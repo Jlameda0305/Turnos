@@ -171,3 +171,5 @@ CREATE TYPE estado_turno AS ENUM (
 - **Timeout de red**: todos los `fetch()` usan `fetchWithTimeout()`. Si n8n no responde en 8 segundos, el usuario ve un mensaje de error en lugar de un spinner eterno.
 - **Accesibilidad**: los slots del calendario en `reservar.html` son elementos `<button>` con `aria-label` y `aria-pressed`. Los toasts tienen `aria-live="polite"` para lectores de pantalla.
 - **Reprogramación**: por simplicidad, "Reprogramar" cancela el turno actual y redirige al calendario para sacar uno nuevo. No hay modal intermedio.
+=======
+# Turnos
