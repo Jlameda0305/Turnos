@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mis Turnos — AIONEX</title>
+  <meta name="description" content="Gestioná tus reservas activas e historial de turnos." />
+  <meta property="og:title" content="Mis Turnos — AIONEX" />
+  <meta property="og:description" content="Gestioná tus reservas activas e historial de turnos." />
+  <meta property="og:type" content="website" />
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/pages/turnos.css" />
+</head>
+<body>
+
+  <div class="bg"></div>
+  <div class="orb orb--1"></div>
+  <div class="orb orb--2"></div>
+  <div class="orb orb--3"></div>
+
+  <div class="main">
+    <div class="top-bar">
+      <div class="brand">
+        <div class="brand-icon">A</div>
+        <span class="brand-name">AIONEX</span>
+      </div>
+
+      <div class="user-pill" id="userPill">
+        <div class="avatar" id="userAvatar">?</div>
+        <span id="userName">Cargando…</span>
+        <button class="logout-btn" id="logoutBtn" title="Cerrar sesión">✕</button>
+      </div>
+    </div>
+
+    <h1 class="section-title">Mis Turnos</h1>
+    <p class="section-subtitle">Gestioná tus reservas activas e historial</p>
+
+    <div class="panel">
+      <div id="loadingState">
+        <div class="state-msg">
+          <div class="mini-spinner"></div>
+          <p>Cargando tus turnos…</p>
+        </div>
+      </div>
+
+      <div id="emptyState" style="display:none;">
+        <div class="state-msg">
+          <div class="icon">📭</div>
+          <p>Todavía no tenés ningún turno reservado.</p>
+        </div>
+      </div>
+
+      <div class="turnos-list" id="turnosList" style="display:none;">
+        <!-- Los turnos se insertarán aquí por JS -->
+      </div>
+
+      <a href="reservar.html" class="btn-create">Crear nuevo turno</a>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" aria-live="polite"></div>
+
+  <script src="js/utils.js"></script>
+  <script>
+    let sessionId = null;
+
+    function init() {
+      sessionId = getSessionOrRedirect();
+      if (!sessionId) return;
+
+      cargarUsuario();
+      cargarMisTurnos();
+
+      document.getElementById('logoutBtn').addEventListener('click', cerrarSesion);
+    }
+
+    async function cargarUsuario() {
+      try {
+        const resp = await fetchWithTimeout(`${N8N_BASE_URL}/webhook/usuario`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_id: sessionId })
+        });
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data.nombre) {
+            document.getElementById('userName').textContent = `${data.nombre} ${data.apellido || ''}`;
+            document.getElementById('userAvatar').textContent = data.nombre.charAt(0).toUpperCase();
+          }
+        }
+      } catch (e) {
+        console.warn('Error cargando usuario', e);
+      }
+    }
+
+    async function cargarMisTurnos() {
+      try {
+        const resp = await fetchWithTimeout(`${N8N_BASE_URL}/webhook/mis-turnos`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_id: sessionId })
+        });
+
+        document.getElementById('loadingState').style.display = 'none';
+
+        if (!resp.ok) throw new Error('Error del servidor');
+
+        const data = await resp.json();
+        const turnos = data.turnos || [];
+
+        if (turnos.length === 0) {
+          document.getElementById('emptyState').style.display = 'block';
+        } else {
+          renderTurnos(turnos);
+        }
+      } catch (err) {
+        document.getElementById('loadingState').style.display = 'none';
+        showToast('No se pudieron cargar tus turnos.', 'error');
+      }
+    }
+
+    function renderTurnos(turnos) {
+      const container = document.getElementById('turnosList');
+      container.innerHTML = '';
+      container.style.display = 'flex';
+
+      turnos.forEach(turno => {
+        const estado = turno.estado || 'pendiente';
+        const isActivo = estado === 'pendiente' || estado === 'confirmado';
+
+        const card = document.createElement('div');
+        card.className = 'turno-card';
+
+        // Header
+        const header = document.createElement('div');
+        header.className = 'turno-header';
+
+        const dateBlock = document.createElement('div');
+        dateBlock.className = 'turno-date';
+        dateBlock.innerHTML = `
+          <div class="turno-fecha">${formatFechaDisplay(turno.fecha)}</div>
+          <div class="turno-hora">${formatHoraDisplay(turno.hora)} hs</div>
+        `;
+
+        const badge = document.createElement('div');
+        badge.className = `turno-badge badge-${estado}`;
+        badge.textContent = estado;
+
+        header.appendChild(dateBlock);
+        header.appendChild(badge);
+        card.appendChild(header);
+
+        // Actions (solo si el turno está activo)
+        if (isActivo) {
+          const actions = document.createElement('div');
+          actions.className = 'turno-actions';
+
+          const btnCancel = document.createElement('button');
+          btnCancel.className = 'action-btn btn-cancel';
+          btnCancel.textContent = 'Cancelar';
+          btnCancel.onclick = () => procesarAccion(turno.id_turno, 'cancelar');
+
+          const btnReschedule = document.createElement('button');
+          btnReschedule.className = 'action-btn btn-reschedule';
+          btnReschedule.textContent = 'Reprogramar';
+          btnReschedule.onclick = () => procesarAccion(turno.id_turno, 'reprogramar');
+
+          actions.appendChild(btnCancel);
+          actions.appendChild(btnReschedule);
+          card.appendChild(actions);
+        }
+
+        container.appendChild(card);
+      });
+    }
+
+    async function procesarAccion(idTurno, accion) {
+      if (!confirm(`¿Estás seguro de que querés ${accion} este turno?`)) return;
+
+      try {
+        const resp = await fetchWithTimeout(`${N8N_BASE_URL}/webhook/cancelar-turno`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_id: sessionId, id_turno: idTurno })
+        });
+
+        if (resp.ok) {
+          showToast(`Turno ${accion === 'reprogramar' ? 'cancelado para reprogramar' : 'cancelado'} exitosamente.`, 'success');
+
+          if (accion === 'reprogramar') {
+            setTimeout(() => window.location.href = 'reservar.html', 1500);
+          } else {
+            document.getElementById('turnosList').style.display = 'none';
+            document.getElementById('loadingState').style.display = 'block';
+            cargarMisTurnos();
+          }
+        } else {
+          throw new Error('Error al cancelar');
+        }
+      } catch (err) {
+        showToast('Hubo un error al procesar la solicitud.', 'error');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

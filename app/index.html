@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AIONEX — Turnos</title>
+  <meta name="description" content="Sistema de reserva de turnos online. Accedé rápidamente a tu agenda." />
+  <meta property="og:title" content="AIONEX — Turnos" />
+  <meta property="og:description" content="Sistema de reserva de turnos online." />
+  <meta property="og:type" content="website" />
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/pages/router.css" />
+</head>
+<body>
+
+  <!-- Background layers -->
+  <div class="bg"></div>
+  <div class="orb orb--1"></div>
+  <div class="orb orb--2"></div>
+  <div class="orb orb--3"></div>
+
+  <!-- Main card -->
+  <div class="card" id="mainCard">
+    <div class="brand">
+      <div class="brand-icon">A</div>
+      <span class="brand-name">AIONEX</span>
+    </div>
+
+    <div class="spinner-wrap" id="spinnerWrap">
+      <div class="spinner"></div>
+      <p class="status" id="statusText">Verificando sesión…</p>
+    </div>
+
+    <div class="error-msg" id="errorMsg" role="alert"></div>
+    <button class="retry-btn" id="retryBtn" onclick="verificarSesion()">Reintentar</button>
+  </div>
+
+  <script src="js/utils.js"></script>
+  <script>
+    // ─── Helpers ────────────────────────────────────
+    function showError(msg) {
+      document.getElementById('spinnerWrap').style.display = 'none';
+      const errorEl = document.getElementById('errorMsg');
+      const retryEl = document.getElementById('retryBtn');
+      errorEl.textContent = msg;
+      errorEl.classList.add('visible');
+      retryEl.classList.add('visible');
+    }
+
+    function showLoading() {
+      document.getElementById('spinnerWrap').style.display = 'flex';
+      document.getElementById('errorMsg').classList.remove('visible');
+      document.getElementById('retryBtn').classList.remove('visible');
+    }
+
+    // ─── Verificación de sesión ─────────────────────
+    async function verificarSesion() {
+      showLoading();
+
+      const sessionId = getCookie('session_id');
+
+      // Si no hay cookie → redirigir a ingreso
+      if (!sessionId) {
+        document.getElementById('statusText').textContent = 'Redirigiendo al ingreso…';
+        await delay(600);
+        window.location.href = 'ingreso.html';
+        return;
+      }
+
+      // Si hay cookie → validar con n8n
+      try {
+        document.getElementById('statusText').textContent = 'Validando tu sesión…';
+        const resp = await fetchWithTimeout(`${N8N_BASE_URL}/webhook/router`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_id: sessionId })
+        });
+
+        if (!resp.ok) throw new Error(`Error del servidor (${resp.status})`);
+
+        const data = await resp.json();
+
+        if (data.valid) {
+          document.getElementById('statusText').textContent = '¡Sesión válida! Redirigiendo…';
+          await delay(500);
+          window.location.href = 'turnos.html';
+        } else {
+          deleteCookie('session_id');
+          document.getElementById('statusText').textContent = 'Sesión expirada. Redirigiendo…';
+          await delay(500);
+          window.location.href = 'ingreso.html';
+        }
+      } catch (err) {
+        showError('No se pudo conectar con el servidor. Verificá tu conexión e intentá nuevamente.');
+        console.error('Router error:', err);
+      }
+    }
+
+    function delay(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    // ─── Iniciar ────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', verificarSesion);
+  </script>
+</body>
+</html>

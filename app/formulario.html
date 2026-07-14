@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Registro — AIONEX Turnos</title>
+  <meta name="description" content="Registrate para reservar turnos online en AIONEX." />
+  <meta property="og:title" content="Registro — AIONEX Turnos" />
+  <meta property="og:description" content="Registrate para reservar turnos online en AIONEX." />
+  <meta property="og:type" content="website" />
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/pages/formulario.css" />
+</head>
+<body>
+
+  <div class="bg"></div>
+  <div class="orb orb--1"></div>
+  <div class="orb orb--2"></div>
+
+  <div class="card">
+    <div class="header">
+      <div class="brand">
+        <div class="brand-icon">A</div>
+        <span class="brand-name">AIONEX</span>
+      </div>
+      <h1>Crear tu cuenta</h1>
+      <p>Completá tus datos para reservar turnos</p>
+    </div>
+
+    <form id="registroForm" class="form-grid" novalidate>
+
+      <!-- DNI -->
+      <div class="field">
+        <label for="dni">DNI <span class="req">*</span></label>
+        <input type="text" id="dni" name="dni" placeholder="12345678" inputmode="numeric" maxlength="8" required />
+        <span class="field-error" id="dniError" role="alert"></span>
+      </div>
+
+      <!-- Sexo -->
+      <div class="field">
+        <label for="sexo">Sexo <span class="req">*</span></label>
+        <div class="select-wrap">
+          <select id="sexo" name="sexo" required>
+            <option value="" disabled selected>Seleccionar</option>
+            <option value="M">Masculino</option>
+            <option value="F">Femenino</option>
+            <option value="X">No especifica</option>
+          </select>
+        </div>
+        <span class="field-error" id="sexoError" role="alert"></span>
+      </div>
+
+      <!-- Nombre -->
+      <div class="field">
+        <label for="nombre">Nombre <span class="req">*</span></label>
+        <input type="text" id="nombre" name="nombre" placeholder="Juan" required />
+        <span class="field-error" id="nombreError" role="alert"></span>
+      </div>
+
+      <!-- Apellido -->
+      <div class="field">
+        <label for="apellido">Apellido <span class="req">*</span></label>
+        <input type="text" id="apellido" name="apellido" placeholder="Pérez" required />
+        <span class="field-error" id="apellidoError" role="alert"></span>
+      </div>
+
+      <!-- Fecha de nacimiento -->
+      <div class="field">
+        <label for="fecha_nacimiento">Fecha de nacimiento <span class="req">*</span></label>
+        <input type="date" id="fecha_nacimiento" name="fecha_nacimiento" required />
+        <span class="field-error" id="fecha_nacimientoError" role="alert"></span>
+      </div>
+
+      <!-- Email -->
+      <div class="field">
+        <label for="email">Email <span class="req">*</span></label>
+        <input type="email" id="email" name="email" placeholder="juan@email.com" required />
+        <span class="field-error" id="emailError" role="alert"></span>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Dirección (opcional) -->
+      <div class="field full">
+        <label for="direccion">Dirección <span style="color:rgba(255,255,255,.25);font-style:italic;text-transform:none">(opcional)</span></label>
+        <input type="text" id="direccion" name="direccion" placeholder="Av. Corrientes 1234, CABA" />
+      </div>
+
+      <!-- Teléfono (opcional) -->
+      <div class="field">
+        <label for="telefono">Teléfono <span style="color:rgba(255,255,255,.25);font-style:italic;text-transform:none">(opcional)</span></label>
+        <input type="tel" id="telefono" name="telefono" placeholder="+54 11 2345-6789" />
+        <span class="field-error" id="telefonoError" role="alert"></span>
+      </div>
+
+      <!-- Spacer en desktop -->
+      <div class="field" style="visibility:hidden" aria-hidden="true"></div>
+
+      <!-- Submit -->
+      <button type="submit" class="submit-btn" id="submitBtn">
+        <span class="btn-text">Registrarme</span>
+        <div class="btn-spinner"></div>
+      </button>
+    </form>
+  </div>
+
+  <!-- Toast notification -->
+  <div class="toast" id="toast" aria-live="polite"></div>
+
+  <script src="js/utils.js"></script>
+  <script>
+    // ─── Validaciones ───────────────────────────────
+    const validators = {
+      dni: {
+        test: v => /^\d{7,8}$/.test(v),
+        msg: 'El DNI debe tener 7 u 8 dígitos numéricos'
+      },
+      nombre: {
+        test: v => v.trim().length >= 2,
+        msg: 'Ingresá tu nombre'
+      },
+      apellido: {
+        test: v => v.trim().length >= 2,
+        msg: 'Ingresá tu apellido'
+      },
+      sexo: {
+        test: v => ['M','F','X'].includes(v),
+        msg: 'Seleccioná una opción'
+      },
+      fecha_nacimiento: {
+        test: v => {
+          if (!v) return false;
+          const d = new Date(v);
+          return d < new Date() && d > new Date('1900-01-01');
+        },
+        msg: 'Ingresá una fecha válida'
+      },
+      email: {
+        test: v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
+        msg: 'Ingresá un email válido'
+      },
+      telefono: {
+        test: v => !v || /^[0-9\s+\-()]{6,20}$/.test(v),
+        msg: 'Formato de teléfono inválido'
+      }
+    };
+
+    function validateField(name) {
+      const el = document.getElementById(name);
+      const errorEl = document.getElementById(name + 'Error');
+      const validator = validators[name];
+      if (!validator) return true;
+
+      const valid = validator.test(el.value);
+      if (!valid) {
+        el.classList.add('invalid');
+        if (errorEl) errorEl.textContent = validator.msg;
+      } else {
+        el.classList.remove('invalid');
+        if (errorEl) errorEl.textContent = '';
+      }
+      return valid;
+    }
+
+    // Live validation on blur
+    document.querySelectorAll('#registroForm input, #registroForm select').forEach(el => {
+      el.addEventListener('blur', () => validateField(el.name || el.id));
+      el.addEventListener('input', () => {
+        if (el.classList.contains('invalid')) validateField(el.name || el.id);
+      });
+    });
+
+    // ─── Submit ─────────────────────────────────────
+    const form = document.getElementById('registroForm');
+    const submitBtn = document.getElementById('submitBtn');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const requiredFields = ['dni', 'nombre', 'apellido', 'sexo', 'fecha_nacimiento', 'email', 'telefono'];
+      let allValid = true;
+      for (const field of requiredFields) {
+        if (!validateField(field)) allValid = false;
+      }
+      if (!allValid) {
+        showToast('Revisá los campos marcados en rojo', 'error');
+        return;
+      }
+
+      const payload = {
+        dni:              document.getElementById('dni').value.trim(),
+        nombre:           document.getElementById('nombre').value.trim(),
+        apellido:         document.getElementById('apellido').value.trim(),
+        sexo:             document.getElementById('sexo').value,
+        fecha_nacimiento: document.getElementById('fecha_nacimiento').value,
+        email:            document.getElementById('email').value.trim().toLowerCase(),
+        direccion:        document.getElementById('direccion').value.trim() || null,
+        telefono:         document.getElementById('telefono').value.trim() || null
+      };
+
+      submitBtn.disabled = true;
+      submitBtn.classList.add('loading');
+
+      try {
+        const resp = await fetchWithTimeout(`${N8N_BASE_URL}/webhook/registro`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await resp.json();
+
+        if (resp.ok && data.id_cliente) {
+          setCookie('session_id', data.id_cliente, 30);
+          showToast('¡Registro exitoso! Redirigiendo…', 'success');
+          setTimeout(() => { window.location.href = 'turnos.html'; }, 1200);
+        } else {
+          showToast(data.message || 'Error al registrar. Intentá nuevamente.', 'error');
+          submitBtn.disabled = false;
+          submitBtn.classList.remove('loading');
+        }
+      } catch (err) {
+        console.error('Registro error:', err);
+        showToast('Error de conexión. Verificá tu red e intentá de nuevo.', 'error');
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('loading');
+      }
+    });
+
+    // ─── Set max date for fecha_nacimiento ──────────
+    (function() {
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('fecha_nacimiento').setAttribute('max', today);
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clientes — AIONEX Admin</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/base.css" />
+  <link rel="stylesheet" href="../css/components.css" />
+  <link rel="stylesheet" href="../css/pages/admin-layout.css" />
+  <link rel="stylesheet" href="../css/pages/admin-tables.css" />
+</head>
+<body>
+  <div class="bg"></div>
+  
+  <div class="admin-layout">
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+      <div class="brand">
+        <div class="brand-icon">A</div>
+        <span class="brand-name">AIONEX</span>
+      </div>
+
+      <nav class="nav-links">
+        <a href="dashboard.html" class="nav-link">
+          <span class="icon">📊</span>
+          Dashboard
+        </a>
+        <a href="turnos.html" class="nav-link">
+          <span class="icon">🗓️</span>
+          Turnos
+        </a>
+        <a href="clientes.html" class="nav-link active">
+          <span class="icon">👥</span>
+          Clientes
+        </a>
+      </nav>
+      
+      <div style="margin-top: auto;">
+        <button class="nav-link" id="logoutBtn" style="width: 100%; border: none; cursor: pointer; text-align: left; background: transparent;">
+          <span class="icon">🚪</span>
+          Cerrar Sesión
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="admin-content">
+      <div class="admin-header">
+        <div class="admin-title">
+          <h1>Clientes</h1>
+          <p>Gestión del padrón de usuarios</p>
+        </div>
+      </div>
+
+      <div class="admin-toolbar">
+        <div class="search-box">
+          <input type="text" id="searchInput" placeholder="Buscar por nombre o DNI..." />
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>DNI</th>
+              <th>Nombre Completo</th>
+              <th>Email</th>
+              <th>Teléfono</th>
+              <th>Registro</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="clientesTableBody">
+            <!-- Renderizado por JS -->
+          </tbody>
+        </table>
+
+        <!-- Estado de carga -->
+        <div id="loadingState" style="padding: 3rem; text-align: center;">
+          <div class="mini-spinner" style="margin: 0 auto 1rem;"></div>
+          <p style="color: rgba(255,255,255,0.6);">Cargando clientes...</p>
+        </div>
+        
+        <!-- Estado vacío -->
+        <div id="emptyState" style="padding: 3rem; text-align: center; display: none;">
+          <p style="color: rgba(255,255,255,0.6);">No se encontraron clientes.</p>
+        </div>
+
+        <div class="pagination">
+          <div class="page-info">Mostrando <span id="pageStart">0</span> - <span id="pageEnd">0</span> de <span id="totalItems">0</span></div>
+          <div class="page-controls">
+            <button class="page-btn" id="prevPageBtn" disabled>Anterior</button>
+            <button class="page-btn" id="nextPageBtn" disabled>Siguiente</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal Confirmar Eliminación -->
+  <div class="modal-overlay" id="deleteModal">
+    <div class="modal-card">
+      <div class="modal-title">Eliminar Cliente</div>
+      <div class="modal-body">
+        <p>¿Estás seguro de que querés eliminar a <strong id="deleteClientName"></strong>?</p>
+        <p style="margin-top: 1rem; color: #ef4444; font-size: 0.9rem;">⚠️ <strong>ATENCIÓN:</strong> Este cliente tiene turnos asociados. Si lo eliminás, <strong>se borrarán todos sus turnos en cascada</strong>. Esta acción no se puede deshacer.</p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeDeleteModal()">Cancelar</button>
+        <button class="btn-danger" id="confirmDeleteBtn">Sí, eliminar todo</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" aria-live="polite"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/admin-utils.js"></script>
+  <script>
+    let currentPage = 1;
+    let currentLimit = 10;
+    let searchQuery = '';
+    let deleteTargetId = null;
+    let searchTimeout = null;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      if (!(await getAdminSessionOrRedirect())) return;
+      document.getElementById('logoutBtn').addEventListener('click', adminLogout);
+      
+      document.getElementById('searchInput').addEventListener('input', handleSearch);
+      document.getElementById('prevPageBtn').addEventListener('click', () => { currentPage--; cargarClientes(); });
+      document.getElementById('nextPageBtn').addEventListener('click', () => { currentPage++; cargarClientes(); });
+      document.getElementById('confirmDeleteBtn').addEventListener('click', deleteClient);
+
+      cargarClientes();
+    });
+
+    function handleSearch(e) {
+      clearTimeout(searchTimeout);
+      searchQuery = e.target.value.trim();
+      currentPage = 1;
+      searchTimeout = setTimeout(() => cargarClientes(), 500);
+    }
+
+    async function cargarClientes() {
+      const tbody = document.getElementById('clientesTableBody');
+      const loading = document.getElementById('loadingState');
+      const empty = document.getElementById('emptyState');
+      
+      tbody.innerHTML = '';
+      loading.style.display = 'block';
+      empty.style.display = 'none';
+      document.getElementById('prevPageBtn').disabled = true;
+      document.getElementById('nextPageBtn').disabled = true;
+
+      try {
+        const offset = (currentPage - 1) * currentLimit;
+        const resp = await adminFetch(`${ADMIN_N8N_PREFIX}/clientes?q=${encodeURIComponent(searchQuery)}&limit=${currentLimit}&offset=${offset}`);
+        
+        if (!resp.ok) throw new Error('Error al cargar');
+        const data = await resp.json();
+        
+        loading.style.display = 'none';
+        
+        if (!data.data || data.data.length === 0 || !data.data[0].id_cliente) {
+          empty.style.display = 'block';
+        } else {
+          renderTable(data.data.filter(c => c.id_cliente));
+        }
+        
+        updatePagination(data.total || 0, (data.data || []).length);
+
+      } catch (err) {
+        showToast('Error al cargar clientes', 'error');
+        loading.style.display = 'none';
+      }
+    }
+
+    function renderTable(clientes) {
+      const tbody = document.getElementById('clientesTableBody');
+      tbody.innerHTML = '';
+      
+      clientes.forEach(c => {
+        const tr = document.createElement('tr');
+        
+        const fecha = new Date(c.created_at).toLocaleDateString('es-AR');
+        const nombreCompleto = `${c.nombre} ${c.apellido}`;
+
+        tr.innerHTML = `
+          <td>${c.dni}</td>
+          <td><strong>${nombreCompleto}</strong></td>
+          <td>${c.email}</td>
+          <td>${c.telefono || '<span style="color:rgba(255,255,255,0.3)">-</span>'}</td>
+          <td>${fecha}</td>
+          <td>
+            <div class="actions-cell">
+              <button class="btn-icon" title="Ver detalle" onclick="window.location.href='cliente-detalle.html?id=${c.id_cliente}'">👁️</button>
+              <button class="btn-icon danger" title="Eliminar" onclick="openDeleteModal('${c.id_cliente}', '${nombreCompleto}')">🗑️</button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function updatePagination(total, currentCount) {
+      const start = (currentPage - 1) * currentLimit + (currentCount > 0 ? 1 : 0);
+      const end = start + currentCount - 1;
+      
+      document.getElementById('pageStart').textContent = start;
+      document.getElementById('pageEnd').textContent = end > 0 ? end : 0;
+      document.getElementById('totalItems').textContent = total;
+
+      document.getElementById('prevPageBtn').disabled = currentPage === 1;
+      document.getElementById('nextPageBtn').disabled = end >= total;
+    }
+
+    function openDeleteModal(id, nombre) {
+      deleteTargetId = id;
+      document.getElementById('deleteClientName').textContent = nombre;
+      document.getElementById('deleteModal').classList.add('visible');
+    }
+
+    function closeDeleteModal() {
+      deleteTargetId = null;
+      document.getElementById('deleteModal').classList.remove('visible');
+    }
+
+    async function deleteClient() {
+      if (!deleteTargetId) return;
+      
+      const btn = document.getElementById('confirmDeleteBtn');
+      btn.disabled = true;
+      btn.textContent = 'Eliminando...';
+
+      try {
+        const resp = await adminFetch(`${ADMIN_N8N_PREFIX}/cliente-eliminar?id=${deleteTargetId}`, { method: 'DELETE' });
+        
+        if (!resp.ok) throw new Error('Error al eliminar');
+        
+        showToast('Cliente y sus turnos eliminados', 'success');
+        closeDeleteModal();
+        btn.disabled = false;
+        btn.textContent = 'Sí, eliminar todo';
+        cargarClientes();
+      } catch (err) {
+        showToast('Error al eliminar cliente', 'error');
+        btn.disabled = false;
+        btn.textContent = 'Sí, eliminar todo';
+      }
+    }
+  </script>
+</body>
+</html>

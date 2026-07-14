@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Detalle Cliente — AIONEX Admin</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/base.css" />
+  <link rel="stylesheet" href="../css/components.css" />
+  <link rel="stylesheet" href="../css/pages/admin-layout.css" />
+  <link rel="stylesheet" href="../css/pages/admin-tables.css" />
+  <style>
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 2rem;
+      border-radius: var(--radius-lg);
+      margin-bottom: 2rem;
+    }
+    .detail-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .detail-item label {
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.6);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .detail-item input, .detail-item select {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #fff;
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-md);
+      font-family: inherit;
+    }
+    .detail-item input:disabled, .detail-item select:disabled {
+      background: transparent;
+      border-color: transparent;
+      padding: 0;
+      opacity: 1;
+      font-weight: 500;
+      font-size: 1rem;
+      appearance: none;
+    }
+    .form-actions {
+      display: flex;
+      gap: 1rem;
+      grid-column: 1 / -1;
+      justify-content: flex-end;
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="bg"></div>
+  
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <div class="brand">
+        <div class="brand-icon">A</div>
+        <span class="brand-name">AIONEX</span>
+      </div>
+      <nav class="nav-links">
+        <a href="dashboard.html" class="nav-link">
+          <span class="icon">📊</span>
+          Dashboard
+        </a>
+        <a href="turnos.html" class="nav-link">
+          <span class="icon">🗓️</span>
+          Turnos
+        </a>
+        <a href="clientes.html" class="nav-link active">
+          <span class="icon">👥</span>
+          Clientes
+        </a>
+      </nav>
+      <div style="margin-top: auto;">
+        <button class="nav-link" id="logoutBtn" style="width: 100%; border: none; cursor: pointer; text-align: left; background: transparent;">
+          <span class="icon">🚪</span>
+          Cerrar Sesión
+        </button>
+      </div>
+    </aside>
+
+    <main class="admin-content">
+      <div class="admin-header" style="margin-bottom: 1rem;">
+        <div class="admin-title">
+          <a href="clientes.html" style="color:var(--color-indigo-light); text-decoration:none; font-size: 0.9rem; display:inline-block; margin-bottom: 0.5rem;">← Volver a Clientes</a>
+          <h1 id="pageTitle">Detalle del Cliente</h1>
+        </div>
+      </div>
+
+      <div id="loadingState" style="padding: 3rem; text-align: center;">
+        <div class="mini-spinner" style="margin: 0 auto 1rem;"></div>
+        <p style="color: rgba(255,255,255,0.6);">Cargando información...</p>
+      </div>
+
+      <div id="contentState" style="display:none;">
+        <!-- Formulario -->
+        <form id="clienteForm" class="detail-grid">
+          <div class="detail-item">
+            <label>DNI</label>
+            <input type="text" id="dni" disabled />
+          </div>
+          <div class="detail-item">
+            <label>Email</label>
+            <input type="email" id="email" disabled />
+          </div>
+          <div class="detail-item">
+            <label>Nombre</label>
+            <input type="text" id="nombre" disabled />
+          </div>
+          <div class="detail-item">
+            <label>Apellido</label>
+            <input type="text" id="apellido" disabled />
+          </div>
+          <div class="detail-item">
+            <label>Sexo</label>
+            <select id="sexo" disabled>
+              <option value="M">Masculino</option>
+              <option value="F">Femenino</option>
+              <option value="X">No especifica</option>
+            </select>
+          </div>
+          <div class="detail-item">
+            <label>Fecha de Nacimiento</label>
+            <input type="date" id="fecha_nacimiento" disabled />
+          </div>
+          <div class="detail-item">
+            <label>Teléfono</label>
+            <input type="text" id="telefono" disabled />
+          </div>
+          <div class="detail-item">
+            <label>Dirección</label>
+            <input type="text" id="direccion" disabled />
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn-secondary" id="editBtn">Editar Datos</button>
+            <button type="button" class="btn-secondary" id="cancelBtn" style="display:none;">Cancelar</button>
+            <button type="submit" class="submit-btn" id="saveBtn" style="display:none; padding: 0.75rem 1.5rem; width: auto;">Guardar Cambios</button>
+          </div>
+        </form>
+
+        <!-- Turnos Recientes -->
+        <h2 style="font-size: 1.1rem; margin-bottom: 1rem;">Últimos Turnos (Historial)</h2>
+        <div class="table-container">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Hora</th>
+                <th>Estado</th>
+                <th>Observaciones</th>
+              </tr>
+            </thead>
+            <tbody id="turnosTableBody">
+              <!-- JS -->
+            </tbody>
+          </table>
+          <div id="emptyTurnos" style="padding: 2rem; text-align: center; display: none;">
+            <p style="color: rgba(255,255,255,0.6);">El cliente no tiene turnos registrados.</p>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="toast" id="toast" aria-live="polite"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/admin-utils.js"></script>
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const clientId = urlParams.get('id');
+    let isEditing = false;
+    let originalData = {};
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      if (!(await getAdminSessionOrRedirect())) return;
+      document.getElementById('logoutBtn').addEventListener('click', adminLogout);
+      
+      if (!clientId) {
+        window.location.href = 'clientes.html';
+        return;
+      }
+
+      document.getElementById('editBtn').addEventListener('click', toggleEdit);
+      document.getElementById('cancelBtn').addEventListener('click', cancelEdit);
+      document.getElementById('clienteForm').addEventListener('submit', saveChanges);
+
+      cargarDetalle();
+    });
+
+    async function cargarDetalle() {
+      try {
+        const resp = await adminFetch(`${ADMIN_N8N_PREFIX}/cliente-detalle?id=${clientId}`);
+        if (!resp.ok) throw new Error('Error al cargar detalle');
+        
+        const data = await resp.json();
+        
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('contentState').style.display = 'block';
+
+        originalData = { ...data };
+        fillForm(data);
+        renderTurnos(data.turnos || []);
+
+      } catch (err) {
+        showToast('Error al cargar detalle', 'error');
+      }
+    }
+
+    function fillForm(data) {
+      document.getElementById('pageTitle').textContent = `${data.nombre} ${data.apellido}`;
+      document.getElementById('dni').value = data.dni;
+      document.getElementById('email').value = data.email;
+      document.getElementById('nombre').value = data.nombre;
+      document.getElementById('apellido').value = data.apellido;
+      document.getElementById('sexo').value = data.sexo;
+      document.getElementById('fecha_nacimiento').value = data.fecha_nacimiento;
+      document.getElementById('telefono').value = data.telefono || '';
+      document.getElementById('direccion').value = data.direccion || '';
+    }
+
+    function renderTurnos(turnos) {
+      const tbody = document.getElementById('turnosTableBody');
+      const empty = document.getElementById('emptyTurnos');
+      tbody.innerHTML = '';
+
+      if (!turnos || turnos.length === 0) {
+        empty.style.display = 'block';
+        return;
+      }
+
+      turnos.forEach(t => {
+        const tr = document.createElement('tr');
+        const badgeColor = t.estado === 'confirmado' ? 'var(--color-indigo)' : 
+                          (t.estado === 'cancelado' ? '#ef4444' : 'rgba(255,255,255,0.2)');
+        
+        tr.innerHTML = `
+          <td>${formatFechaDisplay(t.fecha)}</td>
+          <td>${formatHoraDisplay(t.hora)}</td>
+          <td>
+            <span style="background:${badgeColor}; padding:0.2rem 0.5rem; border-radius:4px; font-size:0.8rem; font-weight:600;">
+              ${t.estado}
+            </span>
+          </td>
+          <td>${t.observaciones || '<span style="color:rgba(255,255,255,0.3)">-</span>'}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function toggleEdit() {
+      isEditing = true;
+      const inputs = document.querySelectorAll('#clienteForm input, #clienteForm select');
+      inputs.forEach(el => {
+        if (el.id !== 'dni' && el.id !== 'email') el.disabled = false; // DNI y email no editables por seguridad simple
+      });
+      document.getElementById('editBtn').style.display = 'none';
+      document.getElementById('cancelBtn').style.display = 'block';
+      document.getElementById('saveBtn').style.display = 'block';
+    }
+
+    function cancelEdit() {
+      isEditing = false;
+      fillForm(originalData); // Restore data
+      const inputs = document.querySelectorAll('#clienteForm input, #clienteForm select');
+      inputs.forEach(el => el.disabled = true);
+      
+      document.getElementById('editBtn').style.display = 'block';
+      document.getElementById('cancelBtn').style.display = 'none';
+      document.getElementById('saveBtn').style.display = 'none';
+    }
+
+    async function saveChanges(e) {
+      e.preventDefault();
+      
+      const btn = document.getElementById('saveBtn');
+      btn.disabled = true;
+      btn.textContent = 'Guardando...';
+
+      const payload = {
+        nombre: document.getElementById('nombre').value,
+        apellido: document.getElementById('apellido').value,
+        sexo: document.getElementById('sexo').value,
+        fecha_nacimiento: document.getElementById('fecha_nacimiento').value,
+        telefono: document.getElementById('telefono').value,
+        direccion: document.getElementById('direccion').value,
+      };
+
+      try {
+        const resp = await adminFetch(`${ADMIN_N8N_PREFIX}/clientes/${clientId}`, { method: 'PUT', body: JSON.stringify(payload) });
+        if (!resp.ok) throw new Error('Error al actualizar');
+        
+        showToast('Datos actualizados correctamente', 'success');
+        originalData = { ...originalData, ...payload };
+        cancelEdit();
+        btn.disabled = false;
+        btn.textContent = 'Guardar Cambios';
+        document.getElementById('pageTitle').textContent = `${originalData.nombre} ${originalData.apellido}`;
+      } catch (err) {
+        showToast('Error al actualizar', 'error');
+        btn.disabled = false;
+        btn.textContent = 'Guardar Cambios';
+      }
+    }
+  </script>
+</body>
+</html>

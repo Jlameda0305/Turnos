@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ingreso — AIONEX Turnos</title>
+  <meta name="description" content="Ingresá con tu DNI para ver o sacar turnos." />
+  <meta property="og:title" content="Ingreso — AIONEX Turnos" />
+  <meta property="og:description" content="Ingresá con tu DNI para ver o sacar turnos." />
+  <meta property="og:type" content="website" />
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/pages/ingreso.css" />
+</head>
+<body>
+
+  <div class="bg"></div>
+  <div class="orb orb--1"></div>
+  <div class="orb orb--2"></div>
+
+  <div class="card">
+    <div class="header">
+      <div class="brand">
+        <div class="brand-icon">A</div>
+        <span class="brand-name">AIONEX</span>
+      </div>
+      <h1>Ingreso</h1>
+      <p>Ingresá tu DNI para ver tus turnos</p>
+    </div>
+
+    <form id="ingresoForm" class="form-grid" novalidate>
+      <div class="field">
+        <label for="dni">DNI</label>
+        <input type="text" id="dni" name="dni" placeholder="Ingresá tu DNI" inputmode="numeric" maxlength="8" required autofocus />
+        <span class="field-error" id="dniError" role="alert"></span>
+      </div>
+
+      <button type="submit" class="submit-btn" id="submitBtn">
+        <span class="btn-text">Continuar</span>
+        <div class="btn-spinner"></div>
+      </button>
+    </form>
+  </div>
+
+  <div class="toast" id="toast" aria-live="polite"></div>
+
+  <script src="js/utils.js"></script>
+  <script>
+    // ─── Validación ─────────────────────────────────
+    const dniInput = document.getElementById('dni');
+    const dniError = document.getElementById('dniError');
+
+    function validateDni() {
+      const val = dniInput.value.trim();
+      const valid = /^\d{7,8}$/.test(val);
+      if (!valid) {
+        dniInput.classList.add('invalid');
+        dniError.textContent = 'El DNI debe tener 7 u 8 dígitos numéricos';
+      } else {
+        dniInput.classList.remove('invalid');
+        dniError.textContent = '';
+      }
+      return valid;
+    }
+
+    dniInput.addEventListener('blur', validateDni);
+    dniInput.addEventListener('input', () => {
+      if (dniInput.classList.contains('invalid')) validateDni();
+    });
+
+    // ─── Submit ─────────────────────────────────────
+    const form = document.getElementById('ingresoForm');
+    const submitBtn = document.getElementById('submitBtn');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      if (!validateDni()) {
+        dniInput.focus();
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.classList.add('loading');
+
+      try {
+        const resp = await fetchWithTimeout(`${N8N_BASE_URL}/webhook/ingreso`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ dni: dniInput.value.trim() })
+        });
+
+        if (resp.status === 404) {
+          showToast('DNI no encontrado. Redirigiendo al registro...', 'error');
+          setTimeout(() => { window.location.href = 'formulario.html'; }, 1500);
+          return;
+        }
+
+        const data = await resp.json();
+
+        if (resp.ok && data.id_cliente) {
+          setCookie('session_id', data.id_cliente, 30);
+          showToast('¡Ingreso exitoso!', 'success');
+          setTimeout(() => { window.location.href = 'turnos.html'; }, 1000);
+        } else {
+          if (data.encontrado === false) {
+            showToast('DNI no registrado. Redirigiendo...', 'error');
+            setTimeout(() => window.location.href = 'formulario.html', 1500);
+          } else {
+            showToast('Error al ingresar. Verificá los datos.', 'error');
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('loading');
+          }
+        }
+      } catch (err) {
+        console.error('Ingreso error:', err);
+        showToast('Error de conexión. Intentá nuevamente.', 'error');
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('loading');
+      }
+    });
+  </script>
+</body>
+</html>

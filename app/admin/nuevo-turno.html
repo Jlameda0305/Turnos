@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nuevo Turno — AIONEX Admin</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/base.css" />
+  <link rel="stylesheet" href="../css/components.css" />
+  <link rel="stylesheet" href="../css/pages/admin-layout.css" />
+  <link rel="stylesheet" href="../css/pages/reservar.css" />
+  <style>
+    .admin-reservar-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+    }
+    
+    .client-search {
+      position: relative;
+      margin-bottom: 2rem;
+    }
+
+    .client-search input {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 1rem;
+      border-radius: var(--radius-md);
+      color: #fff;
+      font-size: 1rem;
+      outline: none;
+    }
+    .client-search input:focus {
+      border-color: var(--color-indigo);
+    }
+
+    .autocomplete-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: #11111a;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius-md);
+      margin-top: 0.5rem;
+      max-height: 250px;
+      overflow-y: auto;
+      z-index: 50;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      display: none;
+    }
+
+    .autocomplete-item {
+      padding: 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .autocomplete-item:last-child {
+      border-bottom: none;
+    }
+    .autocomplete-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .selected-client-card {
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      padding: 1rem;
+      border-radius: var(--radius-md);
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+    }
+    .selected-client-card.visible {
+      display: flex;
+    }
+
+    @media (max-width: 768px) {
+      .admin-reservar-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg"></div>
+  
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <div class="brand">
+        <div class="brand-icon">A</div>
+        <span class="brand-name">AIONEX</span>
+      </div>
+      <nav class="nav-links">
+        <a href="dashboard.html" class="nav-link">
+          <span class="icon">📊</span>
+          Dashboard
+        </a>
+        <a href="turnos.html" class="nav-link active">
+          <span class="icon">🗓️</span>
+          Turnos
+        </a>
+        <a href="clientes.html" class="nav-link">
+          <span class="icon">👥</span>
+          Clientes
+        </a>
+      </nav>
+      <div style="margin-top: auto;">
+        <button class="nav-link" id="logoutBtn" style="width: 100%; border: none; cursor: pointer; text-align: left; background: transparent;">
+          <span class="icon">🚪</span>
+          Cerrar Sesión
+        </button>
+      </div>
+    </aside>
+
+    <main class="admin-content">
+      <div class="admin-header" style="margin-bottom: 1rem;">
+        <div class="admin-title">
+          <a href="turnos.html" style="color:var(--color-indigo-light); text-decoration:none; font-size: 0.9rem; display:inline-block; margin-bottom: 0.5rem;">← Volver a Turnos</a>
+          <h1>Asignar Nuevo Turno</h1>
+        </div>
+      </div>
+
+      <div class="admin-reservar-layout">
+        <!-- Columna Izquierda: Cliente y Fecha -->
+        <div>
+          <div class="panel" style="margin-bottom: 1.5rem;">
+            <h2 style="font-size: 1.1rem; margin-bottom: 1rem;">1. Seleccionar Cliente</h2>
+            
+            <div class="client-search" id="searchContainer">
+              <input type="text" id="clientSearchInput" placeholder="Buscar por DNI o Nombre..." autocomplete="off" />
+              <div class="autocomplete-dropdown" id="autocompleteDropdown"></div>
+            </div>
+
+            <div class="selected-client-card" id="selectedClientCard">
+              <div>
+                <strong id="selectedClientName">Juan Pérez</strong><br>
+                <span style="font-size: 0.85rem; color: rgba(255,255,255,0.7);" id="selectedClientDni">DNI: 12345678</span>
+              </div>
+              <button type="button" class="btn-icon" style="border:none;" onclick="clearSelectedClient()" title="Cambiar cliente">❌</button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h2 style="font-size: 1.1rem; margin-bottom: 1rem;">2. Seleccionar Fecha</h2>
+            <div class="date-section">
+              <label for="fechaInput">Fecha</label>
+              <input type="date" class="date-input" id="fechaInput" disabled />
+            </div>
+          </div>
+        </div>
+
+        <!-- Columna Derecha: Horarios y Confirmación -->
+        <div class="panel" id="slotsPanel">
+          <h2 style="font-size: 1.1rem; margin-bottom: 1rem;">3. Horario y Detalles</h2>
+          
+          <div class="state-msg" id="emptyState">
+            <div class="icon">📅</div>
+            <p>Seleccioná un cliente y una fecha para ver los horarios</p>
+          </div>
+
+          <div id="loadingState" style="display:none;">
+            <div class="state-msg">
+              <div class="mini-spinner"></div>
+              <p>Cargando horarios…</p>
+            </div>
+          </div>
+
+          <div id="slotsContent" style="display:none;">
+            <div class="slots-grid" id="slotsGrid"></div>
+            
+            <div class="obs-section" style="margin-top: 2rem;">
+              <label for="estadoInput">Estado Inicial</label>
+              <select id="estadoInput" style="width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:#fff; padding:0.75rem; border-radius:var(--radius-md); margin-bottom: 1rem; font-family:inherit;">
+                <option value="confirmado" selected>Confirmado</option>
+                <option value="pendiente">Pendiente</option>
+              </select>
+
+              <label for="obsInput">Observaciones <span style="color:rgba(255,255,255,.25);font-style:italic;text-transform:none">(opcional)</span></label>
+              <textarea class="obs-input" id="obsInput" placeholder="Alguna indicación especial…"></textarea>
+            </div>
+
+            <button class="confirm-btn" id="confirmBtn" disabled>
+              <span class="btn-text">Confirmar Asignación</span>
+              <div class="btn-spinner"></div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="toast" id="toast" aria-live="polite"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/admin-utils.js"></script>
+  <script>
+    let selectedClientId = null;
+    let selectedSlot = null;
+    let searchTimeout = null;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      if (!(await getAdminSessionOrRedirect())) return;
+      document.getElementById('logoutBtn').addEventListener('click', adminLogout);
+      
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('fechaInput').setAttribute('min', today);
+
+      document.getElementById('clientSearchInput').addEventListener('input', handleClientSearch);
+      document.getElementById('fechaInput').addEventListener('change', onFechaChange);
+      document.getElementById('confirmBtn').addEventListener('click', confirmarTurno);
+    });
+
+    function handleClientSearch(e) {
+      clearTimeout(searchTimeout);
+      const query = e.target.value.trim();
+      const dropdown = document.getElementById('autocompleteDropdown');
+      
+      if (query.length < 2) {
+        dropdown.style.display = 'none';
+        return;
+      }
+
+      searchTimeout = setTimeout(async () => {
+        try {
+          const resp = await adminFetch(`${ADMIN_N8N_PREFIX}/buscar-cliente?q=${encodeURIComponent(query)}`);
+          if (!resp.ok) throw new Error();
+          
+          const mockResults = await resp.json();
+
+          dropdown.innerHTML = '';
+          if (mockResults.length > 0) {
+            mockResults.forEach(c => {
+              const item = document.createElement('div');
+              item.className = 'autocomplete-item';
+              item.innerHTML = `<strong>${c.nombre} ${c.apellido}</strong> <span style="color:rgba(255,255,255,0.5);font-size:0.85rem">(${c.dni})</span>`;
+              item.onclick = () => selectClient(c);
+              dropdown.appendChild(item);
+            });
+            dropdown.style.display = 'block';
+          } else {
+            dropdown.innerHTML = '<div class="autocomplete-item" style="color:rgba(255,255,255,0.5)">No se encontraron clientes</div>';
+            dropdown.style.display = 'block';
+          }
+        } catch(e) {}
+      }, 400);
+    }
+
+    function selectClient(c) {
+      selectedClientId = c.id_cliente;
+      document.getElementById('autocompleteDropdown').style.display = 'none';
+      document.getElementById('searchContainer').style.display = 'none';
+      
+      document.getElementById('selectedClientName').textContent = `${c.nombre} ${c.apellido}`;
+      document.getElementById('selectedClientDni').textContent = `DNI: ${c.dni}`;
+      document.getElementById('selectedClientCard').classList.add('visible');
+      
+      document.getElementById('fechaInput').disabled = false;
+    }
+
+    function clearSelectedClient() {
+      selectedClientId = null;
+      document.getElementById('searchContainer').style.display = 'block';
+      document.getElementById('clientSearchInput').value = '';
+      document.getElementById('selectedClientCard').classList.remove('visible');
+      
+      const fechaInput = document.getElementById('fechaInput');
+      fechaInput.value = '';
+      fechaInput.disabled = true;
+      
+      document.getElementById('slotsContent').style.display = 'none';
+      document.getElementById('emptyState').style.display = 'block';
+    }
+
+    async function onFechaChange(e) {
+      const fecha = e.target.value;
+      if (!fecha) return;
+
+      selectedSlot = null;
+      document.getElementById('confirmBtn').disabled = true;
+
+      document.getElementById('emptyState').style.display = 'none';
+      document.getElementById('slotsContent').style.display = 'none';
+      document.getElementById('loadingState').style.display = 'block';
+
+      try {
+        const resp = await adminFetch(`${ADMIN_N8N_PREFIX}/turnos-disponibles?fecha=${fecha}`);
+        if (!resp.ok) throw new Error();
+        
+        const ocupados = await resp.json();
+        renderSlots(ocupados);
+      } catch (err) {
+        showToast('Error al cargar horarios', 'error');
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('emptyState').style.display = 'block';
+      }
+    }
+
+    function renderSlots(ocupados) {
+      const grid = document.getElementById('slotsGrid');
+      const allSlots = generarHorarios();
+      grid.innerHTML = '';
+
+      allSlots.forEach(hora => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.classList.add('slot');
+        btn.textContent = hora;
+
+        if (ocupados.includes(hora)) {
+          btn.classList.add('taken');
+          btn.disabled = true;
+        } else {
+          btn.classList.add('available');
+          btn.addEventListener('click', () => selectSlot(btn, hora));
+        }
+        grid.appendChild(btn);
+      });
+
+      document.getElementById('loadingState').style.display = 'none';
+      document.getElementById('slotsContent').style.display = 'block';
+    }
+
+    function selectSlot(el, hora) {
+      document.querySelectorAll('.slot.selected').forEach(s => {
+        s.classList.remove('selected');
+        s.classList.add('available');
+      });
+
+      el.classList.remove('available');
+      el.classList.add('selected');
+      selectedSlot = hora;
+      document.getElementById('confirmBtn').disabled = false;
+    }
+
+    async function confirmarTurno() {
+      const fecha = document.getElementById('fechaInput').value;
+      const obs = document.getElementById('obsInput').value.trim();
+      const estado = document.getElementById('estadoInput').value;
+
+      if (!selectedClientId || !fecha || !selectedSlot) {
+        showToast('Faltan datos para crear el turno', 'error');
+        return;
+      }
+
+      const btn = document.getElementById('confirmBtn');
+      btn.disabled = true;
+      btn.classList.add('loading');
+
+      try {
+        const payload = {
+          id_cliente: selectedClientId,
+          fecha: fecha,
+          hora: selectedSlot,
+          observaciones: obs,
+          estado: estado
+        };
+        const resp = await adminFetch(`${ADMIN_N8N_PREFIX}/turno-crear`, { method: 'POST', body: JSON.stringify(payload) });
+        if (!resp.ok) throw new Error();
+        
+        showToast('Turno asignado exitosamente', 'success');
+        setTimeout(() => { window.location.href = 'turnos.html'; }, 1000);
+      } catch (err) {
+        showToast('Error al crear el turno', 'error');
+        btn.disabled = false;
+        btn.classList.remove('loading');
+      }
+    }
+  </script>
+</body>
+</html>

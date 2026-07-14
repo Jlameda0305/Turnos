@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reservar Turno — AIONEX</title>
+  <meta name="description" content="Seleccioná fecha y horario para reservar tu turno en AIONEX." />
+  <meta property="og:title" content="Reservar Turno — AIONEX" />
+  <meta property="og:description" content="Seleccioná fecha y horario para reservar tu turno en AIONEX." />
+  <meta property="og:type" content="website" />
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/pages/reservar.css" />
+</head>
+<body>
+
+  <div class="bg"></div>
+  <div class="orb orb--1"></div>
+  <div class="orb orb--2"></div>
+  <div class="orb orb--3"></div>
+
+  <div class="main">
+    <!-- Top bar -->
+    <div class="top-bar">
+      <div class="brand">
+        <a href="turnos.html" class="back-link" aria-label="Volver a Mis Turnos">←</a>
+        <div class="brand-icon">A</div>
+        <span class="brand-name">AIONEX</span>
+      </div>
+
+      <div class="user-pill" id="userPill">
+        <div class="avatar" id="userAvatar">?</div>
+        <span id="userName">Cargando…</span>
+        <button class="logout-btn" id="logoutBtn" title="Cerrar sesión">✕</button>
+      </div>
+    </div>
+
+    <!-- Title -->
+    <h1 class="section-title">Reservar turno</h1>
+    <p class="section-subtitle">Seleccioná una fecha y un horario disponible</p>
+
+    <!-- Date panel -->
+    <div class="panel">
+      <div class="date-section">
+        <label for="fechaInput">Fecha</label>
+        <input type="date" class="date-input" id="fechaInput" />
+        <span class="day-badge" id="dayBadge" style="display:none;"></span>
+      </div>
+    </div>
+
+    <!-- Slots panel -->
+    <div class="panel" id="slotsPanel">
+      <div class="state-msg" id="emptyState">
+        <div class="icon">📅</div>
+        <p>Seleccioná una fecha para ver los horarios disponibles</p>
+      </div>
+
+      <div id="loadingState" style="display:none;">
+        <div class="state-msg">
+          <div class="mini-spinner"></div>
+          <p>Cargando horarios…</p>
+        </div>
+      </div>
+
+      <div id="slotsContent" style="display:none;">
+        <p class="slots-title">Horarios disponibles</p>
+        <div class="slots-grid" id="slotsGrid" role="group" aria-label="Horarios disponibles"></div>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-dot available-dot"></div> Disponible</div>
+          <div class="legend-item"><div class="legend-dot taken-dot"></div> Ocupado</div>
+          <div class="legend-item"><div class="legend-dot selected-dot"></div> Seleccionado</div>
+        </div>
+
+        <div class="obs-section">
+          <label for="obsInput">Observaciones <span style="color:rgba(255,255,255,.25);font-style:italic;text-transform:none">(opcional)</span></label>
+          <textarea class="obs-input" id="obsInput" placeholder="Alguna indicación especial para tu turno…"></textarea>
+        </div>
+
+        <button class="confirm-btn" id="confirmBtn" disabled>
+          <span class="btn-text">Confirmar reserva</span>
+          <div class="btn-spinner"></div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success overlay -->
+  <div class="success-overlay" id="successOverlay">
+    <div class="success-card">
+      <div class="success-icon">✓</div>
+      <h2>¡Turno reservado!</h2>
+      <p>Tu reserva fue registrada correctamente.</p>
+      <div class="success-detail">
+        <div class="detail-item">
+          <div class="detail-label">Fecha</div>
+          <div class="detail-value" id="successFecha">—</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label">Hora</div>
+          <div class="detail-value" id="successHora">—</div>
+        </div>
+      </div>
+      <button class="back-to-turnos-btn" onclick="window.location.href='turnos.html'">Volver a Mis Turnos</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" aria-live="polite"></div>
+
+  <script src="js/utils.js"></script>
+  <script>
+    // ─── Estado ─────────────────────────────────────
+    let sessionId    = null;
+    let selectedSlot = null;
+
+    // ─── Helpers ────────────────────────────────────
+    const DIAS_SEMANA = {
+      0: 'domingo', 1: 'lunes', 2: 'martes', 3: 'miércoles',
+      4: 'jueves', 5: 'viernes', 6: 'sábado'
+    };
+
+    // ─── Verificar sesión ───────────────────────────
+    function init() {
+      sessionId = getSessionOrRedirect();
+      if (!sessionId) return;
+
+      // Set min date = hoy
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm   = String(today.getMonth() + 1).padStart(2, '0');
+      const dd   = String(today.getDate()).padStart(2, '0');
+      document.getElementById('fechaInput').setAttribute('min', `${yyyy}-${mm}-${dd}`);
+
+      cargarUsuario();
+
+      document.getElementById('fechaInput').addEventListener('change', onFechaChange);
+      document.getElementById('confirmBtn').addEventListener('click', confirmarReserva);
+      document.getElementById('logoutBtn').addEventListener('click', cerrarSesion);
+    }
+
+    async function cargarUsuario() {
+      try {
+        const resp = await fetchWithTimeout(`${N8N_BASE_URL}/webhook/usuario`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_id: sessionId })
+        });
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data.nombre) {
+            document.getElementById('userName').textContent = `${data.nombre} ${data.apellido || ''}`;
+            document.getElementById('userAvatar').textContent = data.nombre.charAt(0).toUpperCase();
+          }
+        }
+      } catch (e) {
+        console.warn('No se pudo cargar info del usuario:', e);
+      }
+    }
+
+    // ─── Cambio de fecha ────────────────────────────
+    async function onFechaChange(e) {
+      const fecha = e.target.value;
+      if (!fecha) return;
+
+      const dateObj = new Date(fecha + 'T12:00:00');
+      const diaSemana = DIAS_SEMANA[dateObj.getDay()];
+      const badge = document.getElementById('dayBadge');
+      badge.textContent = diaSemana;
+      badge.style.display = 'inline-block';
+
+      selectedSlot = null;
+      document.getElementById('confirmBtn').disabled = true;
+
+      document.getElementById('emptyState').style.display = 'none';
+      document.getElementById('slotsContent').style.display = 'none';
+      document.getElementById('loadingState').style.display = 'block';
+
+      try {
+        const resp = await fetchWithTimeout(`${N8N_BASE_URL}/webhook/turnos-disponibles`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fecha, session_id: sessionId })
+        });
+
+        if (!resp.ok) throw new Error('Error del servidor');
+
+        const data = await resp.json();
+        const ocupados = (data.ocupados || []).map(t => t.hora ? t.hora.substring(0,5) : t);
+
+        renderSlots(ocupados);
+      } catch (err) {
+        console.error('Error al cargar turnos:', err);
+        showToast('No se pudieron cargar los horarios. Intentá de nuevo.', 'error');
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('emptyState').style.display = 'block';
+      }
+    }
+
+    // ─── Renderizar slots (accesible) ───────────────
+    function renderSlots(ocupados) {
+      const grid     = document.getElementById('slotsGrid');
+      const allSlots = generarHorarios();
+
+      grid.innerHTML = '';
+
+      allSlots.forEach(hora => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.classList.add('slot');
+        btn.textContent = hora;
+
+        if (ocupados.includes(hora)) {
+          btn.classList.add('taken');
+          btn.disabled = true;
+          btn.setAttribute('aria-label', `Horario ${hora}, no disponible`);
+        } else {
+          btn.classList.add('available');
+          btn.setAttribute('aria-label', `Horario ${hora}, disponible`);
+          btn.setAttribute('aria-pressed', 'false');
+          btn.addEventListener('click', () => selectSlot(btn, hora));
+        }
+
+        grid.appendChild(btn);
+      });
+
+      document.getElementById('loadingState').style.display = 'none';
+      document.getElementById('slotsContent').style.display = 'block';
+    }
+
+    function selectSlot(el, hora) {
+      document.querySelectorAll('.slot.selected').forEach(s => {
+        s.classList.remove('selected');
+        s.classList.add('available');
+        s.setAttribute('aria-pressed', 'false');
+      });
+
+      el.classList.remove('available');
+      el.classList.add('selected');
+      el.setAttribute('aria-pressed', 'true');
+      selectedSlot = hora;
+      document.getElementById('confirmBtn').disabled = false;
+    }
+
+    // ─── Confirmar reserva ──────────────────────────
+    async function confirmarReserva() {
+      const fecha = document.getElementById('fechaInput').value;
+      const obs   = document.getElementById('obsInput').value.trim();
+
+      if (!fecha || !selectedSlot) {
+        showToast('Seleccioná una fecha y un horario', 'error');
+        return;
+      }
+
+      const btn = document.getElementById('confirmBtn');
+      btn.disabled = true;
+      btn.classList.add('loading');
+
+      try {
+        const resp = await fetchWithTimeout(`${N8N_BASE_URL}/webhook/reservar`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            session_id:    sessionId,
+            fecha:         fecha,
+            hora:          selectedSlot,
+            observaciones: obs || null
+          })
+        });
+
+        const data = await resp.json();
+
+        if (resp.ok && data.success) {
+          document.getElementById('successFecha').textContent = formatFechaDisplay(fecha);
+          document.getElementById('successHora').textContent = selectedSlot;
+          document.getElementById('successOverlay').classList.add('visible');
+        } else if (resp.status === 409) {
+          showToast(data.message || 'Ese horario ya fue reservado. Elegí otro.', 'error');
+          onFechaChange({ target: { value: fecha } });
+        } else {
+          showToast(data.message || 'Error al reservar. Intentá de nuevo.', 'error');
+        }
+      } catch (err) {
+        console.error('Error al reservar:', err);
+        showToast('Error de conexión. Verificá tu red.', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.classList.remove('loading');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

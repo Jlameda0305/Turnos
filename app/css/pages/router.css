@@ -1,0 +1,92 @@
+/* ══════════════════════════════════════════════════
+   Router (index.html) — Page-Specific Styles
+   ══════════════════════════════════════════════════ */
+
+body {
+  overflow: hidden;
+}
+
+.card {
+  padding: 3rem 2.5rem;
+  max-width: 420px;
+  text-align: center;
+}
+
+.card .brand {
+  margin-bottom: 2rem;
+  gap: .6rem;
+  justify-content: center;
+}
+
+.card .brand-icon {
+  width: 44px; height: 44px;
+  font-size: 1.25rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(99,102,241,.35);
+}
+
+.card .brand-name {
+  font-size: 1.5rem;
+  letter-spacing: -.02em;
+}
+
+.spinner-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  margin-top: .5rem;
+}
+
+.spinner {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  border: 3px solid rgba(255,255,255,.08);
+  border-top-color: var(--color-indigo-light);
+  animation: spin .8s linear infinite;
+}
+
+.status {
+  font-size: .95rem;
+  color: rgba(255,255,255,.55);
+  font-weight: 400;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.error-msg {
+  display: none;
+  margin-top: 1.5rem;
+  padding: 1rem 1.25rem;
+  background: rgba(239,68,68,.12);
+  border: 1px solid rgba(239,68,68,.25);
+  border-radius: var(--radius-md);
+  color: var(--color-error-text);
+  font-size: .88rem;
+  line-height: 1.5;
+}
+.error-msg.visible {
+  display: block;
+  animation: cardIn .4s ease both;
+}
+
+.retry-btn {
+  margin-top: 1.25rem;
+  display: none;
+  padding: .7rem 2rem;
+  background: var(--gradient-brand);
+  color: #fff;
+  font-family: inherit;
+  font-size: .9rem;
+  font-weight: 600;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: transform .2s, box-shadow .2s;
+}
+.retry-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-btn-hover);
+}
+.retry-btn.visible {
+  display: inline-flex;
+}

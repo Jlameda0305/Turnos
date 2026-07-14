@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — AIONEX Admin</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/base.css" />
+  <link rel="stylesheet" href="../css/components.css" />
+  <link rel="stylesheet" href="../css/pages/admin-layout.css" />
+</head>
+<body>
+  <div class="bg"></div>
+  
+  <div class="admin-layout">
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+      <div class="brand">
+        <div class="brand-icon">A</div>
+        <span class="brand-name">AIONEX</span>
+        <span style="font-size: 0.7rem; color: #ef4444; margin-left: 5px; font-weight: bold; border: 1px solid rgba(239, 68, 68, 0.3); padding: 2px 4px; border-radius: 4px;">ADMIN</span>
+      </div>
+
+      <nav class="nav-links">
+        <a href="dashboard.html" class="nav-link active">
+          <span class="icon">📊</span>
+          Dashboard
+        </a>
+        <a href="turnos.html" class="nav-link">
+          <span class="icon">🗓️</span>
+          Turnos
+        </a>
+        <a href="clientes.html" class="nav-link">
+          <span class="icon">👥</span>
+          Clientes
+        </a>
+      </nav>
+      
+      <div style="margin-top: auto;">
+        <button class="nav-link" id="logoutBtn" style="width: 100%; border: none; cursor: pointer; text-align: left; background: transparent;">
+          <span class="icon">🚪</span>
+          Cerrar Sesión
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="admin-content">
+      <div class="admin-header">
+        <div class="admin-title">
+          <h1>Dashboard</h1>
+          <p>Resumen general del sistema</p>
+        </div>
+        <div class="user-pill" style="position: relative; right: 0; top: 0;">
+          <div class="avatar">A</div>
+          <span>Administrador</span>
+        </div>
+      </div>
+
+      <!-- Metrics -->
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="icon">👥</div>
+          <div class="value" id="metricClientes">-</div>
+          <div class="label">Clientes Totales</div>
+        </div>
+        <div class="metric-card">
+          <div class="icon">📅</div>
+          <div class="value" id="metricTurnosHoy">-</div>
+          <div class="label">Turnos de Hoy</div>
+        </div>
+        <div class="metric-card">
+          <div class="icon">✅</div>
+          <div class="value" id="metricTurnosActivos">-</div>
+          <div class="label">Turnos Activos (Futuros)</div>
+        </div>
+        <div class="metric-card">
+          <div class="icon">❌</div>
+          <div class="value" id="metricCancelados">-</div>
+          <div class="label">Cancelaciones (Mes)</div>
+        </div>
+      </div>
+
+      <!-- Placeholder for future charts or recent activity -->
+      <div class="panel" style="margin-top: 2rem;">
+        <h2 style="font-size: 1.1rem; margin-bottom: 1rem;">Actividad Reciente</h2>
+        <div id="loadingState">
+          <div class="state-msg">
+            <div class="mini-spinner"></div>
+            <p>Cargando datos…</p>
+          </div>
+        </div>
+        <div id="recentActivity" style="display:none; color: rgba(255,255,255,0.7);">
+          <!-- Esto se llenará desde n8n en la Etapa 2 -->
+          <p>Los datos reales serán inyectados por el webhook de n8n.</p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/admin-utils.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      // 1. Validar sesión de admin
+      const session = await getAdminSessionOrRedirect();
+      if (!session) return;
+
+      // 2. Configurar el logout
+      document.getElementById('logoutBtn').addEventListener('click', adminLogout);
+
+      // 3. (Etapa 2) Cargar dashboard real desde n8n
+      cargarDashboardStats();
+    });
+
+    async function cargarDashboardStats() {
+      try {
+        const resp = await adminFetch(`${ADMIN_N8N_PREFIX}/dashboard`);
+        if (!resp.ok) throw new Error('Error de red');
+        
+        const data = await resp.json();
+        
+        document.getElementById('metricClientes').textContent = data.clientes_totales || '0';
+        document.getElementById('metricTurnosHoy').textContent = data.turnos_hoy || '0';
+        document.getElementById('metricTurnosActivos').textContent = data.turnos_activos || '0';
+        document.getElementById('metricCancelados').textContent = data.cancelaciones_mes || '0';
+        
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('recentActivity').style.display = 'block';
+      } catch (err) {
+        showToast('Error cargando métricas del dashboard', 'error');
+        document.getElementById('loadingState').style.display = 'none';
+      }
+    }
+  </script>
+</body>
+</html>

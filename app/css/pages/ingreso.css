@@ -1,0 +1,33 @@
+/* ══════════════════════════════════════════════════
+   Ingreso — Page-Specific Styles
+   ══════════════════════════════════════════════════ */
+
+body {
+  padding: 1.5rem;
+}
+
+.form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.field input {
+  text-align: center;
+  letter-spacing: .1em;
+  font-size: 1rem;
+  padding: .8rem 1rem;
+}
+
+.field input::placeholder {
+  letter-spacing: normal;
+}
+
+.field .field-error {
+  text-align: center;
+}
+
+.submit-btn {
+  margin-top: .5rem;
+  font-size: 1rem;
+}
