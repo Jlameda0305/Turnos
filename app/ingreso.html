@@ -44,6 +44,13 @@
         <div class="btn-spinner"></div>
       </button>
     </form>
+
+    <div id="registerBlock" style="display: none; margin-top: 2rem; padding: 1.5rem; background: rgba(255, 60, 60, 0.05); border: 1px solid rgba(255, 60, 60, 0.2); border-radius: 12px; text-align: center;">
+      <div style="font-size: 2rem; margin-bottom: 0.5rem;">⚠️</div>
+      <h3 style="color: var(--text-primary); margin-bottom: 0.5rem; font-size: 1.1rem;">DNI no encontrado</h3>
+      <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">Parece que no tenés una cuenta registrada con este DNI.</p>
+      <a href="formulario.html" class="submit-btn" style="text-decoration: none; display: inline-flex; justify-content: center; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);">Registrarme ahora</a>
+    </div>
   </div>
 
   <div class="toast" id="toast" aria-live="polite"></div>
@@ -95,8 +102,9 @@
         });
 
         if (resp.status === 404) {
-          showToast('DNI no encontrado. Redirigiendo al registro...', 'error');
-          setTimeout(() => { window.location.href = 'formulario.html'; }, 1500);
+          document.getElementById('registerBlock').style.display = 'block';
+          submitBtn.disabled = false;
+          submitBtn.classList.remove('loading');
           return;
         }
 
@@ -104,17 +112,15 @@
 
         if (resp.ok && data.id_cliente) {
           setCookie('session_id', data.id_cliente, 30);
-          showToast('¡Ingreso exitoso!', 'success');
-          setTimeout(() => { window.location.href = 'turnos.html'; }, 1000);
+          window.location.href = 'turnos.html';
         } else {
           if (data.encontrado === false) {
-            showToast('DNI no registrado. Redirigiendo...', 'error');
-            setTimeout(() => window.location.href = 'formulario.html', 1500);
+            document.getElementById('registerBlock').style.display = 'block';
           } else {
             showToast('Error al ingresar. Verificá los datos.', 'error');
-            submitBtn.disabled = false;
-            submitBtn.classList.remove('loading');
           }
+          submitBtn.disabled = false;
+          submitBtn.classList.remove('loading');
         }
       } catch (err) {
         console.error('Ingreso error:', err);

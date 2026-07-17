@@ -67,7 +67,6 @@
       // Si no hay cookie → redirigir a ingreso
       if (!sessionId) {
         document.getElementById('statusText').textContent = 'Redirigiendo al ingreso…';
-        await delay(600);
         window.location.href = 'ingreso.html';
         return;
       }
@@ -87,12 +86,10 @@
 
         if (data.valid) {
           document.getElementById('statusText').textContent = '¡Sesión válida! Redirigiendo…';
-          await delay(500);
           window.location.href = 'turnos.html';
         } else {
           deleteCookie('session_id');
           document.getElementById('statusText').textContent = 'Sesión expirada. Redirigiendo…';
-          await delay(500);
           window.location.href = 'ingreso.html';
         }
       } catch (err) {

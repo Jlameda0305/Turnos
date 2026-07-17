@@ -48,6 +48,10 @@
         </div>
       </div>
 
+      <div style="display:flex; justify-content:flex-end; margin-bottom: 1.5rem;">
+        <a href="reservar.html" class="btn-create" style="margin-top:0;">+ Nueva Reserva</a>
+      </div>
+
       <div id="emptyState" style="display:none;">
         <div class="state-msg">
           <div class="icon">📭</div>
@@ -55,11 +59,15 @@
         </div>
       </div>
 
-      <div class="turnos-list" id="turnosList" style="display:none;">
-        <!-- Los turnos se insertarán aquí por JS -->
+      <div id="turnosActivosContainer" style="display:none;">
+        <h2 style="font-size: 1.1rem; color: var(--text-primary); margin-bottom: 1rem;">Tus Próximos Turnos</h2>
+        <div class="turnos-list" id="turnosActivosList"></div>
       </div>
 
-      <a href="reservar.html" class="btn-create">Crear nuevo turno</a>
+      <div id="turnosHistorialContainer" style="display:none; margin-top: 2.5rem;">
+        <h2 style="font-size: 1.1rem; color: var(--text-primary); margin-bottom: 1rem; opacity: 0.8;">Historial</h2>
+        <div class="turnos-list" id="turnosHistorialList" style="opacity: 0.8;"></div>
+      </div>
     </div>
   </div>
 
@@ -124,71 +132,90 @@
       }
     }
 
+    function createTurnoCard(turno, isActivo) {
+      const estado = turno.estado || 'pendiente';
+      
+      const card = document.createElement('div');
+      card.className = 'turno-card';
+
+      const header = document.createElement('div');
+      header.className = 'turno-header';
+
+      const dateBlock = document.createElement('div');
+      dateBlock.className = 'turno-date';
+      dateBlock.innerHTML = `
+        <div class="turno-fecha">${formatFechaDisplay(turno.fecha)}</div>
+        <div class="turno-hora">${formatHoraDisplay(turno.hora)} a ${formatHoraDisplay(turno.hora_fin)} hs</div>
+      `;
+
+      const badge = document.createElement('div');
+      badge.className = `turno-badge badge-${estado}`;
+      badge.textContent = estado;
+
+      header.appendChild(dateBlock);
+      header.appendChild(badge);
+      card.appendChild(header);
+
+      const details = document.createElement('div');
+      details.className = 'turno-details';
+      details.style.padding = '0 1rem 1rem 1rem';
+      details.style.color = 'var(--text-secondary)';
+      details.style.fontSize = '0.9rem';
+      details.innerHTML = `
+        <div style="font-weight:500;color:var(--text-primary);margin-bottom:0.25rem;">${turno.servicio_nombre || 'Turno Genérico'}</div>
+        <div>⏱ ${turno.duracion || 30} min — $${turno.costo || 0}</div>
+      `;
+      card.appendChild(details);
+
+      if (isActivo) {
+        const actions = document.createElement('div');
+        actions.className = 'turno-actions';
+
+        const btnCancel = document.createElement('button');
+        btnCancel.className = 'action-btn btn-cancel';
+        btnCancel.textContent = 'Cancelar';
+        btnCancel.onclick = () => procesarAccion(turno.id_turno, 'cancelar');
+
+        const btnReschedule = document.createElement('button');
+        btnReschedule.className = 'action-btn btn-reschedule';
+        btnReschedule.textContent = 'Reprogramar';
+        btnReschedule.onclick = () => procesarAccion(turno.id_turno, 'reprogramar');
+
+        actions.appendChild(btnCancel);
+        actions.appendChild(btnReschedule);
+        card.appendChild(actions);
+      }
+
+      return card;
+    }
+
     function renderTurnos(turnos) {
-      const container = document.getElementById('turnosList');
-      container.innerHTML = '';
-      container.style.display = 'flex';
+      const containerActivos = document.getElementById('turnosActivosContainer');
+      const listActivos = document.getElementById('turnosActivosList');
+      const containerHistorial = document.getElementById('turnosHistorialContainer');
+      const listHistorial = document.getElementById('turnosHistorialList');
 
-      turnos.forEach(turno => {
-        const estado = turno.estado || 'pendiente';
-        const isActivo = estado === 'pendiente' || estado === 'confirmado';
+      listActivos.innerHTML = '';
+      listHistorial.innerHTML = '';
+      
+      const activos = turnos.filter(t => t.estado === 'pendiente' || t.estado === 'confirmado');
+      const historial = turnos.filter(t => t.estado !== 'pendiente' && t.estado !== 'confirmado');
 
-        const card = document.createElement('div');
-        card.className = 'turno-card';
+      if (activos.length > 0) {
+        activos.forEach(t => listActivos.appendChild(createTurnoCard(t, true)));
+        containerActivos.style.display = 'block';
+        listActivos.style.display = 'flex';
+      } else {
+        containerActivos.style.display = 'none';
+      }
 
-        // Header
-        const header = document.createElement('div');
-        header.className = 'turno-header';
-
-        const dateBlock = document.createElement('div');
-        dateBlock.className = 'turno-date';
-        dateBlock.innerHTML = `
-          <div class="turno-fecha">${formatFechaDisplay(turno.fecha)}</div>
-          <div class="turno-hora">${formatHoraDisplay(turno.hora)} a ${formatHoraDisplay(turno.hora_fin)} hs</div>
-        `;
-
-        const badge = document.createElement('div');
-        badge.className = `turno-badge badge-${estado}`;
-        badge.textContent = estado;
-
-        header.appendChild(dateBlock);
-        header.appendChild(badge);
-        card.appendChild(header);
-
-        // Service details
-        const details = document.createElement('div');
-        details.className = 'turno-details';
-        details.style.padding = '0 1rem 1rem 1rem';
-        details.style.color = 'var(--text-secondary)';
-        details.style.fontSize = '0.9rem';
-        details.innerHTML = `
-          <div style="font-weight:500;color:var(--text-primary);margin-bottom:0.25rem;">${turno.servicio_nombre || 'Turno Genérico'}</div>
-          <div>⏱ ${turno.duracion || 30} min — $${turno.costo || 0}</div>
-        `;
-        card.appendChild(details);
-
-        // Actions (solo si el turno está activo)
-        if (isActivo) {
-          const actions = document.createElement('div');
-          actions.className = 'turno-actions';
-
-          const btnCancel = document.createElement('button');
-          btnCancel.className = 'action-btn btn-cancel';
-          btnCancel.textContent = 'Cancelar';
-          btnCancel.onclick = () => procesarAccion(turno.id_turno, 'cancelar');
-
-          const btnReschedule = document.createElement('button');
-          btnReschedule.className = 'action-btn btn-reschedule';
-          btnReschedule.textContent = 'Reprogramar';
-          btnReschedule.onclick = () => procesarAccion(turno.id_turno, 'reprogramar');
-
-          actions.appendChild(btnCancel);
-          actions.appendChild(btnReschedule);
-          card.appendChild(actions);
-        }
-
-        container.appendChild(card);
-      });
+      if (historial.length > 0) {
+        historial.forEach(t => listHistorial.appendChild(createTurnoCard(t, false)));
+        containerHistorial.style.display = 'block';
+        listHistorial.style.display = 'flex';
+      } else {
+        containerHistorial.style.display = 'none';
+      }
     }
 
     async function procesarAccion(idTurno, accion) {
@@ -207,7 +234,8 @@
           if (accion === 'reprogramar') {
             setTimeout(() => window.location.href = 'reservar.html', 1500);
           } else {
-            document.getElementById('turnosList').style.display = 'none';
+            document.getElementById('turnosActivosContainer').style.display = 'none';
+            document.getElementById('turnosHistorialContainer').style.display = 'none';
             document.getElementById('loadingState').style.display = 'block';
             cargarMisTurnos();
           }

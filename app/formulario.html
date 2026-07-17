@@ -34,6 +34,9 @@
 
     <form id="registroForm" class="form-grid" novalidate>
 
+      <!-- Datos Personales Header -->
+      <div class="full" style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; color: var(--brand); font-weight: 600; margin-bottom: 0.2rem; margin-top: 0.5rem;">Datos Personales</div>
+
       <!-- DNI -->
       <div class="field">
         <label for="dni">DNI <span class="req">*</span></label>
@@ -76,14 +79,17 @@
         <span class="field-error" id="fecha_nacimientoError" role="alert"></span>
       </div>
 
+      <div class="divider"></div>
+
+      <!-- Datos de Contacto Header -->
+      <div class="full" style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; color: var(--brand); font-weight: 600; margin-bottom: 0.2rem; margin-top: 0.5rem;">Datos de Contacto</div>
+
       <!-- Email -->
       <div class="field">
         <label for="email">Email <span class="req">*</span></label>
         <input type="email" id="email" name="email" placeholder="juan@email.com" required />
         <span class="field-error" id="emailError" role="alert"></span>
       </div>
-
-      <div class="divider"></div>
 
       <!-- Dirección (opcional) -->
       <div class="field full">

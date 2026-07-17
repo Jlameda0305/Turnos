@@ -44,26 +44,40 @@
     <p class="section-subtitle">Seleccioná una fecha y un horario disponible</p>
 
     <!-- Service panel -->
-    <div class="panel">
-      <div class="date-section">
+    <div class="panel" id="servicePanel">
+      <div class="date-section" id="serviceSelectSection">
         <label for="servicioInput">Servicio</label>
         <select class="date-input" id="servicioInput" disabled>
           <option value="">Cargando servicios…</option>
         </select>
       </div>
+      <div class="date-section" id="serviceSummarySection" style="display: none; justify-content: space-between; align-items: center;">
+        <div>
+          <label style="margin-bottom: 0;">Servicio seleccionado</label>
+          <div style="font-weight: 600; color: var(--text-primary);" id="serviceSummaryText"></div>
+        </div>
+        <button type="button" class="back-link" style="position:static; padding: 0.5rem;" onclick="reabrirPaso('servicio')">Cambiar</button>
+      </div>
     </div>
 
     <!-- Date panel -->
-    <div class="panel" id="datePanel" style="opacity: 0.5; pointer-events: none;">
-      <div class="date-section">
+    <div class="panel" id="datePanel" style="display: none;">
+      <div class="date-section" id="dateSelectSection">
         <label for="fechaInput">Fecha</label>
-        <input type="date" class="date-input" id="fechaInput" disabled />
+        <input type="date" class="date-input" id="fechaInput" />
         <span class="day-badge" id="dayBadge" style="display:none;"></span>
+      </div>
+      <div class="date-section" id="dateSummarySection" style="display: none; justify-content: space-between; align-items: center;">
+        <div>
+          <label style="margin-bottom: 0;">Fecha seleccionada</label>
+          <div style="font-weight: 600; color: var(--text-primary);" id="dateSummaryText"></div>
+        </div>
+        <button type="button" class="back-link" style="position:static; padding: 0.5rem;" onclick="reabrirPaso('fecha')">Cambiar</button>
       </div>
     </div>
 
     <!-- Slots panel -->
-    <div class="panel" id="slotsPanel">
+    <div class="panel" id="slotsPanel" style="display: none;">
       <div class="state-msg" id="emptyState">
         <div class="icon">📅</div>
         <p>Seleccioná una fecha para ver los horarios disponibles</p>
@@ -218,22 +232,46 @@
     }
 
     function onServicioChange(e) {
-      const datePanel = document.getElementById('datePanel');
-      const fechaInput = document.getElementById('fechaInput');
-      
-      if (e.target.value) {
-        datePanel.style.opacity = '1';
-        datePanel.style.pointerEvents = 'auto';
-        fechaInput.disabled = false;
+      const select = e.target;
+      if (select.value) {
+        document.getElementById('serviceSelectSection').style.display = 'none';
+        const optText = select.options[select.selectedIndex].textContent;
+        document.getElementById('serviceSummaryText').textContent = optText;
+        document.getElementById('serviceSummarySection').style.display = 'flex';
+        
+        document.getElementById('datePanel').style.display = 'block';
+        const fechaInput = document.getElementById('fechaInput');
         if (fechaInput.value) {
-          onFechaChange({ target: { value: fechaInput.value } }); // trigger refresh if date was already selected
+          onFechaChange({ target: { value: fechaInput.value } });
+        } else {
+          document.getElementById('slotsPanel').style.display = 'none';
         }
       } else {
-        datePanel.style.opacity = '0.5';
-        datePanel.style.pointerEvents = 'none';
-        fechaInput.disabled = true;
+        document.getElementById('datePanel').style.display = 'none';
+        document.getElementById('slotsPanel').style.display = 'none';
         resetSlotsState();
       }
+    }
+
+    function reabrirPaso(paso) {
+      if (paso === 'servicio') {
+        document.getElementById('serviceSummarySection').style.display = 'none';
+        document.getElementById('serviceSelectSection').style.display = 'block';
+        
+        document.getElementById('datePanel').style.display = 'none';
+        document.getElementById('slotsPanel').style.display = 'none';
+        
+        document.getElementById('dateSummarySection').style.display = 'none';
+        document.getElementById('dateSelectSection').style.display = 'block';
+        document.getElementById('servicioInput').value = '';
+      } else if (paso === 'fecha') {
+        document.getElementById('dateSummarySection').style.display = 'none';
+        document.getElementById('dateSelectSection').style.display = 'block';
+        
+        document.getElementById('slotsPanel').style.display = 'none';
+        document.getElementById('fechaInput').value = '';
+      }
+      resetSlotsState();
     }
 
     function resetSlotsState() {
@@ -256,6 +294,14 @@
       const badge = document.getElementById('dayBadge');
       badge.textContent = diaSemana;
       badge.style.display = 'inline-block';
+
+      // Acordeón: ocultar selector de fecha, mostrar resumen
+      document.getElementById('dateSelectSection').style.display = 'none';
+      document.getElementById('dateSummaryText').textContent = formatFechaDisplay(fecha) + ' (' + diaSemana + ')';
+      document.getElementById('dateSummarySection').style.display = 'flex';
+
+      // Revelar panel de slots
+      document.getElementById('slotsPanel').style.display = 'block';
 
       selectedSlot = null;
       document.getElementById('confirmBtn').disabled = true;
