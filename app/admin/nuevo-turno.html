@@ -111,6 +111,14 @@
           <span class="icon">👥</span>
           Clientes
         </a>
+        <a href="servicios.html" class="nav-link">
+          <span class="icon">⚙️</span>
+          Servicios
+        </a>
+        <a href="tipos-servicio.html" class="nav-link">
+          <span class="icon">🏷️</span>
+          Tipos de Servicio
+        </a>
       </nav>
       <div style="margin-top: auto;">
         <button class="nav-link" id="logoutBtn" style="width: 100%; border: none; cursor: pointer; text-align: left; background: transparent;">
@@ -148,8 +156,15 @@
             </div>
           </div>
 
+          <div class="panel" style="margin-bottom: 1.5rem;">
+            <h2 style="font-size: 1.1rem; margin-bottom: 1rem;">2. Seleccionar Servicio</h2>
+            <div id="serviciosContainer" style="display:flex; flex-direction:column; gap:0.75rem;">
+              <span style="color:rgba(255,255,255,0.5); font-size:0.9rem;">Seleccione un cliente primero...</span>
+            </div>
+          </div>
+
           <div class="panel">
-            <h2 style="font-size: 1.1rem; margin-bottom: 1rem;">2. Seleccionar Fecha</h2>
+            <h2 style="font-size: 1.1rem; margin-bottom: 1rem;">3. Seleccionar Fecha</h2>
             <div class="date-section">
               <label for="fechaInput">Fecha</label>
               <input type="date" class="date-input" id="fechaInput" disabled />
@@ -159,11 +174,11 @@
 
         <!-- Columna Derecha: Horarios y Confirmación -->
         <div class="panel" id="slotsPanel">
-          <h2 style="font-size: 1.1rem; margin-bottom: 1rem;">3. Horario y Detalles</h2>
+          <h2 style="font-size: 1.1rem; margin-bottom: 1rem;">4. Horario y Detalles</h2>
           
           <div class="state-msg" id="emptyState">
             <div class="icon">📅</div>
-            <p>Seleccioná un cliente y una fecha para ver los horarios</p>
+            <p>Seleccioná un cliente, servicio y fecha para ver los horarios</p>
           </div>
 
           <div id="loadingState" style="display:none;">
@@ -204,6 +219,8 @@
   <script src="../js/admin-utils.js"></script>
   <script>
     let selectedClientId = null;
+    let selectedServiceId = null;
+    let selectedDuration = 30;
     let selectedSlot = null;
     let searchTimeout = null;
 
@@ -217,7 +234,20 @@
       document.getElementById('clientSearchInput').addEventListener('input', handleClientSearch);
       document.getElementById('fechaInput').addEventListener('change', onFechaChange);
       document.getElementById('confirmBtn').addEventListener('click', confirmarTurno);
+      
+      cargarServicios();
     });
+
+    async function cargarServicios() {
+      try {
+        const resp = await fetch(`${PUBLIC_N8N_PREFIX}/servicios-activos`);
+        if (resp.ok) {
+          window.serviciosActivos = await resp.json();
+        }
+      } catch (err) {
+        console.warn('Error cargando servicios');
+      }
+    }
 
     function handleClientSearch(e) {
       clearTimeout(searchTimeout);
@@ -263,14 +293,63 @@
       document.getElementById('selectedClientDni').textContent = `DNI: ${c.dni}`;
       document.getElementById('selectedClientCard').classList.add('visible');
       
+      renderServicios();
+    }
+
+    function renderServicios() {
+      const container = document.getElementById('serviciosContainer');
+      container.innerHTML = '';
+      
+      if (!window.serviciosActivos || window.serviciosActivos.length === 0) {
+        container.innerHTML = '<span style="color:#ef4444;">No hay servicios activos disponibles.</span>';
+        return;
+      }
+
+      window.serviciosActivos.forEach(s => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'service-btn';
+        // Add basic styles directly since css class might not exist in admin css
+        btn.style.cssText = 'background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px; color: #fff; cursor: pointer; text-align: left; transition: all 0.2s;';
+        
+        btn.innerHTML = `
+          <div style="font-weight: 600;">${s.nombre}</div>
+          <div style="font-size: 0.85rem; color: rgba(255,255,255,0.6); margin-top: 0.25rem;">⏱ ${s.duracion} min | 💲${s.costo} | ${s.tipo_nombre}</div>
+        `;
+        
+        btn.onclick = () => selectService(s.id_servicio, s.duracion, btn);
+        container.appendChild(btn);
+      });
+    }
+
+    function selectService(id, duracion, btnEl) {
+      selectedServiceId = id;
+      selectedDuration = duracion;
+      
+      document.querySelectorAll('#serviciosContainer button').forEach(b => {
+        b.style.background = 'rgba(255,255,255,0.05)';
+        b.style.borderColor = 'rgba(255,255,255,0.1)';
+      });
+      
+      btnEl.style.background = 'rgba(99, 102, 241, 0.1)';
+      btnEl.style.borderColor = 'var(--color-indigo)';
+      
       document.getElementById('fechaInput').disabled = false;
+      
+      // Si ya hay fecha seleccionada, recargar
+      if (document.getElementById('fechaInput').value) {
+        onFechaChange({target: document.getElementById('fechaInput')});
+      }
     }
 
     function clearSelectedClient() {
       selectedClientId = null;
+      selectedServiceId = null;
       document.getElementById('searchContainer').style.display = 'block';
       document.getElementById('clientSearchInput').value = '';
       document.getElementById('selectedClientCard').classList.remove('visible');
+      
+      document.getElementById('serviciosContainer').innerHTML = '<span style="color:rgba(255,255,255,0.5); font-size:0.9rem;">Seleccione un cliente primero...</span>';
       
       const fechaInput = document.getElementById('fechaInput');
       fechaInput.value = '';
@@ -282,7 +361,13 @@
 
     async function onFechaChange(e) {
       const fecha = e.target.value;
-      if (!fecha) return;
+      if (!fecha || !selectedServiceId) {
+        if (!selectedServiceId && fecha) {
+          showToast('Por favor seleccioná un servicio primero', 'error');
+          e.target.value = '';
+        }
+        return;
+      }
 
       selectedSlot = null;
       document.getElementById('confirmBtn').disabled = true;
@@ -292,11 +377,11 @@
       document.getElementById('loadingState').style.display = 'block';
 
       try {
-        const resp = await adminFetch(`${ADMIN_N8N_PREFIX}/turnos-disponibles?fecha=${fecha}`);
+        const resp = await fetch(`${PUBLIC_N8N_PREFIX}/turnos-disponibles-v2?fecha=${fecha}&id_servicio=${selectedServiceId}`);
         if (!resp.ok) throw new Error();
         
-        const ocupados = await resp.json();
-        renderSlots(ocupados);
+        const data = await resp.json();
+        renderSlots(data.horarios_disponibles);
       } catch (err) {
         showToast('Error al cargar horarios', 'error');
         document.getElementById('loadingState').style.display = 'none';
@@ -304,10 +389,14 @@
       }
     }
 
-    function renderSlots(ocupados) {
+    function renderSlots(disponibles) {
       const grid = document.getElementById('slotsGrid');
-      const allSlots = generarHorarios();
       grid.innerHTML = '';
+      
+      const allBaseSlots = generarHorarios(); // Genera todos los slots 09:00, 09:30...
+      
+      // Unimos los slots base con los que puedan venir extra (por si duraciones generan algo raro)
+      const allSlots = [...new Set([...allBaseSlots, ...disponibles])].sort();
 
       allSlots.forEach(hora => {
         const btn = document.createElement('button');
@@ -315,12 +404,12 @@
         btn.classList.add('slot');
         btn.textContent = hora;
 
-        if (ocupados.includes(hora)) {
-          btn.classList.add('taken');
-          btn.disabled = true;
-        } else {
+        if (disponibles.includes(hora)) {
           btn.classList.add('available');
           btn.addEventListener('click', () => selectSlot(btn, hora));
+        } else {
+          btn.classList.add('taken');
+          btn.disabled = true;
         }
         grid.appendChild(btn);
       });
@@ -346,7 +435,7 @@
       const obs = document.getElementById('obsInput').value.trim();
       const estado = document.getElementById('estadoInput').value;
 
-      if (!selectedClientId || !fecha || !selectedSlot) {
+      if (!selectedClientId || !selectedServiceId || !fecha || !selectedSlot) {
         showToast('Faltan datos para crear el turno', 'error');
         return;
       }
@@ -357,13 +446,25 @@
 
       try {
         const payload = {
-          id_cliente: selectedClientId,
+          session_id: localStorage.getItem('aionex_admin_session'), // Para v2, enviamos sesion para que n8n identifique cliente o saltar si es admin
+          id_cliente_override: selectedClientId, // En el backend v2 si hay admin token y esto, usara este cliente
+          id_servicio: selectedServiceId,
           fecha: fecha,
           hora: selectedSlot,
-          observaciones: obs,
-          estado: estado
+          observaciones: obs
         };
-        const resp = await adminFetch(`${ADMIN_N8N_PREFIX}/turno-crear`, { method: 'POST', body: JSON.stringify(payload) });
+        const resp = await adminFetch(`${ADMIN_N8N_PREFIX}/turno-crear-v2`, { 
+          method: 'POST', 
+          body: JSON.stringify({
+            id_cliente: selectedClientId,
+            id_servicio: selectedServiceId,
+            fecha: fecha,
+            hora: selectedSlot,
+            estado: estado,
+            observaciones: obs
+          }) 
+        });
+        
         if (!resp.ok) throw new Error();
         
         showToast('Turno asignado exitosamente', 'success');

@@ -100,7 +100,7 @@
 
     async function cargarMisTurnos() {
       try {
-        const resp = await fetchWithTimeout(`${N8N_BASE_URL}/webhook/mis-turnos`, {
+        const resp = await fetchWithTimeout(`${N8N_BASE_URL}/webhook/public/mis-turnos-v2`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ session_id: sessionId })
@@ -144,7 +144,7 @@
         dateBlock.className = 'turno-date';
         dateBlock.innerHTML = `
           <div class="turno-fecha">${formatFechaDisplay(turno.fecha)}</div>
-          <div class="turno-hora">${formatHoraDisplay(turno.hora)} hs</div>
+          <div class="turno-hora">${formatHoraDisplay(turno.hora)} a ${formatHoraDisplay(turno.hora_fin)} hs</div>
         `;
 
         const badge = document.createElement('div');
@@ -154,6 +154,18 @@
         header.appendChild(dateBlock);
         header.appendChild(badge);
         card.appendChild(header);
+
+        // Service details
+        const details = document.createElement('div');
+        details.className = 'turno-details';
+        details.style.padding = '0 1rem 1rem 1rem';
+        details.style.color = 'var(--text-secondary)';
+        details.style.fontSize = '0.9rem';
+        details.innerHTML = `
+          <div style="font-weight:500;color:var(--text-primary);margin-bottom:0.25rem;">${turno.servicio_nombre || 'Turno Genérico'}</div>
+          <div>⏱ ${turno.duracion || 30} min — $${turno.costo || 0}</div>
+        `;
+        card.appendChild(details);
 
         // Actions (solo si el turno está activo)
         if (isActivo) {

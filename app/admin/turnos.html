@@ -36,6 +36,14 @@
           <span class="icon">👥</span>
           Clientes
         </a>
+        <a href="servicios.html" class="nav-link">
+          <span class="icon">⚙️</span>
+          Servicios
+        </a>
+        <a href="tipos-servicio.html" class="nav-link">
+          <span class="icon">🏷️</span>
+          Tipos de Servicio
+        </a>
       </nav>
       <div style="margin-top: auto;">
         <button class="nav-link" id="logoutBtn" style="width: 100%; border: none; cursor: pointer; text-align: left; background: transparent;">
@@ -70,7 +78,7 @@
             <tr>
               <th>Cliente</th>
               <th>Fecha</th>
-              <th>Hora</th>
+              <th>Servicio</th>
               <th>Observaciones</th>
               <th>Estado</th>
               <th>Acciones</th>
@@ -144,7 +152,8 @@
 
       try {
         const offset = (currentPage - 1) * currentLimit;
-        const resp = await adminFetch(`${ADMIN_N8N_PREFIX}/turnos?estado=${currentFilter}&limit=${currentLimit}&offset=${offset}`);
+        // Updated to use the v2 endpoint
+        const resp = await adminFetch(`${ADMIN_N8N_PREFIX}/turnos-v2?estado=${currentFilter}&limit=${currentLimit}&offset=${offset}`);
         
         if (!resp.ok) throw new Error('Error al cargar turnos');
         const data = await resp.json();
@@ -172,7 +181,7 @@
       turnos.forEach(t => {
         const tr = document.createElement('tr');
         
-        const clienteNombre = `${t.cliente.nombre} ${t.cliente.apellido}`;
+        const clienteNombre = `${t.cliente_nombre || ''} ${t.cliente_apellido || ''}`.trim() || 'Desconocido';
         
         // Dropdown de estados
         const estados = ['pendiente', 'confirmado', 'cancelado', 'completado'];
@@ -185,11 +194,17 @@
         tr.innerHTML = `
           <td>
             <strong>${clienteNombre}</strong><br>
-            <span style="font-size:0.8rem; color:rgba(255,255,255,0.5)">DNI: ${t.cliente.dni}</span>
+            <span style="font-size:0.8rem; color:rgba(255,255,255,0.5)">DNI: ${t.cliente_dni || t.cliente?.dni || '-'}</span>
           </td>
-          <td>${formatFechaDisplay(t.fecha)}</td>
-          <td>${formatHoraDisplay(t.hora)}</td>
-          <td style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${t.observaciones || ''}">
+          <td>
+            ${formatFechaDisplay(t.fecha)}<br>
+            <span style="font-size:0.8rem; color:rgba(255,255,255,0.7)">${formatHoraDisplay(t.hora)} a ${formatHoraDisplay(t.hora_fin)}</span>
+          </td>
+          <td>
+            <strong>${t.servicio_nombre || 'General'}</strong><br>
+            <span style="font-size:0.8rem; color:rgba(255,255,255,0.5)">${t.tipo_nombre || '-'}</span>
+          </td>
+          <td style="max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${t.observaciones || ''}">
             ${t.observaciones || '<span style="color:rgba(255,255,255,0.3)">-</span>'}
           </td>
           <td>${selectHtml}</td>

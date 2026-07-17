@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tipos de Servicio — AIONEX Admin</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/base.css" />
+  <link rel="stylesheet" href="../css/components.css" />
+  <link rel="stylesheet" href="../css/pages/admin-layout.css" />
+  <link rel="stylesheet" href="../css/pages/admin-tables.css" />
+</head>
+<body>
+  <div class="bg"></div>
+  
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <div class="brand">
+        <div class="brand-icon">A</div>
+        <span class="brand-name">AIONEX</span>
+      </div>
+
+      <nav class="nav-links">
+        <a href="dashboard.html" class="nav-link">
+          <span class="icon">📊</span>
+          Dashboard
+        </a>
+        <a href="turnos.html" class="nav-link">
+          <span class="icon">🗓️</span>
+          Turnos
+        </a>
+        <a href="clientes.html" class="nav-link">
+          <span class="icon">👥</span>
+          Clientes
+        </a>
+        <a href="servicios.html" class="nav-link">
+          <span class="icon">⚙️</span>
+          Servicios
+        </a>
+        <a href="tipos-servicio.html" class="nav-link active">
+          <span class="icon">🏷️</span>
+          Tipos de Servicio
+        </a>
+      </nav>
+      
+      <div style="margin-top: auto;">
+        <button class="nav-link" id="logoutBtn" style="width: 100%; border: none; cursor: pointer; text-align: left; background: transparent;">
+          <span class="icon">🚪</span>
+          Cerrar Sesión
+        </button>
+      </div>
+    </aside>
+
+    <main class="admin-content">
+      <div class="admin-header">
+        <div class="admin-title">
+          <h1>Tipos de Servicio</h1>
+          <p>Gestión de categorías</p>
+        </div>
+        <div>
+          <button class="submit-btn" style="padding: 0.75rem 1.5rem;" onclick="openModal()">+ Nuevo Tipo</button>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Descripción</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <!-- Renderizado por JS -->
+          </tbody>
+        </table>
+
+        <!-- Estado de carga -->
+        <div id="loadingState" style="padding: 3rem; text-align: center;">
+          <div class="mini-spinner" style="margin: 0 auto 1rem;"></div>
+          <p style="color: rgba(255,255,255,0.6);">Cargando tipos de servicio...</p>
+        </div>
+        
+        <!-- Estado vacío -->
+        <div id="emptyState" style="padding: 3rem; text-align: center; display: none;">
+          <p style="color: rgba(255,255,255,0.6);">No se encontraron tipos de servicio.</p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal Crear/Editar -->
+  <div class="modal-overlay" id="formModal">
+    <div class="modal-card">
+      <div class="modal-title" id="modalTitle">Nuevo Tipo de Servicio</div>
+      <form id="tipoForm">
+        <input type="hidden" id="tipoId" />
+        <div class="field">
+          <label for="nombre">Nombre</label>
+          <input type="text" id="nombre" required placeholder="Ej. Consulta General" />
+        </div>
+        <div class="field">
+          <label for="descripcion">Descripción</label>
+          <textarea id="descripcion" rows="3" placeholder="Descripción opcional..."></textarea>
+        </div>
+        <div class="field" id="activoField" style="display: none; align-items: center; gap: 0.5rem; flex-direction: row;">
+          <input type="checkbox" id="activo" checked />
+          <label for="activo" style="margin: 0;">Activo</label>
+        </div>
+        <div class="modal-actions" style="margin-top: 1.5rem;">
+          <button type="button" class="btn-secondary" onclick="closeModal()">Cancelar</button>
+          <button type="submit" class="submit-btn" id="saveBtn">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" aria-live="polite"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/admin-utils.js"></script>
+  <script>
+    let currentData = [];
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      if (!(await getAdminSessionOrRedirect())) return;
+      document.getElementById('logoutBtn').addEventListener('click', adminLogout);
+      document.getElementById('tipoForm').addEventListener('submit', saveTipo);
+      cargarTipos();
+    });
+
+    async function cargarTipos() {
+      const tbody = document.getElementById('tableBody');
+      const loading = document.getElementById('loadingState');
+      const empty = document.getElementById('emptyState');
+      
+      tbody.innerHTML = '';
+      loading.style.display = 'block';
+      empty.style.display = 'none';
+
+      try {
+        const resp = await adminFetch(`${ADMIN_N8N_PREFIX}/tipos-servicio`);
+        if (!resp.ok) throw new Error('Error al cargar');
+        const data = await resp.json();
+        
+        loading.style.display = 'none';
+        
+        if (!data || data.length === 0 || !data[0].id_tipo_servicio) {
+          empty.style.display = 'block';
+        } else {
+          currentData = data.filter(i => i.id_tipo_servicio);
+          renderTable(currentData);
+        }
+      } catch (err) {
+        showToast('Error al cargar tipos de servicio', 'error');
+        loading.style.display = 'none';
+      }
+    }
+
+    function renderTable(items) {
+      const tbody = document.getElementById('tableBody');
+      tbody.innerHTML = '';
+      
+      items.forEach(item => {
+        const tr = document.createElement('tr');
+        
+        const badgeClass = item.activo ? 'badge-confirmado' : 'badge-cancelado';
+        const badgeText = item.activo ? 'Activo' : 'Inactivo';
+
+        tr.innerHTML = `
+          <td><strong>${item.nombre}</strong></td>
+          <td style="max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${item.descripcion || ''}">
+            ${item.descripcion || '<span style="color:rgba(255,255,255,0.3)">-</span>'}
+          </td>
+          <td><span class="turno-badge ${badgeClass}">${badgeText}</span></td>
+          <td>
+            <div class="actions-cell">
+              <button class="btn-icon" title="Editar" onclick="editTipo('${item.id_tipo_servicio}')">✏️</button>
+              <button class="btn-icon" title="Eliminar" style="color: #ff4444;" onclick="deleteTipo('${item.id_tipo_servicio}')">🗑️</button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function openModal() {
+      document.getElementById('tipoId').value = '';
+      document.getElementById('nombre').value = '';
+      document.getElementById('descripcion').value = '';
+      document.getElementById('activo').checked = true;
+      document.getElementById('activoField').style.display = 'none'; // Al crear, por defecto activo
+      document.getElementById('modalTitle').textContent = 'Nuevo Tipo de Servicio';
+      document.getElementById('formModal').classList.add('visible');
+    }
+
+    function editTipo(id) {
+      const item = currentData.find(i => i.id_tipo_servicio === id);
+      if (!item) return;
+
+      document.getElementById('tipoId').value = item.id_tipo_servicio;
+      document.getElementById('nombre').value = item.nombre;
+      document.getElementById('descripcion').value = item.descripcion || '';
+      document.getElementById('activo').checked = item.activo;
+      document.getElementById('activoField').style.display = 'flex';
+      document.getElementById('modalTitle').textContent = 'Editar Tipo de Servicio';
+      document.getElementById('formModal').classList.add('visible');
+    }
+
+    function closeModal() {
+      document.getElementById('formModal').classList.remove('visible');
+    }
+
+    async function saveTipo(e) {
+      e.preventDefault();
+      const id = document.getElementById('tipoId').value;
+      const nombre = document.getElementById('nombre').value.trim();
+      const descripcion = document.getElementById('descripcion').value.trim();
+      const activo = document.getElementById('activo').checked;
+
+      const btn = document.getElementById('saveBtn');
+      btn.disabled = true;
+      btn.textContent = 'Guardando...';
+
+      try {
+        let resp;
+        if (id) {
+          resp = await adminFetch(`${ADMIN_N8N_PREFIX}/tipo-servicio-editar`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, id_tipo_servicio: id, nombre, descripcion, activo })
+          });
+        } else {
+          resp = await adminFetch(`${ADMIN_N8N_PREFIX}/tipo-servicio-crear`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nombre, descripcion })
+          });
+        }
+
+        if (!resp.ok) {
+          const errData = await resp.json();
+          throw new Error(errData.message || 'Error al guardar');
+        }
+
+        showToast('Guardado exitosamente', 'success');
+        closeModal();
+        cargarTipos();
+      } catch (err) {
+        showToast(err.message || 'Hubo un error', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Guardar';
+      }
+    }
+
+    async function deleteTipo(id) {
+      if (!confirm('⚠️ ADVERTENCIA: Al eliminar este tipo de servicio, se eliminarán en cascada TODOS los servicios asociados a él. ¿Estás seguro de que querés continuar?')) return;
+
+      try {
+        const resp = await adminFetch(`${ADMIN_N8N_PREFIX}/tipo-servicio-eliminar`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id_tipo_servicio: id })
+        });
+
+        if (!resp.ok) {
+          const errData = await resp.json();
+          throw new Error(errData.message || 'Error al eliminar');
+        }
+
+        showToast('Tipo de servicio eliminado', 'success');
+        cargarTipos();
+      } catch (err) {
+        showToast(err.message || 'Hubo un error al eliminar', 'error');
+      }
+    }
+  </script>
+</body>
+</html>

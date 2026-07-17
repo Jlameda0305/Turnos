@@ -43,11 +43,21 @@
     <h1 class="section-title">Reservar turno</h1>
     <p class="section-subtitle">Seleccioná una fecha y un horario disponible</p>
 
-    <!-- Date panel -->
+    <!-- Service panel -->
     <div class="panel">
       <div class="date-section">
+        <label for="servicioInput">Servicio</label>
+        <select class="date-input" id="servicioInput" disabled>
+          <option value="">Cargando servicios…</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Date panel -->
+    <div class="panel" id="datePanel" style="opacity: 0.5; pointer-events: none;">
+      <div class="date-section">
         <label for="fechaInput">Fecha</label>
-        <input type="date" class="date-input" id="fechaInput" />
+        <input type="date" class="date-input" id="fechaInput" disabled />
         <span class="day-badge" id="dayBadge" style="display:none;"></span>
       </div>
     </div>
@@ -123,7 +133,7 @@
     };
 
     // ─── Verificar sesión ───────────────────────────
-    function init() {
+    async function init() {
       sessionId = getSessionOrRedirect();
       if (!sessionId) return;
 
@@ -135,7 +145,9 @@
       document.getElementById('fechaInput').setAttribute('min', `${yyyy}-${mm}-${dd}`);
 
       cargarUsuario();
+      await cargarServicios();
 
+      document.getElementById('servicioInput').addEventListener('change', onServicioChange);
       document.getElementById('fechaInput').addEventListener('change', onFechaChange);
       document.getElementById('confirmBtn').addEventListener('click', confirmarReserva);
       document.getElementById('logoutBtn').addEventListener('click', cerrarSesion);
@@ -160,10 +172,84 @@
       }
     }
 
+    async function cargarServicios() {
+      try {
+        const resp = await fetchWithTimeout(`${N8N_BASE_URL}/webhook/public/servicios-activos`);
+        if (!resp.ok) throw new Error('Error al cargar servicios');
+        let servicios = await resp.json();
+        
+        // n8n a veces devuelve [{}] cuando no hay resultados
+        servicios = servicios.filter(s => s.id_servicio);
+        
+        const select = document.getElementById('servicioInput');
+        
+        if (!servicios || servicios.length === 0) {
+          select.innerHTML = '<option value="">No hay servicios disponibles en este momento</option>';
+          select.disabled = true;
+          return;
+        }
+
+        select.innerHTML = '<option value="">Seleccioná un servicio...</option>';
+        
+        // Group by tipo_nombre
+        const grupos = {};
+        servicios.forEach(s => {
+          if (!grupos[s.tipo_nombre]) grupos[s.tipo_nombre] = [];
+          grupos[s.tipo_nombre].push(s);
+        });
+
+        for (const [tipo, servs] of Object.entries(grupos)) {
+          const optgroup = document.createElement('optgroup');
+          optgroup.label = tipo;
+          servs.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s.id_servicio;
+            opt.textContent = `${s.nombre} (⏱ ${s.duracion}m - $${s.costo})`;
+            optgroup.appendChild(opt);
+          });
+          select.appendChild(optgroup);
+        }
+        select.disabled = false;
+      } catch (e) {
+        console.error(e);
+        document.getElementById('servicioInput').innerHTML = '<option value="">Error al cargar</option>';
+        showToast('No se pudieron cargar los servicios.', 'error');
+      }
+    }
+
+    function onServicioChange(e) {
+      const datePanel = document.getElementById('datePanel');
+      const fechaInput = document.getElementById('fechaInput');
+      
+      if (e.target.value) {
+        datePanel.style.opacity = '1';
+        datePanel.style.pointerEvents = 'auto';
+        fechaInput.disabled = false;
+        if (fechaInput.value) {
+          onFechaChange({ target: { value: fechaInput.value } }); // trigger refresh if date was already selected
+        }
+      } else {
+        datePanel.style.opacity = '0.5';
+        datePanel.style.pointerEvents = 'none';
+        fechaInput.disabled = true;
+        resetSlotsState();
+      }
+    }
+
+    function resetSlotsState() {
+      selectedSlot = null;
+      document.getElementById('confirmBtn').disabled = true;
+      document.getElementById('emptyState').style.display = 'block';
+      document.getElementById('slotsContent').style.display = 'none';
+      document.getElementById('loadingState').style.display = 'none';
+    }
+
     // ─── Cambio de fecha ────────────────────────────
     async function onFechaChange(e) {
       const fecha = e.target.value;
-      if (!fecha) return;
+      const idServicio = document.getElementById('servicioInput').value;
+      
+      if (!fecha || !idServicio) return;
 
       const dateObj = new Date(fecha + 'T12:00:00');
       const diaSemana = DIAS_SEMANA[dateObj.getDay()];
@@ -179,18 +265,18 @@
       document.getElementById('loadingState').style.display = 'block';
 
       try {
-        const resp = await fetchWithTimeout(`${N8N_BASE_URL}/webhook/turnos-disponibles`, {
+        const resp = await fetchWithTimeout(`${N8N_BASE_URL}/webhook/public/turnos-disponibles-v2`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ fecha, session_id: sessionId })
+          body: JSON.stringify({ fecha, id_servicio: idServicio })
         });
 
         if (!resp.ok) throw new Error('Error del servidor');
 
         const data = await resp.json();
-        const ocupados = (data.ocupados || []).map(t => t.hora ? t.hora.substring(0,5) : t);
+        if (data.error) throw new Error(data.error);
 
-        renderSlots(ocupados);
+        renderSlots(data.availableSlots || []);
       } catch (err) {
         console.error('Error al cargar turnos:', err);
         showToast('No se pudieron cargar los horarios. Intentá de nuevo.', 'error');
@@ -200,11 +286,19 @@
     }
 
     // ─── Renderizar slots (accesible) ───────────────
-    function renderSlots(ocupados) {
+    function renderSlots(availableSlots) {
       const grid     = document.getElementById('slotsGrid');
-      const allSlots = generarHorarios();
+      
+      // Tomamos la grilla base (c/30m) y le sumamos los disponibles reales (por si hay slots de 45m, 15m, etc.)
+      const baseSlots = generarHorarios();
+      const allSlotsSet = new Set([...baseSlots, ...availableSlots]);
+      const allSlots = Array.from(allSlotsSet).sort();
 
       grid.innerHTML = '';
+
+      if (availableSlots.length === 0) {
+        grid.innerHTML = '<p style="color:var(--text-secondary); grid-column: 1/-1;">No hay horarios disponibles para esta fecha.</p>';
+      }
 
       allSlots.forEach(hora => {
         const btn = document.createElement('button');
@@ -212,7 +306,7 @@
         btn.classList.add('slot');
         btn.textContent = hora;
 
-        if (ocupados.includes(hora)) {
+        if (!availableSlots.includes(hora)) {
           btn.classList.add('taken');
           btn.disabled = true;
           btn.setAttribute('aria-label', `Horario ${hora}, no disponible`);
@@ -258,12 +352,15 @@
       btn.disabled = true;
       btn.classList.add('loading');
 
+      const idServicio = document.getElementById('servicioInput').value;
+
       try {
-        const resp = await fetchWithTimeout(`${N8N_BASE_URL}/webhook/reservar`, {
+        const resp = await fetchWithTimeout(`${N8N_BASE_URL}/webhook/public/reservar-turno-v2`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             session_id:    sessionId,
+            id_servicio:   idServicio,
             fecha:         fecha,
             hora:          selectedSlot,
             observaciones: obs || null
