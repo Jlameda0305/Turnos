@@ -15,8 +15,8 @@ body {
 }
 
 .turno-card {
-  background: rgba(255,255,255,.03);
-  border: 1px solid rgba(255,255,255,.08);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
   border-radius: 16px;
   padding: 1.25rem;
   display: flex;
@@ -27,7 +27,7 @@ body {
 
 .turno-card:hover {
   background: var(--glass-bg-hover);
-  border-color: rgba(255,255,255,.15);
+  border-color: rgba(201,204,209,.15);
 }
 
 .turno-header {
@@ -45,12 +45,12 @@ body {
 .turno-fecha {
   font-size: 1.1rem;
   font-weight: 600;
-  color: #fff;
+  color: var(--color-text-primary);
 }
 
 .turno-hora {
   font-size: .88rem;
-  color: var(--color-indigo-pale);
+  color: var(--color-accent);
   font-weight: 500;
 }
 
@@ -93,7 +93,7 @@ body {
 .turno-actions {
   display: flex;
   gap: .75rem;
-  border-top: 1px solid rgba(255,255,255,.08);
+  border-top: 1px solid var(--glass-border);
   padding-top: 1rem;
 }
 
@@ -105,11 +105,11 @@ body {
 .btn-cancel:hover { background: rgba(239,68,68,.2); }
 
 .btn-reschedule {
-  background: rgba(255,255,255,.08);
-  color: var(--text-primary);
-  border: 1px solid rgba(255,255,255,.1);
+  background: var(--glass-bg);
+  color: var(--color-text-primary);
+  border: 1px solid var(--glass-border);
 }
-.btn-reschedule:hover { background: rgba(255,255,255,.15); }
+.btn-reschedule:hover { background: var(--glass-bg-hover); }
 
 
 /* ── Create Button ────────────────────────────── */
@@ -119,8 +119,8 @@ body {
   text-align: center;
   padding: 1rem;
   margin-top: 1.5rem;
-  background: var(--gradient-brand);
-  color: #fff;
+  background: var(--color-accent);
+  color: #050505;
   text-decoration: none;
   font-size: 1rem;
   font-weight: 600;
@@ -129,7 +129,7 @@ body {
 }
 .btn-create:hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-btn-hover);
+  box-shadow: 0 4px 12px rgba(201,204,209,.2);
 }
 
 

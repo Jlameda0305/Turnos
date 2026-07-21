@@ -99,3 +99,32 @@ function getSessionOrRedirect() {
   }
   return sessionId;
 }
+
+// ── Icons (Lucide) Auto-Render ─────────────────
+if (typeof lucide !== 'undefined') {
+  const observer = new MutationObserver((mutations) => {
+    let shouldUpdate = false;
+    for (let m of mutations) {
+      if (m.addedNodes.length > 0) {
+        // Ignorar nodos SVG que Lucide acaba de crear
+        for (let node of m.addedNodes) {
+          if (node.nodeType === 1 && !node.classList.contains('lucide')) {
+            shouldUpdate = true;
+            break;
+          }
+        }
+      }
+      if (shouldUpdate) break;
+    }
+    
+    if (shouldUpdate) {
+      observer.disconnect();
+      lucide.createIcons();
+      observer.observe(document.body, { childList: true, subtree: true });
+    }
+  });
+  
+  document.addEventListener('DOMContentLoaded', () => {
+    observer.observe(document.body, { childList: true, subtree: true });
+  });
+}

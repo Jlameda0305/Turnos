@@ -26,8 +26,8 @@ body {
 .date-input {
   flex: 1; min-width: 180px;
   padding: .7rem 1rem;
-  background: rgba(255,255,255,.06);
-  border: 1px solid rgba(255,255,255,.1);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
   color: var(--text-primary);
   font-family: inherit;
@@ -38,18 +38,18 @@ body {
 }
 
 .date-input:focus {
-  border-color: var(--color-indigo-light);
-  box-shadow: 0 0 0 3px rgba(129,140,248,.15);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(201,204,209,.15);
 }
 
 .day-badge {
   padding: .35rem .85rem;
-  background: rgba(129,140,248,.12);
-  border: 1px solid rgba(129,140,248,.2);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-pill);
   font-size: .78rem;
   font-weight: 600;
-  color: var(--color-indigo-pale);
+  color: var(--color-text-secondary);
   text-transform: capitalize;
 }
 
@@ -86,30 +86,30 @@ body {
 }
 
 .slot.available {
-  background: rgba(255,255,255,.05);
-  border-color: rgba(255,255,255,.08);
-  color: rgba(255,255,255,.7);
+  background: var(--glass-bg);
+  border-color: var(--glass-border);
+  color: var(--color-text-secondary);
 }
 
 .slot.available:hover {
-  background: rgba(129,140,248,.12);
-  border-color: rgba(129,140,248,.3);
-  color: var(--color-indigo-ghost);
+  background: var(--color-bg-surface);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(99,102,241,.15);
+  box-shadow: 0 4px 12px rgba(201,204,209,.15);
 }
 
 .slot.available:focus-visible {
-  outline: 2px solid var(--color-indigo-light);
+  outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }
 
 .slot.selected {
-  background: var(--gradient-brand);
+  background: var(--color-accent);
   border-color: transparent;
-  color: #fff;
+  color: #050505;
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(99,102,241,.3);
+  box-shadow: 0 6px 20px rgba(201,204,209,.2);
 }
 
 .slot.taken {
@@ -151,7 +151,7 @@ body {
   border: 1px solid rgba(239,68,68,.2);
 }
 .legend-dot.selected-dot {
-  background: var(--gradient-brand);
+  background: var(--color-accent);
 }
 
 
@@ -171,8 +171,8 @@ body {
 .obs-input {
   width: 100%;
   padding: .7rem 1rem;
-  background: rgba(255,255,255,.06);
-  border: 1px solid rgba(255,255,255,.1);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
   color: var(--text-primary);
   font-family: inherit;
@@ -186,8 +186,8 @@ body {
 .obs-input::placeholder { color: var(--text-ghost); }
 
 .obs-input:focus {
-  border-color: var(--color-indigo-light);
-  box-shadow: 0 0 0 3px rgba(129,140,248,.15);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(201,204,209,.15);
 }
 
 
@@ -196,8 +196,8 @@ body {
   width: 100%;
   margin-top: 1.25rem;
   padding: .9rem 2rem;
-  background: var(--gradient-brand);
-  color: #fff;
+  background: var(--color-accent);
+  color: #050505;
   font-family: inherit;
   font-size: .95rem;
   font-weight: 600;
@@ -248,7 +248,7 @@ body {
 .success-overlay {
   display: none;
   position: fixed; inset: 0; z-index: 50;
-  background: rgba(10,10,26,.85);
+  background: rgba(5,5,5,.85);
   backdrop-filter: blur(12px);
   align-items: center;
   justify-content: center;
@@ -311,7 +311,7 @@ body {
 .success-detail .detail-value {
   font-size: 1.1rem;
   font-weight: 600;
-  color: var(--color-indigo-pale);
+  color: var(--color-accent);
 }
 
 .back-to-turnos-btn {

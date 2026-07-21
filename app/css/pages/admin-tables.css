@@ -1,4 +1,7 @@
-/* Admin Tables and Data UI */
+/* ══════════════════════════════════════════════════
+   Admin Tables & Data UI — AIONEX Design System
+   ══════════════════════════════════════════════════ */
+
 .admin-toolbar {
   display: flex;
   justify-content: space-between;
@@ -15,17 +18,17 @@
 
 .search-box input {
   width: 100%;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
   padding: 0.75rem 1rem 0.75rem 2.5rem;
   border-radius: var(--radius-md);
-  color: #fff;
+  color: var(--color-text-primary);
   outline: none;
-  transition: border-color 0.2s;
+  transition: border-color var(--transition-default);
 }
 
 .search-box input:focus {
-  border-color: var(--color-indigo);
+  border-color: var(--color-accent);
 }
 
 .search-box::before {
@@ -43,7 +46,7 @@
   display: flex;
   gap: 1rem;
   margin-bottom: 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--color-border);
   padding-bottom: 0.5rem;
   overflow-x: auto;
 }
@@ -51,29 +54,29 @@
 .tab-btn {
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--color-text-secondary);
   padding: 0.5rem 1rem;
   cursor: pointer;
   font-weight: 500;
   font-size: 0.95rem;
   border-radius: var(--radius-sm);
-  transition: all 0.2s;
+  transition: all var(--transition-fast);
 }
 
 .tab-btn:hover {
-  color: rgba(255, 255, 255, 0.8);
-  background: rgba(255, 255, 255, 0.05);
+  color: var(--color-text-primary);
+  background: var(--glass-bg);
 }
 
 .tab-btn.active {
-  color: var(--color-indigo-light);
-  background: rgba(99, 102, 241, 0.1);
+  color: var(--color-accent);
+  background: rgba(201, 204, 209, 0.08);
 }
 
 /* Table */
 .table-container {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   overflow-x: auto;
   backdrop-filter: blur(10px);
@@ -88,24 +91,25 @@
 .admin-table th,
 .admin-table td {
   padding: 1rem 1.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(35, 35, 35, 0.6);
 }
 
 .admin-table th {
+  font-family: var(--font-heading);
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--color-text-secondary);
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(18, 18, 18, 0.5);
 }
 
 .admin-table tbody tr {
-  transition: background 0.2s;
+  transition: background var(--transition-fast);
 }
 
 .admin-table tbody tr:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--glass-bg-hover);
 }
 
 .admin-table tbody tr:last-child td {
@@ -119,9 +123,9 @@
 }
 
 .btn-icon {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #fff;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--color-text-primary);
   width: 32px;
   height: 32px;
   border-radius: var(--radius-sm);
@@ -129,17 +133,18 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--transition-fast);
 }
 
 .btn-icon:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--glass-bg-hover);
+  border-color: var(--glass-border-hover);
 }
 
 .btn-icon.danger:hover {
-  background: rgba(239, 68, 68, 0.15);
-  color: #ef4444;
-  border-color: rgba(239, 68, 68, 0.3);
+  background: rgba(220, 53, 69, 0.12);
+  color: var(--color-error);
+  border-color: rgba(220, 53, 69, 0.25);
 }
 
 /* Pagination */
@@ -148,11 +153,11 @@
   justify-content: space-between;
   align-items: center;
   padding: 1rem 1.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--color-border);
 }
 
 .page-info {
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--color-text-secondary);
   font-size: 0.9rem;
 }
 
@@ -162,30 +167,31 @@
 }
 
 .page-btn {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #fff;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--color-text-primary);
   padding: 0.5rem 1rem;
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background var(--transition-fast);
   font-size: 0.9rem;
 }
 
 .page-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--glass-bg-hover);
+  border-color: var(--glass-border-hover);
 }
 
 .page-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
 /* Status Dropdown */
 .status-select {
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #fff;
+  border: 1px solid var(--glass-border);
+  color: var(--color-text-primary);
   padding: 0.25rem 0.5rem;
   border-radius: var(--radius-sm);
   font-size: 0.85rem;
@@ -193,11 +199,47 @@
   outline: none;
 }
 .status-select:focus {
-  border-color: var(--color-indigo);
+  border-color: var(--color-accent);
 }
 .status-select option {
-  background: var(--bg-base);
-  color: #fff;
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+}
+
+/* Status Badges */
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.status-badge--pendiente {
+  background: rgba(212, 160, 10, 0.12);
+  color: var(--color-warning-text);
+  border: 1px solid rgba(212, 160, 10, 0.2);
+}
+
+.status-badge--confirmado {
+  background: rgba(201, 204, 209, 0.1);
+  color: var(--color-accent);
+  border: 1px solid rgba(201, 204, 209, 0.2);
+}
+
+.status-badge--cancelado {
+  background: rgba(220, 53, 69, 0.1);
+  color: var(--color-error-text);
+  border: 1px solid rgba(220, 53, 69, 0.2);
+}
+
+.status-badge--completado {
+  background: rgba(31, 168, 85, 0.1);
+  color: var(--color-success-text);
+  border: 1px solid rgba(31, 168, 85, 0.2);
 }
 
 /* Modal */
@@ -215,7 +257,7 @@
   z-index: 100;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.3s;
+  transition: opacity var(--transition-default);
 }
 
 .modal-overlay.visible {
@@ -224,8 +266,8 @@
 }
 
 .modal-card {
-  background: #11111a;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   padding: 2rem;
   width: 90%;
@@ -240,13 +282,15 @@
 }
 
 .modal-title {
+  font-family: var(--font-heading);
   font-size: 1.25rem;
   font-weight: 600;
   margin-bottom: 1rem;
+  color: var(--color-text-primary);
 }
 
 .modal-body {
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--color-text-secondary);
   margin-bottom: 2rem;
   line-height: 1.5;
 }
@@ -259,30 +303,143 @@
 
 .btn-secondary {
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #fff;
+  border: 1px solid var(--glass-border);
+  color: var(--color-text-primary);
   padding: 0.75rem 1.5rem;
   border-radius: var(--radius-md);
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--transition-fast);
 }
 
 .btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--glass-bg);
+  border-color: var(--glass-border-hover);
 }
 
 .btn-danger {
-  background: #ef4444;
+  background: var(--color-error);
   border: none;
-  color: #fff;
+  color: var(--color-text-primary);
   padding: 0.75rem 1.5rem;
   border-radius: var(--radius-md);
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background var(--transition-fast);
 }
 
 .btn-danger:hover {
-  background: #dc2626;
+  background: #c62d3a;
+}
+
+/* Admin filter panel */
+.admin-filter-panel {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.admin-filter-panel .filter-group {
+  flex: 1;
+  min-width: 200px;
+}
+
+.admin-filter-panel .filter-label {
+  display: block;
+  font-size: 0.8rem;
+  margin-bottom: 0.25rem;
+  color: var(--color-text-secondary);
+  font-family: var(--font-heading);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.admin-filter-panel .filter-input {
+  width: 100%;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
+  font-family: inherit;
+  transition: border-color var(--transition-default);
+}
+
+.admin-filter-panel .filter-input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+/* Dialog modal (native <dialog>) */
+dialog.modal {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  color: var(--color-text-primary);
+  width: 90%;
+  max-width: 500px;
+  backdrop-filter: blur(10px);
+}
+
+dialog.modal::backdrop {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.modal-header h2 {
+  font-family: var(--font-heading);
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.close-modal {
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-size: 1.25rem;
+  transition: color var(--transition-fast);
+}
+
+.close-modal:hover {
+  color: var(--color-text-primary);
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+  font-family: var(--font-heading);
+}
+
+.form-control {
+  width: 100%;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  padding: 0.75rem;
+  border-radius: var(--radius-md);
+  color: var(--color-text-primary);
+  font-family: inherit;
+  transition: border-color var(--transition-default);
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--color-accent);
 }

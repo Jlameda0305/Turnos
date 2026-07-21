@@ -22,7 +22,7 @@ body {
   width: 44px; height: 44px;
   font-size: 1.25rem;
   border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(99,102,241,.35);
+  box-shadow: 0 4px 16px rgba(0,0,0,.35);
 }
 
 .card .brand-name {
@@ -42,13 +42,13 @@ body {
   width: 52px; height: 52px;
   border-radius: 50%;
   border: 3px solid rgba(255,255,255,.08);
-  border-top-color: var(--color-indigo-light);
+  border-top-color: var(--color-accent);
   animation: spin .8s linear infinite;
 }
 
 .status {
   font-size: .95rem;
-  color: rgba(255,255,255,.55);
+  color: var(--color-text-secondary);
   font-weight: 400;
   animation: pulse 2s ease-in-out infinite;
 }
@@ -57,8 +57,8 @@ body {
   display: none;
   margin-top: 1.5rem;
   padding: 1rem 1.25rem;
-  background: rgba(239,68,68,.12);
-  border: 1px solid rgba(239,68,68,.25);
+  background: rgba(220,53,69,.12);
+  border: 1px solid rgba(220,53,69,.25);
   border-radius: var(--radius-md);
   color: var(--color-error-text);
   font-size: .88rem;
@@ -73,8 +73,8 @@ body {
   margin-top: 1.25rem;
   display: none;
   padding: .7rem 2rem;
-  background: var(--gradient-brand);
-  color: #fff;
+  background: var(--color-accent);
+  color: #050505;
   font-family: inherit;
   font-size: .9rem;
   font-weight: 600;

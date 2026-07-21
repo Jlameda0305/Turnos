@@ -1,5 +1,6 @@
 /* ══════════════════════════════════════════════════
    AIONEX — Shared Components
+   Aligned with AIONEX Design System: Dark Premium
    ══════════════════════════════════════════════════ */
 
 
@@ -12,19 +13,25 @@
 
 .brand-icon {
   width: 38px; height: 38px;
-  background: linear-gradient(135deg, var(--color-indigo), var(--color-sky));
-  border-radius: 10px;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
   display: flex; align-items: center; justify-content: center;
-  font-size: 1.1rem; font-weight: 800; color: #fff;
-  box-shadow: 0 4px 14px rgba(99,102,241,.3);
+  font-size: 1.1rem; font-weight: 600;
+  color: var(--color-accent);
+  box-shadow: var(--shadow-panel);
+  transition: box-shadow var(--transition-default);
+}
+
+.brand-icon:hover {
+  box-shadow: var(--glow-plateado);
 }
 
 .brand-name {
-  font-size: 1.3rem; font-weight: 700;
-  background: var(--gradient-brand-text);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-family: var(--font-heading);
+  font-size: 1.3rem; font-weight: 600;
+  color: var(--color-accent);
+  letter-spacing: .02em;
 }
 
 
@@ -33,11 +40,11 @@
   position: relative; z-index: 1;
   width: 100%; max-width: 420px;
   padding: 3rem 2.25rem 2.5rem;
-  background: rgba(255,255,255,.05);
-  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(18,18,18,.85);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-2xl);
-  backdrop-filter: blur(24px) saturate(1.4);
-  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   box-shadow: var(--shadow-card);
   animation: cardIn .7s var(--ease-out) both;
 }
@@ -53,14 +60,16 @@
 }
 
 .card .header h1 {
-  font-size: 1.45rem; font-weight: 700;
+  font-family: var(--font-heading);
+  font-size: 1.45rem; font-weight: var(--font-weight-heading);
   letter-spacing: -.02em;
   margin-bottom: .4rem;
+  color: var(--color-text-primary);
 }
 
 .card .header p {
   font-size: .88rem;
-  color: var(--text-muted);
+  color: var(--color-text-secondary);
 }
 
 
@@ -69,8 +78,8 @@
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-xl);
-  backdrop-filter: blur(20px) saturate(1.3);
-  -webkit-backdrop-filter: blur(20px) saturate(1.3);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   box-shadow: var(--shadow-panel);
   padding: 1.75rem;
   margin-bottom: 1.25rem;
@@ -88,19 +97,21 @@
 .user-pill {
   display: flex; align-items: center; gap: .5rem;
   padding: .45rem .9rem;
-  background: rgba(255,255,255,.06);
-  border: 1px solid rgba(255,255,255,.08);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-pill);
   font-size: .78rem;
-  color: rgba(255,255,255,.55);
+  color: var(--color-text-secondary);
 }
 
 .user-pill .avatar {
   width: 24px; height: 24px;
   border-radius: 50%;
-  background: var(--gradient-brand);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-accent);
   display: flex; align-items: center; justify-content: center;
-  font-size: .65rem; font-weight: 700; color: #fff;
+  font-size: .65rem; font-weight: 600;
+  color: var(--color-accent);
 }
 
 .logout-btn {
@@ -108,21 +119,23 @@
   color: var(--text-faint);
   cursor: pointer; font-size: .75rem;
   margin-left: .3rem;
-  transition: color .2s;
+  transition: color var(--transition-fast);
 }
 .logout-btn:hover { color: var(--color-error-text); }
 
 
 /* ── Section Titles ──────────────────────────── */
 .section-title {
-  font-size: 1.5rem; font-weight: 700;
+  font-family: var(--font-heading);
+  font-size: 1.5rem; font-weight: var(--font-weight-heading);
   letter-spacing: -.02em;
   margin-bottom: .35rem;
+  color: var(--color-text-primary);
 }
 
 .section-subtitle {
   font-size: .88rem;
-  color: rgba(255,255,255,.4);
+  color: var(--color-text-secondary);
   margin-bottom: 1.75rem;
 }
 
@@ -143,15 +156,16 @@
 }
 
 .field label {
+  font-family: var(--font-heading);
   font-size: .78rem;
   font-weight: 500;
-  color: rgba(255,255,255,.5);
+  color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: .06em;
 }
 
 .field label .req {
-  color: var(--color-indigo-light);
+  color: var(--color-accent);
   margin-left: 2px;
 }
 
@@ -159,13 +173,13 @@
 .field select {
   width: 100%;
   padding: .7rem 1rem;
-  background: rgba(255,255,255,.06);
-  border: 1px solid rgba(255,255,255,.1);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
-  color: var(--text-primary);
+  color: var(--color-text-primary);
   font-family: inherit;
   font-size: .92rem;
-  transition: border-color .25s, box-shadow .25s, background .25s;
+  transition: border-color var(--transition-default), box-shadow var(--transition-default), background var(--transition-default);
   outline: none;
   -webkit-appearance: none;
   appearance: none;
@@ -177,15 +191,15 @@
 
 .field input:focus,
 .field select:focus {
-  border-color: var(--color-indigo-light);
-  box-shadow: 0 0 0 3px rgba(129,140,248,.15);
-  background: rgba(255,255,255,.08);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(201,204,209,.12);
+  background: var(--glass-bg-hover);
 }
 
 .field input.invalid,
 .field select.invalid {
-  border-color: #f87171;
-  box-shadow: 0 0 0 3px rgba(248,113,113,.12);
+  border-color: var(--color-error);
+  box-shadow: 0 0 0 3px rgba(220,53,69,.12);
 }
 
 .field .field-error {
@@ -199,15 +213,15 @@
 /* ── Submit / Primary Button ─────────────────── */
 .submit-btn {
   padding: .9rem 2rem;
-  background: var(--gradient-brand);
-  color: #fff;
-  font-family: inherit;
+  background: var(--color-accent);
+  color: var(--aionex-negro-principal);
+  font-family: var(--font-heading);
   font-size: .95rem;
   font-weight: 600;
   border: none;
   border-radius: var(--radius-lg);
   cursor: pointer;
-  transition: transform .2s, box-shadow .2s, opacity .2s;
+  transition: transform var(--transition-fast), box-shadow var(--transition-default), opacity var(--transition-fast);
   position: relative;
   overflow: hidden;
 }
@@ -215,18 +229,18 @@
 .submit-btn::before {
   content: '';
   position: absolute; inset: 0;
-  background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,.15));
+  background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,.2));
   opacity: 0;
-  transition: opacity .3s;
+  transition: opacity var(--transition-default);
 }
 .submit-btn:hover::before { opacity: 1; }
 .submit-btn:hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-btn-hover);
+  box-shadow: var(--glow-plateado);
 }
 .submit-btn:active { transform: translateY(0); }
 .submit-btn:disabled {
-  opacity: .55;
+  opacity: .45;
   cursor: not-allowed;
   transform: none !important;
   box-shadow: none !important;
@@ -237,8 +251,8 @@
   display: none;
   position: relative; z-index: 1;
   width: 22px; height: 22px;
-  border: 2.5px solid rgba(255,255,255,.25);
-  border-top-color: #fff;
+  border: 2.5px solid rgba(5,5,5,.25);
+  border-top-color: var(--aionex-negro-principal);
   border-radius: 50%;
   animation: spin .7s linear infinite;
   margin: 0 auto;
@@ -251,11 +265,11 @@
 .action-btn {
   flex: 1;
   padding: .65rem;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   font-size: .85rem; font-weight: 600;
   font-family: inherit;
   cursor: pointer;
-  transition: all .2s;
+  transition: all var(--transition-fast);
   border: none;
 }
 
@@ -282,14 +296,14 @@
 }
 
 .toast.success {
-  background: rgba(34,197,94,.18);
-  border: 1px solid rgba(34,197,94,.3);
+  background: rgba(31,168,85,.15);
+  border: 1px solid rgba(31,168,85,.25);
   color: var(--color-success-text);
 }
 
 .toast.error {
-  background: rgba(239,68,68,.15);
-  border: 1px solid rgba(239,68,68,.25);
+  background: rgba(220,53,69,.12);
+  border: 1px solid rgba(220,53,69,.2);
   color: var(--color-error-text);
 }
 
@@ -298,7 +312,7 @@
 .state-msg {
   text-align: center;
   padding: 2.5rem 1rem;
-  color: rgba(255,255,255,.4);
+  color: var(--color-text-secondary);
   font-size: .92rem;
 }
 
@@ -309,8 +323,8 @@
 
 .mini-spinner {
   width: 32px; height: 32px;
-  border: 3px solid rgba(255,255,255,.08);
-  border-top-color: var(--color-indigo-light);
+  border: 3px solid var(--glass-border);
+  border-top-color: var(--color-accent);
   border-radius: 50%;
   animation: spin .8s linear infinite;
   margin: 0 auto .75rem;
@@ -319,10 +333,36 @@
 
 /* ── Back Link ───────────────────────────────── */
 .back-link {
-  color: var(--text-muted);
+  color: var(--color-text-secondary);
   text-decoration: none;
   margin-right: .75rem;
   font-size: 1.1rem;
-  transition: color .2s;
+  transition: color var(--transition-fast);
 }
-.back-link:hover { color: #fff; }
+.back-link:hover { color: var(--color-text-primary); }
+
+/* ── Icons (Lucide) ───────────────────────────── */
+.lucide {
+  width: 1em;
+  height: 1em;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+  vertical-align: middle;
+  transition: stroke 0.25s, transform 0.2s;
+}
+.btn-icon .lucide {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+.nav-link .lucide {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+.metric-card .icon .lucide {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+

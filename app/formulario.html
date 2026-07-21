@@ -11,16 +11,16 @@
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/base.css" />
   <link rel="stylesheet" href="css/components.css" />
   <link rel="stylesheet" href="css/pages/formulario.css" />
+  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
 
   <div class="bg"></div>
-  <div class="orb orb--1"></div>
-  <div class="orb orb--2"></div>
+
 
   <div class="card">
     <div class="header">
@@ -35,7 +35,7 @@
     <form id="registroForm" class="form-grid" novalidate>
 
       <!-- Datos Personales Header -->
-      <div class="full" style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; color: var(--brand); font-weight: 600; margin-bottom: 0.2rem; margin-top: 0.5rem;">Datos Personales</div>
+      <div class="full" style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; color: var(--color-accent); font-weight: 600; margin-bottom: 0.2rem; margin-top: 0.5rem;">Datos Personales</div>
 
       <!-- DNI -->
       <div class="field">
@@ -82,7 +82,7 @@
       <div class="divider"></div>
 
       <!-- Datos de Contacto Header -->
-      <div class="full" style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; color: var(--brand); font-weight: 600; margin-bottom: 0.2rem; margin-top: 0.5rem;">Datos de Contacto</div>
+      <div class="full" style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; color: var(--color-accent); font-weight: 600; margin-bottom: 0.2rem; margin-top: 0.5rem;">Datos de Contacto</div>
 
       <!-- Email -->
       <div class="field">
@@ -93,13 +93,13 @@
 
       <!-- Dirección (opcional) -->
       <div class="field full">
-        <label for="direccion">Dirección <span style="color:rgba(255,255,255,.25);font-style:italic;text-transform:none">(opcional)</span></label>
+        <label for="direccion">Dirección <span style="color:var(--text-faint);font-style:italic;text-transform:none">(opcional)</span></label>
         <input type="text" id="direccion" name="direccion" placeholder="Av. Corrientes 1234, CABA" />
       </div>
 
       <!-- Teléfono (opcional) -->
       <div class="field">
-        <label for="telefono">Teléfono <span style="color:rgba(255,255,255,.25);font-style:italic;text-transform:none">(opcional)</span></label>
+        <label for="telefono">Teléfono <span style="color:var(--text-faint);font-style:italic;text-transform:none">(opcional)</span></label>
         <input type="tel" id="telefono" name="telefono" placeholder="+54 11 2345-6789" />
         <span class="field-error" id="telefonoError" role="alert"></span>
       </div>
@@ -118,6 +118,7 @@
   <!-- Toast notification -->
   <div class="toast" id="toast" aria-live="polite"></div>
 
+  <script src="js/node-network.js"></script>
   <script src="js/utils.js"></script>
   <script>
     // ─── Validaciones ───────────────────────────────
@@ -244,5 +245,6 @@
       document.getElementById('fecha_nacimiento').setAttribute('max', today);
     })();
   </script>
+  <script>lucide.createIcons();</script>
 </body>
 </html>

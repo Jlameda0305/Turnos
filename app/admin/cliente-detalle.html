@@ -8,7 +8,7 @@
   <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../css/base.css" />
   <link rel="stylesheet" href="../css/components.css" />
   <link rel="stylesheet" href="../css/pages/admin-layout.css" />
@@ -18,8 +18,8 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 1.5rem;
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
       padding: 2rem;
       border-radius: var(--radius-lg);
       margin-bottom: 2rem;
@@ -31,14 +31,14 @@
     }
     .detail-item label {
       font-size: 0.85rem;
-      color: rgba(255, 255, 255, 0.6);
+      color: var(--color-text-secondary);
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
     .detail-item input, .detail-item select {
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1);
-      color: #fff;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      color: var(--color-text-primary);
       padding: 0.75rem 1rem;
       border-radius: var(--radius-md);
       font-family: inherit;
@@ -60,37 +60,58 @@
       margin-top: 1rem;
     }
   </style>
+  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
   <div class="bg"></div>
   
   <div class="admin-layout">
-    <aside class="admin-sidebar">
-      <div class="brand">
-        <div class="brand-icon">A</div>
-        <span class="brand-name">AIONEX</span>
+        <header class="admin-topnav">
+      <div class="admin-topnav-left">
+        <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Abrir menú">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </button>
+        <div class="brand" style="margin-bottom: 0;">
+          <div class="brand-icon" style="width:32px; height:32px; font-size:1rem;">A</div>
+          <span class="brand-name" style="font-size:1.2rem;">AIONEX</span>
+          <span class="admin-badge-inline">ADMIN</span>
+        </div>
       </div>
-      <nav class="nav-links">
+
+      <nav class="nav-menu" id="navMenu">
+
+        <div class="nav-section-title">Principal</div>
         <a href="dashboard.html" class="nav-link">
-          <span class="icon">📊</span>
+          <span class="icon"><i data-lucide="layout-dashboard"></i></span>
           Dashboard
         </a>
+        <div class="nav-section-title">Gestión</div>
         <a href="turnos.html" class="nav-link">
-          <span class="icon">🗓️</span>
+          <span class="icon"><i data-lucide="calendar"></i></span>
           Turnos
         </a>
         <a href="clientes.html" class="nav-link active">
-          <span class="icon">👥</span>
+          <span class="icon"><i data-lucide="users"></i></span>
           Clientes
         </a>
+        <a href="servicios.html" class="nav-link">
+          <span class="icon"><i data-lucide="settings"></i></span>
+          Servicios
+        </a>
+        <a href="tipos-servicio.html" class="nav-link">
+          <span class="icon"><i data-lucide="tag"></i></span>
+          Tipos de Servicio
+        </a>
       </nav>
-      <div style="margin-top: auto;">
-        <button class="nav-link" id="logoutBtn" style="width: 100%; border: none; cursor: pointer; text-align: left; background: transparent;">
-          <span class="icon">🚪</span>
-          Cerrar Sesión
-        </button>
+      
+      <div class="admin-topnav-right">
+        <div class="user-pill" id="userPill">
+          <div class="avatar" id="userAvatar">A</div>
+          <span id="userName">Admin</span>
+          <button class="logout-btn" id="logoutBtn" title="Cerrar sesión"><i data-lucide="log-out"></i></button>
+        </div>
       </div>
-    </aside>
+    </header>
 
     <main class="admin-content">
       <div class="admin-header" style="margin-bottom: 1rem;">
@@ -102,18 +123,18 @@
 
       <div id="loadingState" style="padding: 3rem; text-align: center;">
         <div class="mini-spinner" style="margin: 0 auto 1rem;"></div>
-        <p style="color: rgba(255,255,255,0.6);">Cargando información...</p>
+        <p style="color: var(--color-text-secondary);">Cargando información...</p>
       </div>
 
       <div id="contentState" style="display:none;">
         <!-- Formulario -->
         <form id="clienteForm" class="detail-grid">
           <div class="detail-item">
-            <label>DNI</label>
+            <label>DNI <span title="Campo fijo por seguridad, no se puede editar" style="cursor:help; font-size: 0.8rem; margin-left: 0.25rem;">🔒</span></label>
             <input type="text" id="dni" disabled />
           </div>
           <div class="detail-item">
-            <label>Email</label>
+            <label>Email <span title="Campo fijo por seguridad, no se puede editar" style="cursor:help; font-size: 0.8rem; margin-left: 0.25rem;">🔒</span></label>
             <input type="email" id="email" disabled />
           </div>
           <div class="detail-item">
@@ -153,7 +174,10 @@
         </form>
 
         <!-- Turnos Recientes -->
-        <h2 style="font-size: 1.1rem; margin-bottom: 1rem;">Últimos Turnos (Historial)</h2>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <h2 style="font-size: 1.1rem; margin: 0;">Últimos Turnos (Historial)</h2>
+          <a id="btnVerTodosTurnos" href="#" class="btn-secondary" style="font-size: 0.85rem; padding: 0.25rem 0.75rem; text-decoration: none;" title="Ver todos los turnos de este cliente en la agenda">Ver historial completo</a>
+        </div>
         <div class="table-container">
           <table class="admin-table">
             <thead>
@@ -169,7 +193,7 @@
             </tbody>
           </table>
           <div id="emptyTurnos" style="padding: 2rem; text-align: center; display: none;">
-            <p style="color: rgba(255,255,255,0.6);">El cliente no tiene turnos registrados.</p>
+            <p style="color: var(--color-text-secondary);">El cliente no tiene turnos registrados.</p>
           </div>
         </div>
       </div>
@@ -179,6 +203,7 @@
   <div class="toast" id="toast" aria-live="polite"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/node-network.js"></script>
   <script src="../js/utils.js"></script>
   <script src="../js/admin-utils.js"></script>
   <script>
@@ -216,6 +241,12 @@
         originalData = { ...data };
         fillForm(data);
         renderTurnos(data.turnos || []);
+        
+        document.getElementById('btnVerTodosTurnos').href = `turnos.html?cliente=${encodeURIComponent(data.dni)}`;
+        
+        if (urlParams.get('edit') === 'true') {
+          toggleEdit();
+        }
 
       } catch (err) {
         showToast('Error al cargar detalle', 'error');
@@ -246,18 +277,17 @@
 
       turnos.forEach(t => {
         const tr = document.createElement('tr');
-        const badgeColor = t.estado === 'confirmado' ? 'var(--color-indigo)' : 
-                          (t.estado === 'cancelado' ? '#ef4444' : 'rgba(255,255,255,0.2)');
+        const statusClass = 'status-badge--' + (t.estado || 'pendiente').toLowerCase();
         
         tr.innerHTML = `
           <td>${formatFechaDisplay(t.fecha)}</td>
           <td>${formatHoraDisplay(t.hora)}</td>
           <td>
-            <span style="background:${badgeColor}; padding:0.2rem 0.5rem; border-radius:4px; font-size:0.8rem; font-weight:600;">
+            <span class="status-badge ${statusClass}">
               ${t.estado}
             </span>
           </td>
-          <td>${t.observaciones || '<span style="color:rgba(255,255,255,0.3)">-</span>'}</td>
+          <td>${t.observaciones || '<span style="color:var(--text-faint)">-</span>'}</td>
         `;
         tbody.appendChild(tr);
       });
@@ -318,5 +348,6 @@
       }
     }
   </script>
+  <script>lucide.createIcons();</script>
 </body>
 </html>

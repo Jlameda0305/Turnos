@@ -23,6 +23,27 @@ async function getAdminSessionOrRedirect() {
     window.location.href = 'index.html';
     return null;
   }
+
+  // Setup mobile menu toggle logic if elements are present
+  setTimeout(() => {
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const navMenu = document.getElementById('navMenu');
+    
+    if (mobileMenuBtn && navMenu && !mobileMenuBtn.dataset.initialized) {
+      mobileMenuBtn.addEventListener('click', () => {
+        navMenu.classList.toggle('active');
+      });
+      mobileMenuBtn.dataset.initialized = 'true';
+      
+      // Close menu when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!mobileMenuBtn.contains(e.target) && !navMenu.contains(e.target)) {
+          navMenu.classList.remove('active');
+        }
+      });
+    }
+  }, 0);
+
   return data.session;
 }
 

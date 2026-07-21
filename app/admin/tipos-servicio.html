@@ -8,52 +8,63 @@
   <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../css/base.css" />
   <link rel="stylesheet" href="../css/components.css" />
   <link rel="stylesheet" href="../css/pages/admin-layout.css" />
   <link rel="stylesheet" href="../css/pages/admin-tables.css" />
+  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
   <div class="bg"></div>
   
   <div class="admin-layout">
-    <aside class="admin-sidebar">
-      <div class="brand">
-        <div class="brand-icon">A</div>
-        <span class="brand-name">AIONEX</span>
+        <header class="admin-topnav">
+      <div class="admin-topnav-left">
+        <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Abrir menú">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </button>
+        <div class="brand" style="margin-bottom: 0;">
+          <div class="brand-icon" style="width:32px; height:32px; font-size:1rem;">A</div>
+          <span class="brand-name" style="font-size:1.2rem;">AIONEX</span>
+          <span class="admin-badge-inline">ADMIN</span>
+        </div>
       </div>
 
-      <nav class="nav-links">
+      <nav class="nav-menu" id="navMenu">
+
+        <div class="nav-section-title">Principal</div>
         <a href="dashboard.html" class="nav-link">
-          <span class="icon">📊</span>
+          <span class="icon"><i data-lucide="layout-dashboard"></i></span>
           Dashboard
         </a>
+        <div class="nav-section-title">Gestión</div>
         <a href="turnos.html" class="nav-link">
-          <span class="icon">🗓️</span>
+          <span class="icon"><i data-lucide="calendar"></i></span>
           Turnos
         </a>
         <a href="clientes.html" class="nav-link">
-          <span class="icon">👥</span>
+          <span class="icon"><i data-lucide="users"></i></span>
           Clientes
         </a>
         <a href="servicios.html" class="nav-link">
-          <span class="icon">⚙️</span>
+          <span class="icon"><i data-lucide="settings"></i></span>
           Servicios
         </a>
         <a href="tipos-servicio.html" class="nav-link active">
-          <span class="icon">🏷️</span>
+          <span class="icon"><i data-lucide="tag"></i></span>
           Tipos de Servicio
         </a>
       </nav>
       
-      <div style="margin-top: auto;">
-        <button class="nav-link" id="logoutBtn" style="width: 100%; border: none; cursor: pointer; text-align: left; background: transparent;">
-          <span class="icon">🚪</span>
-          Cerrar Sesión
-        </button>
+      <div class="admin-topnav-right">
+        <div class="user-pill" id="userPill">
+          <div class="avatar" id="userAvatar">A</div>
+          <span id="userName">Admin</span>
+          <button class="logout-btn" id="logoutBtn" title="Cerrar sesión"><i data-lucide="log-out"></i></button>
+        </div>
       </div>
-    </aside>
+    </header>
 
     <main class="admin-content">
       <div class="admin-header">
@@ -84,12 +95,12 @@
         <!-- Estado de carga -->
         <div id="loadingState" style="padding: 3rem; text-align: center;">
           <div class="mini-spinner" style="margin: 0 auto 1rem;"></div>
-          <p style="color: rgba(255,255,255,0.6);">Cargando tipos de servicio...</p>
+          <p style="color: var(--color-text-secondary);">Cargando tipos de servicio...</p>
         </div>
         
         <!-- Estado vacío -->
         <div id="emptyState" style="padding: 3rem; text-align: center; display: none;">
-          <p style="color: rgba(255,255,255,0.6);">No se encontraron tipos de servicio.</p>
+          <p style="color: var(--color-text-secondary);">No se encontraron tipos de servicio.</p>
         </div>
       </div>
     </main>
@@ -124,6 +135,7 @@
   <div class="toast" id="toast" aria-live="polite"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/node-network.js"></script>
   <script src="../js/utils.js"></script>
   <script src="../js/admin-utils.js"></script>
   <script>
@@ -182,8 +194,8 @@
           <td><span class="turno-badge ${badgeClass}">${badgeText}</span></td>
           <td>
             <div class="actions-cell">
-              <button class="btn-icon" title="Editar" onclick="editTipo('${item.id_tipo_servicio}')">✏️</button>
-              <button class="btn-icon" title="Eliminar" style="color: #ff4444;" onclick="deleteTipo('${item.id_tipo_servicio}')">🗑️</button>
+              <button class="btn-icon" title="Editar" onclick="editTipo('${item.id_tipo_servicio}')"><i data-lucide="pencil"></i></button>
+              <button class="btn-icon" title="Eliminar" style="color: var(--color-error-text);" onclick="deleteTipo('${item.id_tipo_servicio}')"><i data-lucide="trash-2"></i></button>
             </div>
           </td>
         `;
@@ -262,7 +274,7 @@
     }
 
     async function deleteTipo(id) {
-      if (!confirm('⚠️ ADVERTENCIA: Al eliminar este tipo de servicio, se eliminarán en cascada TODOS los servicios asociados a él. ¿Estás seguro de que querés continuar?')) return;
+      if (!confirm('⚠ ADVERTENCIA: Al eliminar este tipo de servicio, se eliminarán en cascada TODOS los servicios asociados a él. ¿Estás seguro de que querés continuar?')) return;
 
       try {
         const resp = await adminFetch(`${ADMIN_N8N_PREFIX}/tipo-servicio-eliminar`, {
@@ -283,5 +295,6 @@
       }
     }
   </script>
+  <script>lucide.createIcons();</script>
 </body>
 </html>

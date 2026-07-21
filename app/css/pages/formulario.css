@@ -24,7 +24,7 @@ body {
 }
 
 .card .header p {
-  color: rgba(255,255,255,.45);
+  color: var(--color-text-secondary);
 }
 
 .form-grid {
@@ -63,15 +63,15 @@ body {
 }
 
 .select-wrap select option {
-  background: #1e1e36;
-  color: var(--text-primary);
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
 }
 
 /* Divider */
 .divider {
   grid-column: 1 / -1;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,.08), transparent);
+  background: linear-gradient(90deg, transparent, rgba(201,204,209,.1), transparent);
   margin: .3rem 0;
 }
 

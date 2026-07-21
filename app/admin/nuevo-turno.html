@@ -8,7 +8,7 @@
   <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../css/base.css" />
   <link rel="stylesheet" href="../css/components.css" />
   <link rel="stylesheet" href="../css/pages/admin-layout.css" />
@@ -27,11 +27,11 @@
 
     .client-search input {
       width: 100%;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
       padding: 1rem;
       border-radius: var(--radius-md);
-      color: #fff;
+      color: var(--color-text-primary);
       font-size: 1rem;
       outline: none;
     }
@@ -44,8 +44,8 @@
       top: 100%;
       left: 0;
       right: 0;
-      background: #11111a;
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: var(--color-bg-surface);
+      border: 1px solid var(--glass-border);
       border-radius: var(--radius-md);
       margin-top: 0.5rem;
       max-height: 250px;
@@ -65,12 +65,12 @@
       border-bottom: none;
     }
     .autocomplete-item:hover {
-      background: rgba(255, 255, 255, 0.05);
+      background: var(--glass-bg);
     }
 
     .selected-client-card {
-      background: rgba(99, 102, 241, 0.1);
-      border: 1px solid rgba(99, 102, 241, 0.3);
+      background: var(--glass-bg-hover);
+      border: 1px solid var(--glass-border-hover);
       padding: 1rem;
       border-radius: var(--radius-md);
       display: none;
@@ -88,51 +88,84 @@
       }
     }
   </style>
+  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
   <div class="bg"></div>
   
   <div class="admin-layout">
-    <aside class="admin-sidebar">
-      <div class="brand">
-        <div class="brand-icon">A</div>
-        <span class="brand-name">AIONEX</span>
+        <header class="admin-topnav">
+      <div class="admin-topnav-left">
+        <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Abrir menú">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </button>
+        <div class="brand" style="margin-bottom: 0;">
+          <div class="brand-icon" style="width:32px; height:32px; font-size:1rem;">A</div>
+          <span class="brand-name" style="font-size:1.2rem;">AIONEX</span>
+          <span class="admin-badge-inline">ADMIN</span>
+        </div>
       </div>
-      <nav class="nav-links">
+
+      <nav class="nav-menu" id="navMenu">
+
+        <div class="nav-section-title">Principal</div>
         <a href="dashboard.html" class="nav-link">
-          <span class="icon">📊</span>
+          <span class="icon"><i data-lucide="layout-dashboard"></i></span>
           Dashboard
         </a>
+        <div class="nav-section-title">Gestión</div>
         <a href="turnos.html" class="nav-link active">
-          <span class="icon">🗓️</span>
+          <span class="icon"><i data-lucide="calendar"></i></span>
           Turnos
         </a>
         <a href="clientes.html" class="nav-link">
-          <span class="icon">👥</span>
+          <span class="icon"><i data-lucide="users"></i></span>
           Clientes
         </a>
         <a href="servicios.html" class="nav-link">
-          <span class="icon">⚙️</span>
+          <span class="icon"><i data-lucide="settings"></i></span>
           Servicios
         </a>
         <a href="tipos-servicio.html" class="nav-link">
-          <span class="icon">🏷️</span>
+          <span class="icon"><i data-lucide="tag"></i></span>
           Tipos de Servicio
         </a>
       </nav>
-      <div style="margin-top: auto;">
-        <button class="nav-link" id="logoutBtn" style="width: 100%; border: none; cursor: pointer; text-align: left; background: transparent;">
-          <span class="icon">🚪</span>
-          Cerrar Sesión
-        </button>
+      
+      <div class="admin-topnav-right">
+        <div class="user-pill" id="userPill">
+          <div class="avatar" id="userAvatar">A</div>
+          <span id="userName">Admin</span>
+          <button class="logout-btn" id="logoutBtn" title="Cerrar sesión"><i data-lucide="log-out"></i></button>
+        </div>
       </div>
-    </aside>
+    </header>
 
     <main class="admin-content">
       <div class="admin-header" style="margin-bottom: 1rem;">
         <div class="admin-title">
-          <a href="turnos.html" style="color:var(--color-indigo-light); text-decoration:none; font-size: 0.9rem; display:inline-block; margin-bottom: 0.5rem;">← Volver a Turnos</a>
+          <div class="nav-section-title">Gestión</div>
+        <a href="turnos.html" style="color:var(--color-accent); text-decoration:none; font-size: 0.9rem; display:inline-block; margin-bottom: 0.5rem;">← Volver a Turnos</a>
           <h1>Asignar Nuevo Turno</h1>
+        </div>
+      </div>
+
+      <div class="stepper" style="display: flex; justify-content: space-between; margin-bottom: 2rem; background: var(--glass-bg); padding: 1.5rem 2rem; border-radius: var(--radius-md); border: 1px solid rgba(255,255,255,0.05);">
+        <div class="step active" id="step1" style="display: flex; align-items: center; font-weight: 500; transition: opacity 0.3s;">
+          <span class="step-icon" id="stepIcon1" style="background: var(--color-accent); color: var(--color-bg); border-radius: 50%; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.9rem; font-weight: bold; margin-right: 0.75rem;">1</span>
+          Cliente
+        </div>
+        <div class="step" id="step2" style="display: flex; align-items: center; font-weight: 500; opacity: 0.4; transition: opacity 0.3s;">
+          <span class="step-icon" id="stepIcon2" style="background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--color-text-primary); border-radius: 50%; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.9rem; font-weight: bold; margin-right: 0.75rem;">2</span>
+          Servicio
+        </div>
+        <div class="step" id="step3" style="display: flex; align-items: center; font-weight: 500; opacity: 0.4; transition: opacity 0.3s;">
+          <span class="step-icon" id="stepIcon3" style="background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--color-text-primary); border-radius: 50%; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.9rem; font-weight: bold; margin-right: 0.75rem;">3</span>
+          Fecha
+        </div>
+        <div class="step" id="step4" style="display: flex; align-items: center; font-weight: 500; opacity: 0.4; transition: opacity 0.3s;">
+          <span class="step-icon" id="stepIcon4" style="background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--color-text-primary); border-radius: 50%; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.9rem; font-weight: bold; margin-right: 0.75rem;">4</span>
+          Horario
         </div>
       </div>
 
@@ -150,7 +183,7 @@
             <div class="selected-client-card" id="selectedClientCard">
               <div>
                 <strong id="selectedClientName">Juan Pérez</strong><br>
-                <span style="font-size: 0.85rem; color: rgba(255,255,255,0.7);" id="selectedClientDni">DNI: 12345678</span>
+                <span style="font-size: 0.85rem; color: var(--color-text-secondary);" id="selectedClientDni">DNI: 12345678</span>
               </div>
               <button type="button" class="btn-icon" style="border:none;" onclick="clearSelectedClient()" title="Cambiar cliente">❌</button>
             </div>
@@ -177,7 +210,7 @@
           <h2 style="font-size: 1.1rem; margin-bottom: 1rem;">4. Horario y Detalles</h2>
           
           <div class="state-msg" id="emptyState">
-            <div class="icon">📅</div>
+            <div class="icon"><i data-lucide="calendar"></i></div>
             <p>Seleccioná un cliente, servicio y fecha para ver los horarios</p>
           </div>
 
@@ -209,12 +242,65 @@
           </div>
         </div>
       </div>
+      <!-- Modal Alta Cliente -->
+      <dialog id="modal-nuevo-cliente" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+          <div class="modal-header">
+            <h3>Nuevo Cliente</h3>
+            <button type="button" class="close-btn" onclick="document.getElementById('modal-nuevo-cliente').close()">×</button>
+          </div>
+          <form id="form-nuevo-cliente">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+              <div class="form-group">
+                <label>DNI</label>
+                <input type="text" id="nuevoClienteDni" required />
+              </div>
+              <div class="form-group">
+                <label>Nombre</label>
+                <input type="text" id="nuevoClienteNombre" required />
+              </div>
+              <div class="form-group">
+                <label>Apellido</label>
+                <input type="text" id="nuevoClienteApellido" required />
+              </div>
+              <div class="form-group">
+                <label>Sexo</label>
+                <select id="nuevoClienteSexo">
+                  <option value="M">Masculino</option>
+                  <option value="F">Femenino</option>
+                  <option value="X">Otro</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group" style="margin-bottom: 1rem;">
+              <label>Fecha de Nacimiento</label>
+              <input type="date" id="nuevoClienteFechaNac" required />
+            </div>
+            <div class="form-group" style="margin-bottom: 1rem;">
+              <label>Dirección</label>
+              <input type="text" id="nuevoClienteDireccion" required />
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+              <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="nuevoClienteEmail" required />
+              </div>
+              <div class="form-group">
+                <label>Teléfono</label>
+                <input type="text" id="nuevoClienteTelefono" required />
+              </div>
+            </div>
+            <button type="submit" id="btnGuardarCliente" class="btn btn-primary" style="width: 100%;">Crear Cliente</button>
+          </form>
+        </div>
+      </dialog>
     </main>
   </div>
 
   <div class="toast" id="toast" aria-live="polite"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/node-network.js"></script>
   <script src="../js/utils.js"></script>
   <script src="../js/admin-utils.js"></script>
   <script>
@@ -223,6 +309,24 @@
     let selectedDuration = 30;
     let selectedSlot = null;
     let searchTimeout = null;
+
+    function updateStepper(step) {
+      for (let i = 1; i <= 4; i++) {
+        const el = document.getElementById('step' + i);
+        const icon = document.getElementById('stepIcon' + i);
+        if (i <= step) {
+          el.style.opacity = '1';
+          icon.style.background = 'var(--color-accent)';
+          icon.style.color = 'var(--color-bg)';
+          icon.style.border = 'none';
+        } else {
+          el.style.opacity = '0.4';
+          icon.style.background = 'var(--glass-bg)';
+          icon.style.color = 'var(--color-text-primary)';
+          icon.style.border = '1px solid var(--glass-border)';
+        }
+      }
+    }
 
     document.addEventListener('DOMContentLoaded', async () => {
       if (!(await getAdminSessionOrRedirect())) return;
@@ -275,9 +379,19 @@
               item.onclick = () => selectClient(c);
               dropdown.appendChild(item);
             });
+            dropdown.innerHTML += `
+              <div class="autocomplete-item" style="border-top: 1px solid var(--glass-border); background: var(--glass-bg-hover); color: var(--color-accent); text-align: center; font-weight: 500;" onclick="abrirModalNuevoCliente()">
+                + Crear Nuevo Cliente
+              </div>
+            `;
             dropdown.style.display = 'block';
           } else {
-            dropdown.innerHTML = '<div class="autocomplete-item" style="color:rgba(255,255,255,0.5)">No se encontraron clientes</div>';
+            dropdown.innerHTML = `
+              <div class="autocomplete-item" style="color:rgba(255,255,255,0.5)">No se encontraron clientes</div>
+              <div class="autocomplete-item" style="border-top: 1px solid var(--glass-border); background: var(--glass-bg-hover); color: var(--color-accent); text-align: center; font-weight: 500;" onclick="abrirModalNuevoCliente()">
+                + Crear Nuevo Cliente
+              </div>
+            `;
             dropdown.style.display = 'block';
           }
         } catch(e) {}
@@ -293,6 +407,7 @@
       document.getElementById('selectedClientDni').textContent = `DNI: ${c.dni}`;
       document.getElementById('selectedClientCard').classList.add('visible');
       
+      updateStepper(2);
       renderServicios();
     }
 
@@ -310,11 +425,11 @@
         btn.type = 'button';
         btn.className = 'service-btn';
         // Add basic styles directly since css class might not exist in admin css
-        btn.style.cssText = 'background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 1rem; border-radius: 8px; color: #fff; cursor: pointer; text-align: left; transition: all 0.2s;';
+        btn.style.cssText = 'background: var(--glass-bg); border: 1px solid var(--glass-border); padding: 1rem; border-radius: 8px; color: var(--color-text-primary); cursor: pointer; text-align: left; transition: all 0.2s;';
         
         btn.innerHTML = `
           <div style="font-weight: 600;">${s.nombre}</div>
-          <div style="font-size: 0.85rem; color: rgba(255,255,255,0.6); margin-top: 0.25rem;">⏱ ${s.duracion} min | 💲${s.costo} | ${s.tipo_nombre}</div>
+          <div style="font-size: 0.85rem; color: var(--color-text-secondary); margin-top: 0.25rem;">⏱ ${s.duracion} min | 💲${s.costo} | ${s.tipo_nombre}</div>
         `;
         
         btn.onclick = () => selectService(s.id_servicio, s.duracion, btn);
@@ -331,11 +446,13 @@
         b.style.borderColor = 'rgba(255,255,255,0.1)';
       });
       
-      btnEl.style.background = 'rgba(99, 102, 241, 0.1)';
-      btnEl.style.borderColor = 'var(--color-indigo)';
+      btnEl.style.background = 'var(--glass-bg-hover)';
+      btnEl.style.borderColor = 'var(--color-accent)';
       
       document.getElementById('fechaInput').disabled = false;
       
+      updateStepper(3);
+
       // Si ya hay fecha seleccionada, recargar
       if (document.getElementById('fechaInput').value) {
         onFechaChange({target: document.getElementById('fechaInput')});
@@ -357,6 +474,8 @@
       
       document.getElementById('slotsContent').style.display = 'none';
       document.getElementById('emptyState').style.display = 'block';
+      
+      updateStepper(1);
     }
 
     async function onFechaChange(e) {
@@ -416,6 +535,7 @@
 
       document.getElementById('loadingState').style.display = 'none';
       document.getElementById('slotsContent').style.display = 'block';
+      updateStepper(4);
     }
 
     function selectSlot(el, hora) {
@@ -475,6 +595,71 @@
         btn.classList.remove('loading');
       }
     }
+
+    function abrirModalNuevoCliente() {
+      document.getElementById('autocompleteDropdown').style.display = 'none';
+      const searchInput = document.getElementById('clientSearchInput').value.trim();
+      const modal = document.getElementById('modal-nuevo-cliente');
+      document.getElementById('form-nuevo-cliente').reset();
+      
+      // Si el usuario ingresó algo numérico, lo precargamos como DNI
+      if (searchInput && /^\d+$/.test(searchInput)) {
+        document.getElementById('nuevoClienteDni').value = searchInput;
+      }
+      
+      modal.showModal();
+    }
+
+    document.getElementById('form-nuevo-cliente').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const payload = {
+        dni: document.getElementById('nuevoClienteDni').value.trim(),
+        nombre: document.getElementById('nuevoClienteNombre').value.trim(),
+        apellido: document.getElementById('nuevoClienteApellido').value.trim(),
+        sexo: document.getElementById('nuevoClienteSexo').value,
+        fecha_nacimiento: document.getElementById('nuevoClienteFechaNac').value,
+        direccion: document.getElementById('nuevoClienteDireccion').value.trim(),
+        email: document.getElementById('nuevoClienteEmail').value.trim(),
+        telefono: document.getElementById('nuevoClienteTelefono').value.trim()
+      };
+      
+      const btn = document.getElementById('btnGuardarCliente');
+      btn.disabled = true;
+      btn.classList.add('loading');
+      
+      try {
+        const response = await fetch(`${N8N_BASE_URL}/webhook/registro`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.message || 'Error al crear el cliente');
+        }
+        
+        const data = await response.json();
+        
+        // Auto-select the newly created client
+        selectClient({
+          id_cliente: data.id_cliente,
+          nombre: data.nombre,
+          apellido: data.apellido,
+          dni: data.dni
+        });
+        
+        document.getElementById('modal-nuevo-cliente').close();
+        showToast('Cliente creado exitosamente', 'success');
+      } catch (err) {
+        showToast(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.classList.remove('loading');
+      }
+    });
   </script>
+  <script>lucide.createIcons();</script>
 </body>
 </html>

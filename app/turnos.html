@@ -11,17 +11,16 @@
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/base.css" />
   <link rel="stylesheet" href="css/components.css" />
   <link rel="stylesheet" href="css/pages/turnos.css" />
+  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
 
   <div class="bg"></div>
-  <div class="orb orb--1"></div>
-  <div class="orb orb--2"></div>
-  <div class="orb orb--3"></div>
+
 
   <div class="main">
     <div class="top-bar">
@@ -33,7 +32,7 @@
       <div class="user-pill" id="userPill">
         <div class="avatar" id="userAvatar">?</div>
         <span id="userName">Cargando…</span>
-        <button class="logout-btn" id="logoutBtn" title="Cerrar sesión">✕</button>
+        <button class="logout-btn" id="logoutBtn" title="Cerrar sesión"><i data-lucide="log-out"></i></button>
       </div>
     </div>
 
@@ -73,6 +72,7 @@
 
   <div class="toast" id="toast" aria-live="polite"></div>
 
+  <script src="js/node-network.js"></script>
   <script src="js/utils.js"></script>
   <script>
     let sessionId = null;
@@ -249,5 +249,6 @@
 
     document.addEventListener('DOMContentLoaded', init);
   </script>
+  <script>lucide.createIcons();</script>
 </body>
 </html>

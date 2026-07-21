@@ -11,16 +11,16 @@
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/base.css" />
   <link rel="stylesheet" href="css/components.css" />
   <link rel="stylesheet" href="css/pages/ingreso.css" />
+  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
 
   <div class="bg"></div>
-  <div class="orb orb--1"></div>
-  <div class="orb orb--2"></div>
+
 
   <div class="card">
     <div class="header">
@@ -45,16 +45,17 @@
       </button>
     </form>
 
-    <div id="registerBlock" style="display: none; margin-top: 2rem; padding: 1.5rem; background: rgba(255, 60, 60, 0.05); border: 1px solid rgba(255, 60, 60, 0.2); border-radius: 12px; text-align: center;">
-      <div style="font-size: 2rem; margin-bottom: 0.5rem;">⚠️</div>
-      <h3 style="color: var(--text-primary); margin-bottom: 0.5rem; font-size: 1.1rem;">DNI no encontrado</h3>
-      <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">Parece que no tenés una cuenta registrada con este DNI.</p>
-      <a href="formulario.html" class="submit-btn" style="text-decoration: none; display: inline-flex; justify-content: center; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);">Registrarme ahora</a>
+    <div id="registerBlock" style="display: none; margin-top: 2rem; padding: 1.5rem; background: rgba(220, 53, 69, 0.05); border: 1px solid rgba(220, 53, 69, 0.2); border-radius: var(--radius-lg); text-align: center;">
+      <div style="font-size: 2rem; margin-bottom: 0.5rem;">⚠</div>
+      <h3 style="color: var(--color-text-primary); margin-bottom: 0.5rem; font-size: 1.1rem;">DNI no encontrado</h3>
+      <p style="color: var(--color-text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">Parece que no tenés una cuenta registrada con este DNI.</p>
+      <a href="formulario.html" class="submit-btn" style="text-decoration: none; display: inline-flex; justify-content: center; background: var(--glass-bg); border: 1px solid var(--glass-border);">Registrarme ahora</a>
     </div>
   </div>
 
   <div class="toast" id="toast" aria-live="polite"></div>
 
+  <script src="js/node-network.js"></script>
   <script src="js/utils.js"></script>
   <script>
     // ─── Validación ─────────────────────────────────
@@ -130,5 +131,6 @@
       }
     });
   </script>
+  <script>lucide.createIcons();</script>
 </body>
 </html>
