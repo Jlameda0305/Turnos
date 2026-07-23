@@ -20,52 +20,7 @@
   
   <div class="admin-layout">
     <!-- Sidebar -->
-        <header class="admin-topnav">
-      <div class="admin-topnav-left">
-        <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Abrir menú">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
-        </button>
-        <div class="brand" style="margin-bottom: 0;">
-          <div class="brand-icon" style="width:32px; height:32px; font-size:1rem;">A</div>
-          <span class="brand-name" style="font-size:1.2rem;">AIONEX</span>
-          <span class="admin-badge-inline">ADMIN</span>
-        </div>
-      </div>
-
-      <nav class="nav-menu" id="navMenu">
-
-        <div class="nav-section-title">Principal</div>
-        <a href="dashboard.html" class="nav-link">
-          <span class="icon"><i data-lucide="layout-dashboard"></i></span>
-          Dashboard
-        </a>
-        <div class="nav-section-title">Gestión</div>
-        <a href="turnos.html" class="nav-link">
-          <span class="icon"><i data-lucide="calendar"></i></span>
-          Turnos
-        </a>
-        <a href="clientes.html" class="nav-link active">
-          <span class="icon"><i data-lucide="users"></i></span>
-          Clientes
-        </a>
-        <a href="servicios.html" class="nav-link">
-          <span class="icon"><i data-lucide="settings"></i></span>
-          Servicios
-        </a>
-        <a href="tipos-servicio.html" class="nav-link">
-          <span class="icon"><i data-lucide="tag"></i></span>
-          Tipos de Servicio
-        </a>
-      </nav>
-      
-      <div class="admin-topnav-right">
-        <div class="user-pill" id="userPill">
-          <div class="avatar" id="userAvatar">A</div>
-          <span id="userName">Admin</span>
-          <button class="logout-btn" id="logoutBtn" title="Cerrar sesión"><i data-lucide="log-out"></i></button>
-        </div>
-      </div>
-    </header>
+    <header class="admin-topnav"></header>
 
     <!-- Main Content -->
     <main class="admin-content">
@@ -204,8 +159,8 @@
     let searchTimeout = null;
 
     document.addEventListener('DOMContentLoaded', async () => {
+      renderAdminNav('clientes');
       if (!(await getAdminSessionOrRedirect())) return;
-      document.getElementById('logoutBtn').addEventListener('click', adminLogout);
       
       document.getElementById('searchInput').addEventListener('input', handleSearch);
       document.getElementById('prevPageBtn').addEventListener('click', () => { currentPage--; cargarClientes(); });
@@ -263,17 +218,22 @@
       clientes.forEach(c => {
         const tr = document.createElement('tr');
         
-        const fecha = new Date(c.created_at).toLocaleDateString('es-AR');
-        const nombreCompleto = `${c.nombre} ${c.apellido}`;
+        const fecha = c.created_at ? new Date(c.created_at).toLocaleDateString('es-AR') : '—';
+        const nombreCompleto = safeVal(`${c.nombre || ''} ${c.apellido || ''}`.trim(), 'Sin Nombre');
+        const waUrl = buildWhatsAppUrl(c.telefono);
+        const waBtn = waUrl 
+          ? `<a href="${waUrl}" target="_blank" rel="noopener" class="btn-icon" style="color: #25D366;" title="Contactar por WhatsApp (${safeVal(c.telefono)})"><i data-lucide="message-circle"></i></a>` 
+          : '';
 
         tr.innerHTML = `
-          <td>${c.dni}</td>
+          <td>${safeVal(c.dni)}</td>
           <td><strong>${nombreCompleto}</strong></td>
-          <td>${c.email}</td>
-          <td>${c.telefono || '<span style="color:rgba(255,255,255,0.3)">-</span>'}</td>
+          <td>${safeVal(c.email)}</td>
+          <td>${safeVal(c.telefono)}</td>
           <td>${fecha}</td>
           <td>
             <div class="actions-cell">
+              ${waBtn}
               <button class="btn-icon" title="Ver detalle" onclick="window.location.href='cliente-detalle.html?id=${c.id_cliente}'"><i data-lucide="eye"></i></button>
               <button class="btn-icon" title="Editar" onclick="window.location.href='cliente-detalle.html?id=${c.id_cliente}&edit=true'"><i data-lucide="pencil"></i></button>
               <button class="btn-icon danger" title="Eliminar" onclick="openDeleteModal('${c.id_cliente}', '${nombreCompleto}')"><i data-lucide="trash-2"></i></button>
@@ -282,6 +242,7 @@
         `;
         tbody.appendChild(tr);
       });
+      refreshIcons(tbody);
     }
 
     function updatePagination(total, currentCount) {

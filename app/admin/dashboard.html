@@ -20,52 +20,7 @@
   
   <div class="admin-layout">
     <!-- Sidebar -->
-        <header class="admin-topnav">
-      <div class="admin-topnav-left">
-        <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Abrir menú">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
-        </button>
-        <div class="brand" style="margin-bottom: 0;">
-          <div class="brand-icon" style="width:32px; height:32px; font-size:1rem;">A</div>
-          <span class="brand-name" style="font-size:1.2rem;">AIONEX</span>
-          <span class="admin-badge-inline">ADMIN</span>
-        </div>
-      </div>
-
-      <nav class="nav-menu" id="navMenu">
-
-        <div class="nav-section-title">Principal</div>
-        <a href="dashboard.html" class="nav-link active">
-          <span class="icon"><i data-lucide="layout-dashboard"></i></span>
-          Dashboard
-        </a>
-        <div class="nav-section-title">Gestión</div>
-        <a href="turnos.html" class="nav-link">
-          <span class="icon"><i data-lucide="calendar"></i></span>
-          Turnos
-        </a>
-        <a href="clientes.html" class="nav-link">
-          <span class="icon"><i data-lucide="users"></i></span>
-          Clientes
-        </a>
-        <a href="servicios.html" class="nav-link">
-          <span class="icon"><i data-lucide="settings"></i></span>
-          Servicios
-        </a>
-        <a href="tipos-servicio.html" class="nav-link">
-          <span class="icon"><i data-lucide="tag"></i></span>
-          Tipos de Servicio
-        </a>
-      </nav>
-      
-      <div class="admin-topnav-right">
-        <div class="user-pill" id="userPill">
-          <div class="avatar" id="userAvatar">A</div>
-          <span id="userName">Admin</span>
-          <button class="logout-btn" id="logoutBtn" title="Cerrar sesión"><i data-lucide="log-out"></i></button>
-        </div>
-      </div>
-    </header>
+    <header class="admin-topnav"></header>
 
     <!-- Main Content -->
     <main class="admin-content">
@@ -96,12 +51,12 @@
           <div class="label">Turnos de Hoy</div>
         </div>
         <div class="metric-card" onclick="window.location.href='turnos.html'" style="cursor: pointer;" title="Ir a Turnos">
-          <div class="icon">✅</div>
+          <div class="icon" style="color: var(--color-success-text);"><i data-lucide="calendar-check"></i></div>
           <div class="value" id="metricTurnosActivos">-</div>
           <div class="label">Turnos Activos (Futuros)</div>
         </div>
         <div class="metric-card" onclick="window.location.href='turnos.html'" style="cursor: pointer;" title="Ir a Turnos">
-          <div class="icon">❌</div>
+          <div class="icon" style="color: var(--color-error-text);"><i data-lucide="calendar-x"></i></div>
           <div class="value" id="metricCancelados">-</div>
           <div class="label">Cancelaciones (Mes)</div>
         </div>
@@ -130,14 +85,14 @@
   <script src="../js/admin-utils.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
+      // Renderizar navegación centralizada
+      renderAdminNav('dashboard');
+
       // 1. Validar sesión de admin
       const session = await getAdminSessionOrRedirect();
       if (!session) return;
 
-      // 2. Configurar el logout
-      document.getElementById('logoutBtn').addEventListener('click', adminLogout);
-
-      // 3. (Etapa 2) Cargar dashboard real desde n8n
+      // 2. Cargar dashboard real desde n8n
       cargarDashboardStats();
     });
 

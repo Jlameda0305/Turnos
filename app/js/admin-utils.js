@@ -73,6 +73,89 @@ async function adminLogout() {
   window.location.href = 'index.html';
 }
 
+/**
+ * Centralized navigation renderer for admin pages.
+ * @param {string} activePage - Name of current page ('dashboard', 'turnos', 'clientes', 'servicios', 'tipos-servicio')
+ */
+function renderAdminNav(activePage = '') {
+  const header = document.querySelector('.admin-topnav') || document.getElementById('adminTopnavContainer');
+  if (!header) return;
+
+  header.className = 'admin-topnav';
+  header.innerHTML = `
+    <div class="admin-topnav-left">
+      <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Abrir menú">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+      </button>
+      <div class="brand" style="margin-bottom: 0;">
+        <div class="brand-icon" style="width:32px; height:32px;"><img src="../assets/logo-aionex.svg" alt="AIONEX" /></div>
+        <span class="brand-name" style="font-size:1.2rem;">AIONEX</span>
+        <span class="admin-badge-inline">ADMIN</span>
+      </div>
+    </div>
+
+    <nav class="nav-menu" id="navMenu">
+      <div class="nav-section-title">Principal</div>
+      <a href="dashboard.html" class="nav-link ${activePage === 'dashboard' ? 'active' : ''}">
+        <span class="icon"><i data-lucide="layout-dashboard"></i></span>
+        Dashboard
+      </a>
+      <div class="nav-section-title">Gestión</div>
+      <a href="turnos.html" class="nav-link ${activePage === 'turnos' ? 'active' : ''}">
+        <span class="icon"><i data-lucide="calendar"></i></span>
+        Turnos
+      </a>
+      <a href="clientes.html" class="nav-link ${['clientes', 'cliente-detalle'].includes(activePage) ? 'active' : ''}">
+        <span class="icon"><i data-lucide="users"></i></span>
+        Clientes
+      </a>
+      <a href="servicios.html" class="nav-link ${activePage === 'servicios' ? 'active' : ''}">
+        <span class="icon"><i data-lucide="settings"></i></span>
+        Servicios
+      </a>
+      <a href="tipos-servicio.html" class="nav-link ${activePage === 'tipos-servicio' ? 'active' : ''}">
+        <span class="icon"><i data-lucide="tag"></i></span>
+        Tipos de Servicio
+      </a>
+    </nav>
+    
+    <div class="admin-topnav-right">
+      <div class="user-pill" id="userPill">
+        <div class="avatar" id="userAvatar">A</div>
+        <span id="userName">Admin</span>
+        <button class="logout-btn" id="logoutBtn" title="Cerrar sesión"><i data-lucide="log-out"></i></button>
+      </div>
+    </div>
+  `;
+
+  // Attach mobile menu behavior
+  const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+  const navMenu = document.getElementById('navMenu');
+  if (mobileMenuBtn && navMenu) {
+    mobileMenuBtn.onclick = (e) => {
+      e.stopPropagation();
+      navMenu.classList.toggle('active');
+    };
+    document.onclick = (e) => {
+      if (!mobileMenuBtn.contains(e.target) && !navMenu.contains(e.target)) {
+        navMenu.classList.remove('active');
+      }
+    };
+  }
+
+  // Attach logout behavior
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) {
+    logoutBtn.onclick = adminLogout;
+  }
+
+  if (typeof refreshIcons === 'function') {
+    refreshIcons(header);
+  } else if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
+  }
+}
+
 // Ensure N8N_BASE_URL and fetchWithTimeout are available from utils.js
 if (typeof N8N_BASE_URL === 'undefined') {
   console.error('admin-utils.js requires utils.js to be loaded first.');

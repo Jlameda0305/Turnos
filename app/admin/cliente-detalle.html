@@ -14,6 +14,49 @@
   <link rel="stylesheet" href="../css/pages/admin-layout.css" />
   <link rel="stylesheet" href="../css/pages/admin-tables.css" />
   <style>
+    .client-hero {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.5rem;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      padding: 1.5rem 2rem;
+      border-radius: var(--radius-lg);
+      margin-bottom: 1.5rem;
+      backdrop-filter: blur(10px);
+      flex-wrap: wrap;
+    }
+    .client-hero-left {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+    }
+    .client-avatar {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      background: var(--color-bg-surface);
+      border: 2px solid var(--color-accent);
+      color: var(--color-accent);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-heading);
+      font-size: 1.4rem; font-weight: 600;
+      box-shadow: var(--glow-plateado);
+      flex-shrink: 0;
+    }
+    .client-hero-name {
+      font-family: var(--font-heading);
+      font-size: 1.5rem; font-weight: 600;
+      color: var(--color-text-primary);
+      margin-bottom: 0.2rem;
+    }
+    .client-hero-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      color: var(--color-text-secondary);
+      font-size: 0.85rem;
+    }
     .detail-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -23,6 +66,11 @@
       padding: 2rem;
       border-radius: var(--radius-lg);
       margin-bottom: 2rem;
+      transition: border-color var(--transition-default), box-shadow var(--transition-default);
+    }
+    .detail-grid.editing {
+      border-color: var(--color-accent);
+      box-shadow: 0 0 20px rgba(201, 204, 209, 0.12);
     }
     .detail-item {
       display: flex;
@@ -30,10 +78,12 @@
       gap: 0.5rem;
     }
     .detail-item label {
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       color: var(--color-text-secondary);
       text-transform: uppercase;
       letter-spacing: 0.05em;
+      font-family: var(--font-heading);
+      font-weight: 500;
     }
     .detail-item input, .detail-item select {
       background: var(--glass-bg);
@@ -42,15 +92,20 @@
       padding: 0.75rem 1rem;
       border-radius: var(--radius-md);
       font-family: inherit;
+      font-size: 0.95rem;
+      transition: all var(--transition-fast);
     }
     .detail-item input:disabled, .detail-item select:disabled {
-      background: transparent;
-      border-color: transparent;
-      padding: 0;
-      opacity: 1;
-      font-weight: 500;
-      font-size: 1rem;
-      appearance: none;
+      background: rgba(255, 255, 255, 0.02);
+      border-color: rgba(255, 255, 255, 0.05);
+      padding: 0.75rem 1rem;
+      opacity: 0.9;
+      cursor: not-allowed;
+    }
+    .detail-item input:not(:disabled):focus, .detail-item select:not(:disabled):focus {
+      border-color: var(--color-accent);
+      box-shadow: 0 0 0 3px rgba(201,204,209,.12);
+      outline: none;
     }
     .form-actions {
       display: flex;
@@ -59,6 +114,10 @@
       justify-content: flex-end;
       margin-top: 1rem;
     }
+    @media (max-width: 640px) {
+      .detail-grid { grid-template-columns: 1fr; }
+      .client-hero { flex-direction: column; align-items: flex-start; }
+    }
   </style>
   <script src="https://unpkg.com/lucide@latest"></script>
 </head>
@@ -66,58 +125,12 @@
   <div class="bg"></div>
   
   <div class="admin-layout">
-        <header class="admin-topnav">
-      <div class="admin-topnav-left">
-        <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Abrir menú">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
-        </button>
-        <div class="brand" style="margin-bottom: 0;">
-          <div class="brand-icon" style="width:32px; height:32px; font-size:1rem;">A</div>
-          <span class="brand-name" style="font-size:1.2rem;">AIONEX</span>
-          <span class="admin-badge-inline">ADMIN</span>
-        </div>
-      </div>
-
-      <nav class="nav-menu" id="navMenu">
-
-        <div class="nav-section-title">Principal</div>
-        <a href="dashboard.html" class="nav-link">
-          <span class="icon"><i data-lucide="layout-dashboard"></i></span>
-          Dashboard
-        </a>
-        <div class="nav-section-title">Gestión</div>
-        <a href="turnos.html" class="nav-link">
-          <span class="icon"><i data-lucide="calendar"></i></span>
-          Turnos
-        </a>
-        <a href="clientes.html" class="nav-link active">
-          <span class="icon"><i data-lucide="users"></i></span>
-          Clientes
-        </a>
-        <a href="servicios.html" class="nav-link">
-          <span class="icon"><i data-lucide="settings"></i></span>
-          Servicios
-        </a>
-        <a href="tipos-servicio.html" class="nav-link">
-          <span class="icon"><i data-lucide="tag"></i></span>
-          Tipos de Servicio
-        </a>
-      </nav>
-      
-      <div class="admin-topnav-right">
-        <div class="user-pill" id="userPill">
-          <div class="avatar" id="userAvatar">A</div>
-          <span id="userName">Admin</span>
-          <button class="logout-btn" id="logoutBtn" title="Cerrar sesión"><i data-lucide="log-out"></i></button>
-        </div>
-      </div>
-    </header>
+    <header class="admin-topnav"></header>
 
     <main class="admin-content">
       <div class="admin-header" style="margin-bottom: 1rem;">
         <div class="admin-title">
           <a href="clientes.html" style="color:var(--color-indigo-light); text-decoration:none; font-size: 0.9rem; display:inline-block; margin-bottom: 0.5rem;">← Volver a Clientes</a>
-          <h1 id="pageTitle">Detalle del Cliente</h1>
         </div>
       </div>
 
@@ -127,6 +140,30 @@
       </div>
 
       <div id="contentState" style="display:none;">
+        <!-- Hero Card del Cliente -->
+        <div class="client-hero">
+          <div class="client-hero-left">
+            <div class="client-avatar" id="clientAvatarHero">C</div>
+            <div>
+              <div class="client-hero-name" id="pageTitle">Detalle del Cliente</div>
+              <div class="client-hero-meta">
+                <span>DNI: <strong id="heroDni" style="color: var(--color-text-primary);">—</strong></span>
+                <span>•</span>
+                <span id="heroEmail" style="color: var(--color-text-secondary);">—</span>
+              </div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 1rem;">
+            <a id="btnWhatsAppHeader" href="#" target="_blank" rel="noopener" class="btn-secondary" style="display: none; align-items: center; gap: 0.4rem; color: #25D366; border-color: rgba(37, 211, 102, 0.3); text-decoration: none; padding: 0.5rem 1rem; font-size: 0.85rem;" title="Abrir chat de WhatsApp">
+              <i data-lucide="message-circle"></i> WhatsApp
+            </a>
+            <label class="toggle-switch" title="Cambiar estado del cliente">
+              <input type="checkbox" id="toggleClienteActivo">
+              <span class="toggle-slider"></span>
+              <span id="labelClienteActivo" style="font-size: 0.9rem; font-weight: 600; color: var(--color-text-primary); min-width: 60px;">Activo</span>
+            </label>
+          </div>
+        </div>
         <!-- Formulario -->
         <form id="clienteForm" class="detail-grid">
           <div class="detail-item">
@@ -213,8 +250,8 @@
     let originalData = {};
 
     document.addEventListener('DOMContentLoaded', async () => {
+      renderAdminNav('cliente-detalle');
       if (!(await getAdminSessionOrRedirect())) return;
-      document.getElementById('logoutBtn').addEventListener('click', adminLogout);
       
       if (!clientId) {
         window.location.href = 'clientes.html';
@@ -243,6 +280,50 @@
         renderTurnos(data.turnos || []);
         
         document.getElementById('btnVerTodosTurnos').href = `turnos.html?cliente=${encodeURIComponent(data.dni)}`;
+
+        // Configurar WhatsApp
+        const waUrl = buildWhatsAppUrl(data.telefono);
+        const waBtn = document.getElementById('btnWhatsAppHeader');
+        if (waBtn) {
+          if (waUrl) {
+            waBtn.href = waUrl;
+            waBtn.style.display = 'inline-flex';
+          } else {
+            waBtn.style.display = 'none';
+          }
+        }
+
+        // Configurar Toggle Activo/Inactivo
+        const toggle = document.getElementById('toggleClienteActivo');
+        const label = document.getElementById('labelClienteActivo');
+        if (toggle && label) {
+          const isActivo = data.activo !== false;
+          toggle.checked = isActivo;
+          label.textContent = isActivo ? 'Activo' : 'Inactivo';
+          label.style.color = isActivo ? 'var(--color-success-text)' : 'var(--color-error-text)';
+
+          toggle.onchange = async (e) => {
+            const isChecked = e.target.checked;
+            label.textContent = isChecked ? 'Activo' : 'Inactivo';
+            label.style.color = isChecked ? 'var(--color-success-text)' : 'var(--color-error-text)';
+
+            try {
+              const resp = await adminFetch(`${ADMIN_N8N_PREFIX}/clientes/${clientId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ activo: isChecked })
+              });
+              if (!resp.ok) throw new Error('Error al actualizar estado');
+              showToast(`Cliente ${isChecked ? 'activado' : 'desactivado'} correctamente`, 'success');
+              originalData.activo = isChecked;
+            } catch (err) {
+              showToast('Error al actualizar estado', 'error');
+              toggle.checked = !isChecked;
+              label.textContent = !isChecked ? 'Activo' : 'Inactivo';
+              label.style.color = !isChecked ? 'var(--color-success-text)' : 'var(--color-error-text)';
+            }
+          };
+        }
         
         if (urlParams.get('edit') === 'true') {
           toggleEdit();
@@ -254,15 +335,27 @@
     }
 
     function fillForm(data) {
-      document.getElementById('pageTitle').textContent = `${data.nombre} ${data.apellido}`;
-      document.getElementById('dni').value = data.dni;
-      document.getElementById('email').value = data.email;
-      document.getElementById('nombre').value = data.nombre;
-      document.getElementById('apellido').value = data.apellido;
-      document.getElementById('sexo').value = data.sexo;
-      document.getElementById('fecha_nacimiento').value = data.fecha_nacimiento;
-      document.getElementById('telefono').value = data.telefono || '';
-      document.getElementById('direccion').value = data.direccion || '';
+      const fullName = safeVal(`${data.nombre || ''} ${data.apellido || ''}`.trim(), 'Cliente');
+      document.getElementById('pageTitle').textContent = fullName;
+      
+      const heroDni = document.getElementById('heroDni');
+      if (heroDni) heroDni.textContent = safeVal(data.dni);
+      
+      const heroEmail = document.getElementById('heroEmail');
+      if (heroEmail) heroEmail.textContent = safeVal(data.email);
+      
+      const initials = `${(data.nombre || '').charAt(0)}${(data.apellido || '').charAt(0)}`.toUpperCase() || 'C';
+      const avatarEl = document.getElementById('clientAvatarHero');
+      if (avatarEl) avatarEl.textContent = initials;
+
+      document.getElementById('dni').value = safeVal(data.dni, '');
+      document.getElementById('email').value = safeVal(data.email, '');
+      document.getElementById('nombre').value = safeVal(data.nombre, '');
+      document.getElementById('apellido').value = safeVal(data.apellido, '');
+      document.getElementById('sexo').value = safeVal(data.sexo, 'X');
+      document.getElementById('fecha_nacimiento').value = safeVal(data.fecha_nacimiento, '');
+      document.getElementById('telefono').value = safeVal(data.telefono, '');
+      document.getElementById('direccion').value = safeVal(data.direccion, '');
     }
 
     function renderTurnos(turnos) {
@@ -284,20 +377,24 @@
           <td>${formatHoraDisplay(t.hora)}</td>
           <td>
             <span class="status-badge ${statusClass}">
-              ${t.estado}
+              ${safeVal(t.estado, 'pendiente')}
             </span>
           </td>
-          <td>${t.observaciones || '<span style="color:var(--text-faint)">-</span>'}</td>
+          <td>${safeVal(t.observaciones)}</td>
         `;
         tbody.appendChild(tr);
       });
+      refreshIcons(tbody);
     }
 
     function toggleEdit() {
       isEditing = true;
+      const form = document.getElementById('clienteForm');
+      if (form) form.classList.add('editing');
+
       const inputs = document.querySelectorAll('#clienteForm input, #clienteForm select');
       inputs.forEach(el => {
-        if (el.id !== 'dni' && el.id !== 'email') el.disabled = false; // DNI y email no editables por seguridad simple
+        if (el.id !== 'dni' && el.id !== 'email') el.disabled = false;
       });
       document.getElementById('editBtn').style.display = 'none';
       document.getElementById('cancelBtn').style.display = 'block';
@@ -306,7 +403,10 @@
 
     function cancelEdit() {
       isEditing = false;
-      fillForm(originalData); // Restore data
+      const form = document.getElementById('clienteForm');
+      if (form) form.classList.remove('editing');
+
+      fillForm(originalData);
       const inputs = document.querySelectorAll('#clienteForm input, #clienteForm select');
       inputs.forEach(el => el.disabled = true);
       

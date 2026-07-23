@@ -100,31 +100,43 @@ function getSessionOrRedirect() {
   return sessionId;
 }
 
-// ── Icons (Lucide) Auto-Render ─────────────────
+// ── Null / Safe Value Helper ─────────────────────
+
+function safeVal(val, fallback = '—') {
+  if (val === null || val === undefined || val === 'null' || val === '' || val === 'undefined') {
+    return fallback;
+  }
+  return val;
+}
+
+
+// ── WhatsApp Helper ──────────────────────────────
+
+function buildWhatsAppUrl(telefono) {
+  if (!telefono || ['null', 'undefined', ''].includes(String(telefono).trim())) return null;
+  const digits = String(telefono).replace(/\D/g, '');
+  if (digits.length < 8) return null;
+  let normalized = digits;
+  if (normalized.startsWith('0')) normalized = '54' + normalized.slice(1);
+  else if (!normalized.startsWith('54')) normalized = '54' + normalized;
+  if (normalized.length < 10 || normalized.length > 15) return null;
+  return `https://wa.me/${normalized}`;
+}
+
+
+// ── Icons (Lucide) Helper & Auto-Render ────────
+function refreshIcons(target) {
+  if (typeof lucide !== 'undefined') {
+    try {
+      lucide.createIcons(target ? { nodes: [target] } : undefined);
+    } catch (e) {
+      console.warn('Error rendering icons:', e);
+    }
+  }
+}
+
 if (typeof lucide !== 'undefined') {
-  const observer = new MutationObserver((mutations) => {
-    let shouldUpdate = false;
-    for (let m of mutations) {
-      if (m.addedNodes.length > 0) {
-        // Ignorar nodos SVG que Lucide acaba de crear
-        for (let node of m.addedNodes) {
-          if (node.nodeType === 1 && !node.classList.contains('lucide')) {
-            shouldUpdate = true;
-            break;
-          }
-        }
-      }
-      if (shouldUpdate) break;
-    }
-    
-    if (shouldUpdate) {
-      observer.disconnect();
-      lucide.createIcons();
-      observer.observe(document.body, { childList: true, subtree: true });
-    }
-  });
-  
   document.addEventListener('DOMContentLoaded', () => {
-    observer.observe(document.body, { childList: true, subtree: true });
+    refreshIcons();
   });
 }

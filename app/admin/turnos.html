@@ -22,52 +22,7 @@
   <div class="bg"></div>
   
   <div class="admin-layout">
-        <header class="admin-topnav">
-      <div class="admin-topnav-left">
-        <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Abrir menú">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
-        </button>
-        <div class="brand" style="margin-bottom: 0;">
-          <div class="brand-icon" style="width:32px; height:32px; font-size:1rem;">A</div>
-          <span class="brand-name" style="font-size:1.2rem;">AIONEX</span>
-          <span class="admin-badge-inline">ADMIN</span>
-        </div>
-      </div>
-
-      <nav class="nav-menu" id="navMenu">
-
-        <div class="nav-section-title">Principal</div>
-        <a href="dashboard.html" class="nav-link">
-          <span class="icon"><i data-lucide="layout-dashboard"></i></span>
-          Dashboard
-        </a>
-        <div class="nav-section-title">Gestión</div>
-        <a href="turnos.html" class="nav-link active">
-          <span class="icon"><i data-lucide="calendar"></i></span>
-          Turnos
-        </a>
-        <a href="clientes.html" class="nav-link">
-          <span class="icon"><i data-lucide="users"></i></span>
-          Clientes
-        </a>
-        <a href="servicios.html" class="nav-link">
-          <span class="icon"><i data-lucide="settings"></i></span>
-          Servicios
-        </a>
-        <a href="tipos-servicio.html" class="nav-link">
-          <span class="icon"><i data-lucide="tag"></i></span>
-          Tipos de Servicio
-        </a>
-      </nav>
-      
-      <div class="admin-topnav-right">
-        <div class="user-pill" id="userPill">
-          <div class="avatar" id="userAvatar">A</div>
-          <span id="userName">Admin</span>
-          <button class="logout-btn" id="logoutBtn" title="Cerrar sesión"><i data-lucide="log-out"></i></button>
-        </div>
-      </div>
-    </header>
+    <header class="admin-topnav"></header>
 
     <main class="admin-content">
       <div class="admin-header">
@@ -80,7 +35,29 @@
         </div>
       </div>
 
-      <div class="panel admin-filter-panel">
+      <!-- Control Bar: Modos de Vista & Filtros -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+        <div class="view-mode-toggle" id="viewModeToggle">
+          <button class="view-mode-btn active" data-mode="tabla">
+            <i data-lucide="list"></i> Tabla
+          </button>
+          <button class="view-mode-btn" data-mode="dia">
+            <i data-lucide="calendar"></i> Día
+          </button>
+          <button class="view-mode-btn" data-mode="semana">
+            <i data-lucide="calendar-days"></i> Semana
+          </button>
+        </div>
+
+        <div id="calendarNavControls" class="calendar-nav-buttons" style="display: none;">
+          <button class="btn-secondary" id="calPrevBtn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">← Anterior</button>
+          <button class="btn-secondary" id="calTodayBtn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">Hoy</button>
+          <button class="btn-secondary" id="calNextBtn" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">Siguiente →</button>
+          <span id="calendarDateDisplay" class="calendar-title-date" style="margin-left: 0.5rem;">—</span>
+        </div>
+      </div>
+
+      <div class="panel admin-filter-panel" id="searchFilterPanel">
         <div class="filter-group">
           <label class="filter-label">Buscar Cliente</label>
           <input type="text" id="searchCliente" placeholder="DNI o Nombre..." class="filter-input">
@@ -103,7 +80,13 @@
         <button class="tab-btn" data-estado="completado">Completados</button>
       </div>
 
-      <div class="table-container">
+      <!-- Contenedor Vista Calendario -->
+      <div id="calendarContainer" class="calendar-view-container" style="display: none;">
+        <div id="calendarGrid"></div>
+      </div>
+
+      <!-- Contenedor Vista Tabla -->
+      <div class="table-container" id="tableContainer">
         <table class="admin-table">
           <thead>
             <tr>
@@ -216,7 +199,12 @@
     let windowTurnos = [];
     let deleteTargetId = null;
 
+    // Estado del Calendario
+    let currentViewMode = 'tabla'; // 'tabla', 'dia', 'semana'
+    let calendarSelectedDate = new Date();
+
     document.addEventListener('DOMContentLoaded', async () => {
+      renderAdminNav('turnos');
       if (!(await getAdminSessionOrRedirect())) return;
       
       const urlParams = new URLSearchParams(window.location.search);
@@ -224,17 +212,40 @@
         document.getElementById('searchCliente').value = urlParams.get('cliente');
       }
 
-      document.getElementById('logoutBtn').addEventListener('click', adminLogout);
       document.getElementById('confirmDeleteBtn').addEventListener('click', doEliminarTurno);
       
+      // Manejo de tabs de filtro por estado
       document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
           document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
           e.target.classList.add('active');
           currentFilter = e.target.dataset.estado;
           currentPage = 1;
-          cargarTurnos();
+          if (currentViewMode === 'tabla') {
+            cargarTurnos();
+          } else {
+            cargarTurnosCalendar();
+          }
         });
+      });
+
+      // Manejo de Toggle de Modos de Vista (Tabla / Día / Semana)
+      document.querySelectorAll('.view-mode-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          document.querySelectorAll('.view-mode-btn').forEach(b => b.classList.remove('active'));
+          const target = e.currentTarget;
+          target.classList.add('active');
+          currentViewMode = target.dataset.mode;
+          switchViewMode(currentViewMode);
+        });
+      });
+
+      // Controles de navegación del calendario
+      document.getElementById('calPrevBtn').addEventListener('click', () => navigateCalendar(-1));
+      document.getElementById('calNextBtn').addEventListener('click', () => navigateCalendar(1));
+      document.getElementById('calTodayBtn').addEventListener('click', () => {
+        calendarSelectedDate = new Date();
+        cargarTurnosCalendar();
       });
 
       document.getElementById('prevPageBtn').addEventListener('click', () => { currentPage--; cargarTurnos(); });
@@ -245,7 +256,7 @@
         document.getElementById('searchCliente').value = ''; 
         document.getElementById('searchFecha').value = ''; 
         currentPage = 1; 
-        cargarTurnos(); 
+        if (currentViewMode === 'tabla') cargarTurnos(); else cargarTurnosCalendar();
       });
 
       document.getElementById('editTurnoForm').addEventListener('submit', handleEditSubmit);
@@ -253,6 +264,201 @@
       cargarServicios();
       cargarTurnos();
     });
+
+    function switchViewMode(mode) {
+      const tableContainer = document.getElementById('tableContainer');
+      const searchPanel = document.getElementById('searchFilterPanel');
+      const calContainer = document.getElementById('calendarContainer');
+      const calControls = document.getElementById('calendarNavControls');
+
+      if (mode === 'tabla') {
+        tableContainer.style.display = 'block';
+        searchPanel.style.display = 'flex';
+        calContainer.style.display = 'none';
+        calControls.style.display = 'none';
+        cargarTurnos();
+      } else {
+        tableContainer.style.display = 'none';
+        searchPanel.style.display = 'none';
+        calContainer.style.display = 'block';
+        calControls.style.display = 'flex';
+        cargarTurnosCalendar();
+      }
+    }
+
+    function toIsoDate(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
+    function getMonday(d) {
+      const date = new Date(d);
+      const day = date.getDay();
+      const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+      return new Date(date.setDate(diff));
+    }
+
+    function navigateCalendar(direction) {
+      if (currentViewMode === 'dia') {
+        calendarSelectedDate.setDate(calendarSelectedDate.getDate() + direction);
+      } else if (currentViewMode === 'semana') {
+        calendarSelectedDate.setDate(calendarSelectedDate.getDate() + (direction * 7));
+      }
+      cargarTurnosCalendar();
+    }
+
+    function updateCalendarDateDisplay() {
+      const display = document.getElementById('calendarDateDisplay');
+      if (!display) return;
+
+      if (currentViewMode === 'dia') {
+        display.textContent = calendarSelectedDate.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+      } else if (currentViewMode === 'semana') {
+        const monday = getMonday(calendarSelectedDate);
+        const sunday = new Date(monday);
+        sunday.setDate(sunday.getDate() + 6);
+        display.textContent = `Semana del ${monday.getDate()} al ${sunday.getDate()} de ${sunday.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })}`;
+      }
+    }
+
+    async function cargarTurnosCalendar() {
+      updateCalendarDateDisplay();
+      const container = document.getElementById('calendarGrid');
+      if (!container) return;
+
+      container.innerHTML = '<div style="text-align:center; padding: 3rem;"><div class="mini-spinner" style="margin: 0 auto 1rem;"></div><p style="color:var(--color-text-secondary);">Cargando agenda...</p></div>';
+
+      try {
+        let fechaDesde, fechaHasta;
+        if (currentViewMode === 'dia') {
+          fechaDesde = toIsoDate(calendarSelectedDate);
+          fechaHasta = fechaDesde;
+        } else {
+          const monday = getMonday(calendarSelectedDate);
+          const sunday = new Date(monday);
+          sunday.setDate(sunday.getDate() + 6);
+          fechaDesde = toIsoDate(monday);
+          fechaHasta = toIsoDate(sunday);
+        }
+
+        let url = `${ADMIN_N8N_PREFIX}/turnos-v2?fecha_desde=${fechaDesde}&fecha_hasta=${fechaHasta}&estado=${currentFilter}&limit=100&offset=0`;
+        const resp = await adminFetch(url);
+        if (!resp.ok) throw new Error('Error al cargar turnos');
+        const data = await resp.json();
+
+        let rawTurnos = (data.data || []).filter(t => t.id_turno);
+
+        // Filtro fallback cliente-side para garantizar precisión temporal exacta
+        const filteredTurnos = rawTurnos.filter(t => {
+          if (!t.fecha) return false;
+          const tDate = t.fecha.split('T')[0];
+          return tDate >= fechaDesde && tDate <= fechaHasta;
+        });
+
+        windowTurnos = filteredTurnos;
+
+        if (currentViewMode === 'dia') {
+          renderDayView(container, fechaDesde, filteredTurnos);
+        } else {
+          renderWeekView(container, getMonday(calendarSelectedDate), filteredTurnos);
+        }
+
+      } catch (err) {
+        showToast('Error al cargar la agenda', 'error');
+        container.innerHTML = '<p style="text-align:center; padding: 2rem; color:var(--color-error-text);">No se pudieron cargar los turnos del calendario.</p>';
+      }
+    }
+
+    function renderDayView(container, dateStr, turnos) {
+      const slots = generarHorarios(); // 08:00 a 17:30
+      let html = '<div class="calendar-day-grid">';
+
+      slots.forEach(slot => {
+        const slotTurnos = turnos.filter(t => (t.hora || '').substring(0, 5) === slot);
+        html += `
+          <div class="calendar-slot-row">
+            <div class="calendar-slot-time">${slot}</div>
+            <div class="calendar-slot-events">
+        `;
+
+        if (slotTurnos.length === 0) {
+          html += `<span style="font-size:0.75rem; color:rgba(255,255,255,0.15); align-self:center;">—</span>`;
+        } else {
+          slotTurnos.forEach(t => {
+            const clienteNombre = safeVal(`${t.cliente_nombre || ''} ${t.cliente_apellido || ''}`.trim(), 'Desconocido');
+            const estado = (t.estado || 'pendiente').toLowerCase();
+            html += `
+              <div class="calendar-event-card status-${estado}" onclick="abrirEditarModal('${t.id_turno}')" title="Editar turno de ${clienteNombre}">
+                <div class="calendar-event-title">${clienteNombre}</div>
+                <div class="calendar-event-sub">${safeVal(t.servicio_nombre, 'Servicio')} (${formatHoraDisplay(t.hora)} - ${formatHoraDisplay(t.hora_fin)})</div>
+              </div>
+            `;
+          });
+        }
+
+        html += `</div></div>`;
+      });
+
+      html += '</div>';
+      container.innerHTML = html;
+      refreshIcons(container);
+    }
+
+    function renderWeekView(container, mondayDate, turnos) {
+      const weekDays = [];
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(mondayDate);
+        d.setDate(d.getDate() + i);
+        weekDays.push(d);
+      }
+
+      const slots = generarHorarios();
+      const todayIso = toIsoDate(new Date());
+
+      let html = '<div class="calendar-week-grid">';
+      
+      // Encabezado de la semana
+      html += '<div class="calendar-week-header">Hora</div>';
+      weekDays.forEach(d => {
+        const dIso = toIsoDate(d);
+        const isToday = dIso === todayIso;
+        const dayName = d.toLocaleDateString('es-AR', { weekday: 'short' });
+        const dayNum = d.getDate();
+        html += `<div class="calendar-week-header ${isToday ? 'today' : ''}">${dayName.toUpperCase()} ${dayNum}</div>`;
+      });
+
+      // Filas de horario
+      slots.forEach(slot => {
+        html += `<div class="calendar-slot-time" style="padding:0.4rem; text-align:center;">${slot}</div>`;
+        weekDays.forEach(d => {
+          const dIso = toIsoDate(d);
+          const cellTurnos = turnos.filter(t => {
+            const tDate = (t.fecha || '').split('T')[0];
+            const tHora = (t.hora || '').substring(0, 5);
+            return tDate === dIso && tHora === slot;
+          });
+
+          html += `<div class="calendar-week-cell">`;
+          cellTurnos.forEach(t => {
+            const clienteNombre = safeVal(`${t.cliente_nombre || ''} ${t.cliente_apellido || ''}`.trim(), 'Cliente');
+            const estado = (t.estado || 'pendiente').toLowerCase();
+            html += `
+              <div class="calendar-event-card status-${estado}" style="min-width:auto; padding:0.3rem 0.5rem;" onclick="abrirEditarModal('${t.id_turno}')" title="${clienteNombre} - ${safeVal(t.servicio_nombre)}">
+                <div class="calendar-event-title" style="font-size:0.75rem;">${clienteNombre}</div>
+                <div class="calendar-event-sub" style="font-size:0.7rem;">${safeVal(t.servicio_nombre)}</div>
+              </div>
+            `;
+          });
+          html += `</div>`;
+        });
+      });
+
+      html += '</div>';
+      container.innerHTML = html;
+      refreshIcons(container);
+    }
 
     async function cargarServicios() {
       try {
@@ -317,28 +523,31 @@
       turnos.forEach(t => {
         const tr = document.createElement('tr');
         
-        const clienteNombre = `${t.cliente_nombre || ''} ${t.cliente_apellido || ''}`.trim() || 'Desconocido';
+        const clienteNombre = safeVal(`${t.cliente_nombre || ''} ${t.cliente_apellido || ''}`.trim(), 'Desconocido');
+        const dniVal = safeVal(t.cliente_dni || t.cliente?.dni);
+        const tipoVal = safeVal(t.tipo_nombre);
+        const obsVal = safeVal(t.observaciones);
         
         let statusBadgeClass = 'status-badge--' + (t.estado || 'pendiente').toLowerCase();
 
         tr.innerHTML = `
           <td>
             <strong>${clienteNombre}</strong><br>
-            <span style="font-size:0.8rem; color:rgba(255,255,255,0.5)">DNI: ${t.cliente_dni || t.cliente?.dni || '-'}</span>
+            <span style="font-size:0.8rem; color:rgba(255,255,255,0.5)">DNI: ${dniVal}</span>
           </td>
           <td>
             ${formatFechaDisplay(t.fecha)}<br>
             <span style="font-size:0.8rem; color:rgba(255,255,255,0.7)">${formatHoraDisplay(t.hora)} a ${formatHoraDisplay(t.hora_fin)}</span>
           </td>
           <td>
-            <strong>${t.servicio_nombre || 'General'}</strong><br>
-            <span style="font-size:0.8rem; color:rgba(255,255,255,0.5)">${t.tipo_nombre || '-'}</span>
+            <strong>${safeVal(t.servicio_nombre, 'General')}</strong><br>
+            <span style="font-size:0.8rem; color:rgba(255,255,255,0.5)">${tipoVal}</span>
           </td>
-          <td style="max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${t.observaciones || ''}">
-            ${t.observaciones || '<span style="color:rgba(255,255,255,0.3)">-</span>'}
+          <td style="max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${obsVal}">
+            ${obsVal}
           </td>
           <td>
-            <span class="status-badge ${statusBadgeClass}">${t.estado}</span>
+            <span class="status-badge ${statusBadgeClass}">${safeVal(t.estado, 'pendiente')}</span>
           </td>
           <td>
             <div class="actions-cell">
@@ -349,6 +558,7 @@
         `;
         tbody.appendChild(tr);
       });
+      refreshIcons(tbody);
     }
 
     function abrirEditarModal(id_turno) {

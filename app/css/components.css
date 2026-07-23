@@ -21,6 +21,13 @@
   color: var(--color-accent);
   box-shadow: var(--shadow-panel);
   transition: box-shadow var(--transition-default);
+  overflow: hidden;
+  padding: 5px;
+}
+
+.brand-icon img, .brand-icon svg {
+  width: 100%; height: 100%;
+  object-fit: contain;
 }
 
 .brand-icon:hover {
