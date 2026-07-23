@@ -5,9 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Detalle Cliente — AIONEX Admin</title>
   <meta name="robots" content="noindex, nofollow" />
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
   <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -63,58 +60,51 @@
     .detail-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 1.25rem;
-      margin-bottom: 2rem;
-    }
-    .detail-cell {
-      background: var(--aionex-negro-grafito);
+      gap: 1.5rem;
+      background: var(--glass-bg);
       border: 1px solid var(--glass-border);
-      border-radius: var(--radius-md);
-      padding: 1rem 1.25rem;
+      padding: 2rem;
+      border-radius: var(--radius-lg);
+      margin-bottom: 2rem;
+      transition: border-color var(--transition-default), box-shadow var(--transition-default);
+    }
+    .detail-grid.editing {
+      border-color: var(--color-accent);
+      box-shadow: 0 0 20px rgba(201, 204, 209, 0.12);
+    }
+    .detail-item {
       display: flex;
       flex-direction: column;
       gap: 0.5rem;
-      transition: all var(--transition-fast);
     }
-    .detail-grid.editing .detail-cell:not(.locked) {
-      border-color: rgba(201, 204, 209, 0.25);
-      background: rgba(255, 255, 255, 0.03);
-    }
-    .cell-label {
-      font-family: var(--font-heading);
-      font-size: 0.78rem;
-      font-weight: 600;
+    .detail-item label {
+      font-size: 0.82rem;
       color: var(--color-text-secondary);
       text-transform: uppercase;
-      letter-spacing: 0.06em;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      letter-spacing: 0.05em;
+      font-family: var(--font-heading);
+      font-weight: 500;
     }
-    .cell-input {
-      width: 100%;
-      background: rgba(0, 0, 0, 0.3);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+    .detail-item input, .detail-item select {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
       color: var(--color-text-primary);
-      padding: 0.65rem 0.85rem;
-      border-radius: var(--radius-sm);
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-md);
       font-family: inherit;
       font-size: 0.95rem;
       transition: all var(--transition-fast);
     }
-    .cell-input:disabled {
-      background: transparent;
-      border-color: transparent;
-      padding-left: 0;
-      color: var(--color-text-primary);
-      font-weight: 500;
+    .detail-item input:disabled, .detail-item select:disabled {
+      background: rgba(255, 255, 255, 0.02);
+      border-color: rgba(255, 255, 255, 0.05);
+      padding: 0.75rem 1rem;
+      opacity: 0.9;
       cursor: not-allowed;
-      opacity: 0.95;
     }
-    .cell-input:not(:disabled):focus {
+    .detail-item input:not(:disabled):focus, .detail-item select:not(:disabled):focus {
       border-color: var(--color-accent);
-      box-shadow: 0 0 0 2px rgba(201, 204, 209, 0.15);
-      background: rgba(0, 0, 0, 0.5);
+      box-shadow: 0 0 0 3px rgba(201,204,209,.12);
       outline: none;
     }
     .form-actions {
@@ -122,7 +112,7 @@
       gap: 1rem;
       grid-column: 1 / -1;
       justify-content: flex-end;
-      margin-top: 0.5rem;
+      margin-top: 1rem;
     }
     @media (max-width: 640px) {
       .detail-grid { grid-template-columns: 1fr; }
@@ -141,7 +131,7 @@
       <div class="admin-header" style="margin-bottom: 1rem;">
         <div class="admin-title">
           <a href="clientes.html" style="color:var(--color-indigo-light); text-decoration:none; font-size: 0.9rem; display:inline-block; margin-bottom: 0.5rem;">← Volver a Clientes</a>
-          <h1 style="font-size: 1.6rem; margin: 0;">Detalle de Cliente</h1>
+          <h1 style="font-size: 1.6rem; margin: 0;">Detalle cliente</h1>
         </div>
       </div>
 
@@ -161,56 +151,56 @@
           </div>
         </div>
 
-        <!-- Formulario de Datos (Celdas/Tarjetas Individuales) -->
-        <div id="clienteForm" class="detail-grid">
-          <div class="detail-cell locked">
-            <label for="dni" class="cell-label">DNI <span title="Campo fijo por seguridad, no se puede editar" style="cursor:help; font-size: 0.8rem;">🔒</span></label>
-            <input type="text" id="dni" class="cell-input" disabled />
+        <!-- Formulario de Datos -->
+        <form id="clienteForm" class="detail-grid">
+          <div class="detail-item">
+            <label>DNI <span title="Campo fijo por seguridad, no se puede editar" style="cursor:help; font-size: 0.8rem; margin-left: 0.25rem;">🔒</span></label>
+            <input type="text" id="dni" disabled />
           </div>
-          <div class="detail-cell locked">
-            <label for="email" class="cell-label">EMAIL <span title="Campo fijo por seguridad, no se puede editar" style="cursor:help; font-size: 0.8rem;">🔒</span></label>
-            <input type="email" id="email" class="cell-input" disabled />
+          <div class="detail-item">
+            <label>EMAIL <span title="Campo fijo por seguridad, no se puede editar" style="cursor:help; font-size: 0.8rem; margin-left: 0.25rem;">🔒</span></label>
+            <input type="email" id="email" disabled />
           </div>
-          <div class="detail-cell">
-            <label for="nombre" class="cell-label">NOMBRE</label>
-            <input type="text" id="nombre" class="cell-input" disabled />
+          <div class="detail-item">
+            <label>NOMBRE</label>
+            <input type="text" id="nombre" disabled />
           </div>
-          <div class="detail-cell">
-            <label for="apellido" class="cell-label">APELLIDO</label>
-            <input type="text" id="apellido" class="cell-input" disabled />
+          <div class="detail-item">
+            <label>APELLIDO</label>
+            <input type="text" id="apellido" disabled />
           </div>
-          <div class="detail-cell">
-            <label for="sexo" class="cell-label">SEXO</label>
-            <select id="sexo" class="cell-input" disabled>
+          <div class="detail-item">
+            <label>SEXO</label>
+            <select id="sexo" disabled>
               <option value="M">Masculino</option>
               <option value="F">Femenino</option>
               <option value="X">No especifica</option>
             </select>
           </div>
-          <div class="detail-cell">
-            <label for="fecha_nacimiento" class="cell-label">FECHA DE NACIMIENTO</label>
-            <input type="date" id="fecha_nacimiento" class="cell-input" disabled />
+          <div class="detail-item">
+            <label>FECHA DE NACIMIENTO</label>
+            <input type="date" id="fecha_nacimiento" disabled />
           </div>
-          <div class="detail-cell">
-            <label for="telefono" class="cell-label">TELÉFONO</label>
+          <div class="detail-item">
+            <label>TELÉFONO</label>
             <div style="display: flex; gap: 0.5rem; align-items: center;">
-              <input type="text" id="telefono" class="cell-input" disabled style="flex: 1;" />
-              <a id="btnWhatsAppForm" href="#" target="_blank" rel="noopener" class="btn-secondary" style="display: none; align-items: center; gap: 0.4rem; color: #25D366; border-color: rgba(37, 211, 102, 0.3); text-decoration: none; padding: 0.4rem 0.8rem; font-size: 0.82rem; white-space: nowrap;" title="Abrir chat de WhatsApp">
+              <input type="text" id="telefono" disabled style="flex: 1;" />
+              <a id="btnWhatsAppForm" href="#" target="_blank" rel="noopener" class="btn-secondary" style="display: none; align-items: center; gap: 0.4rem; color: #25D366; border-color: rgba(37, 211, 102, 0.3); text-decoration: none; padding: 0.75rem 1rem; font-size: 0.85rem; white-space: nowrap;" title="Abrir chat de WhatsApp">
                 <i data-lucide="message-circle"></i> Chat
               </a>
             </div>
           </div>
-          <div class="detail-cell">
-            <label for="direccion" class="cell-label">DIRECCIÓN</label>
-            <input type="text" id="direccion" class="cell-input" disabled />
+          <div class="detail-item">
+            <label>DIRECCIÓN</label>
+            <input type="text" id="direccion" disabled />
           </div>
 
           <div class="form-actions">
             <button type="button" class="btn-secondary" id="editBtn" style="padding: 0.75rem 1.5rem;">Editar Datos</button>
             <button type="button" class="btn-secondary" id="cancelBtn" style="display: none; padding: 0.75rem 1.5rem;">Cancelar</button>
-            <button type="button" class="submit-btn" id="saveBtn" style="display: none; padding: 0.75rem 1.5rem; width: auto;" disabled>Guardar Cambios</button>
+            <button type="submit" class="submit-btn" id="saveBtn" style="display: none; padding: 0.75rem 1.5rem; width: auto;" disabled>Guardar Cambios</button>
           </div>
-        </div>
+        </form>
 
         <!-- Turnos Recientes -->
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
@@ -346,11 +336,7 @@
       document.getElementById('nombre').value = safeVal(data.nombre, '');
       document.getElementById('apellido').value = safeVal(data.apellido, '');
       document.getElementById('sexo').value = safeVal(data.sexo, 'X');
-      
-      let fnac = safeVal(data.fecha_nacimiento, '');
-      if (fnac && fnac.length > 10) fnac = fnac.substring(0, 10);
-      document.getElementById('fecha_nacimiento').value = fnac;
-      
+      document.getElementById('fecha_nacimiento').value = safeVal(data.fecha_nacimiento, '');
       document.getElementById('telefono').value = safeVal(data.telefono, '');
       document.getElementById('direccion').value = safeVal(data.direccion, '');
     }
