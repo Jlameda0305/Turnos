@@ -62,32 +62,61 @@
         </div>
       </div>
 
-      <!-- Calendar & Agenda Quick Access Banner -->
-      <div class="panel" style="margin-top: 1rem; background: linear-gradient(135deg, rgba(18,18,18,0.95), rgba(30,30,30,0.8)); border: 1px solid var(--color-border); padding: 1.5rem 2rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
-        <div>
-          <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--color-accent); font-weight: 600; font-size: 0.9rem; margin-bottom: 0.25rem;">
-            <i data-lucide="calendar-days"></i> Agenda & Calendario de Turnos
+      <!-- 1. Turnos de Hoy (Lista / Tabla) -->
+      <div class="panel" style="margin-top: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.5rem;">
+          <div>
+            <h2 style="font-size: 1.15rem; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+              <i data-lucide="clock" style="color: var(--color-accent);"></i> Turnos de Hoy
+            </h2>
+            <span id="dateHoyLabel" style="font-size: 0.85rem; color: var(--color-text-secondary);">—</span>
           </div>
-          <p style="color: var(--color-text-secondary); font-size: 0.88rem; margin: 0;">Accedé a la vista interactiva diaria y semanal por rango de fechas de los turnos programados.</p>
+          <a href="turnos.html" class="btn-secondary" style="font-size: 0.85rem; padding: 0.35rem 0.75rem; text-decoration: none;">Ver Todos en Agenda →</a>
         </div>
-        <div style="display: flex; gap: 0.75rem;">
-          <a href="turnos.html" class="submit-btn" style="text-decoration: none; padding: 0.6rem 1.2rem; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 0.5rem;">
-            <i data-lucide="calendar"></i> Abrir Vista Calendario
-          </a>
+
+        <div class="table-container" style="border: 1px solid var(--glass-border); border-radius: var(--radius-md);">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Hora</th>
+                <th>Cliente</th>
+                <th>Servicio</th>
+                <th>Estado</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody id="turnosHoyTableBody">
+              <!-- Renderizado por JS -->
+            </tbody>
+          </table>
+          <div id="loadingTurnosHoy" style="padding: 2rem; text-align: center;">
+            <div class="mini-spinner" style="margin: 0 auto 0.5rem;"></div>
+            <p style="color: var(--color-text-secondary); font-size: 0.85rem;">Cargando turnos de hoy...</p>
+          </div>
+          <div id="emptyTurnosHoy" style="padding: 2rem; text-align: center; display: none;">
+            <p style="color: var(--color-text-secondary); font-size: 0.9rem;">No hay turnos programados para el día de hoy.</p>
+          </div>
         </div>
       </div>
 
-      <!-- Actividad Reciente -->
+      <!-- 2. Turnos en la Semana (Vista Calendario Semanal) -->
       <div class="panel" style="margin-top: 2rem;">
-        <h2 style="font-size: 1.1rem; margin-bottom: 1rem;">Actividad Reciente</h2>
-        <div id="loadingState">
-          <div class="state-msg">
-            <div class="mini-spinner"></div>
-            <p>Cargando datos…</p>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.5rem;">
+          <div>
+            <h2 style="font-size: 1.15rem; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+              <i data-lucide="calendar-days" style="color: var(--color-accent);"></i> Turnos en la Semana
+            </h2>
+            <span id="dateSemanaLabel" style="font-size: 0.85rem; color: var(--color-text-secondary);">—</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <button class="btn-secondary" id="dashWeekPrev" style="padding: 0.35rem 0.7rem; font-size: 0.8rem;">← Anterior</button>
+            <button class="btn-secondary" id="dashWeekToday" style="padding: 0.35rem 0.7rem; font-size: 0.8rem;">Esta Semana</button>
+            <button class="btn-secondary" id="dashWeekNext" style="padding: 0.35rem 0.7rem; font-size: 0.8rem;">Siguiente →</button>
           </div>
         </div>
-        <div id="recentActivity" style="display:none; color: var(--color-text-secondary);">
-          <p>Los datos reales serán inyectados por el webhook de n8n.</p>
+
+        <div id="dashboardWeekContainer" class="calendar-view-container" style="padding: 1rem; margin-bottom: 0;">
+          <div id="dashboardWeekGrid"></div>
         </div>
       </div>
     </main>
@@ -98,6 +127,8 @@
   <script src="../js/utils.js"></script>
   <script src="../js/admin-utils.js"></script>
   <script>
+    let dashSelectedDate = new Date();
+
     document.addEventListener('DOMContentLoaded', async () => {
       // Renderizar navegación centralizada
       renderAdminNav('dashboard');
@@ -106,9 +137,39 @@
       const session = await getAdminSessionOrRedirect();
       if (!session) return;
 
-      // 2. Cargar dashboard real desde n8n
+      // 2. Listeners de navegación de semana
+      document.getElementById('dashWeekPrev').addEventListener('click', () => {
+        dashSelectedDate.setDate(dashSelectedDate.getDate() - 7);
+        cargarTurnosSemanaDashboard();
+      });
+      document.getElementById('dashWeekNext').addEventListener('click', () => {
+        dashSelectedDate.setDate(dashSelectedDate.getDate() + 7);
+        cargarTurnosSemanaDashboard();
+      });
+      document.getElementById('dashWeekToday').addEventListener('click', () => {
+        dashSelectedDate = new Date();
+        cargarTurnosSemanaDashboard();
+      });
+
+      // 3. Cargar métricas y turnos
       cargarDashboardStats();
+      cargarTurnosHoy();
+      cargarTurnosSemanaDashboard();
     });
+
+    function toIsoDate(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
+    function getMonday(d) {
+      const date = new Date(d);
+      const day = date.getDay();
+      const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+      return new Date(date.setDate(diff));
+    }
 
     async function cargarDashboardStats() {
       try {
@@ -122,15 +183,153 @@
         document.getElementById('metricTurnosActivos').textContent = data.turnos_activos || '0';
         document.getElementById('metricCancelados').textContent = data.cancelaciones_mes || '0';
         
-        document.getElementById('loadingState').style.display = 'none';
-        document.getElementById('recentActivity').style.display = 'block';
-        
         const now = new Date();
         document.getElementById('lastRefreshTime').textContent = `(Actualizado: ${now.toLocaleTimeString()})`;
       } catch (err) {
         showToast('Error cargando métricas del dashboard', 'error');
-        document.getElementById('loadingState').style.display = 'none';
       }
+    }
+
+    async function cargarTurnosHoy() {
+      const tbody = document.getElementById('turnosHoyTableBody');
+      const loading = document.getElementById('loadingTurnosHoy');
+      const empty = document.getElementById('emptyTurnosHoy');
+      const label = document.getElementById('dateHoyLabel');
+
+      const today = new Date();
+      label.textContent = today.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+      const todayIso = toIsoDate(today);
+
+      try {
+        const resp = await adminFetch(`${ADMIN_N8N_PREFIX}/turnos-v2?fecha_desde=${todayIso}&fecha_hasta=${todayIso}&limit=50&offset=0`);
+        if (!resp.ok) throw new Error('Error de red');
+        const data = await resp.json();
+        
+        loading.style.display = 'none';
+        const rawTurnos = (data.data || []).filter(t => t.id_turno);
+        
+        // Filtrar estrictamente hoy
+        const turnosHoy = rawTurnos.filter(t => (t.fecha || '').split('T')[0] === todayIso);
+
+        if (turnosHoy.length === 0) {
+          empty.style.display = 'block';
+        } else {
+          empty.style.display = 'none';
+          tbody.innerHTML = turnosHoy.map(t => {
+            const clienteNombre = safeVal(`${t.cliente_nombre || ''} ${t.cliente_apellido || ''}`.trim(), 'Desconocido');
+            const estado = (t.estado || 'pendiente').toLowerCase();
+            const statusBadgeClass = `status-badge--${estado}`;
+            return `
+              <tr>
+                <td><strong>${formatHoraDisplay(t.hora)} a ${formatHoraDisplay(t.hora_fin)}</strong></td>
+                <td>
+                  <strong>${clienteNombre}</strong><br>
+                  <span style="font-size:0.8rem; color:rgba(255,255,255,0.5)">DNI: ${safeVal(t.cliente_dni)}</span>
+                </td>
+                <td>
+                  <strong>${safeVal(t.servicio_nombre, 'General')}</strong><br>
+                  <span style="font-size:0.8rem; color:rgba(255,255,255,0.5)">${safeVal(t.tipo_nombre)}</span>
+                </td>
+                <td><span class="status-badge ${statusBadgeClass}">${safeVal(t.estado, 'pendiente')}</span></td>
+                <td>
+                  <a href="turnos.html" class="btn-icon" title="Ver en agenda"><i data-lucide="eye"></i></a>
+                </td>
+              </tr>
+            `;
+          }).join('');
+          refreshIcons(tbody);
+        }
+      } catch (err) {
+        loading.style.display = 'none';
+        empty.style.display = 'block';
+      }
+    }
+
+    async function cargarTurnosSemanaDashboard() {
+      const container = document.getElementById('dashboardWeekGrid');
+      const label = document.getElementById('dateSemanaLabel');
+
+      const monday = getMonday(dashSelectedDate);
+      const sunday = new Date(monday);
+      sunday.setDate(sunday.getDate() + 6);
+
+      label.textContent = `Semana del ${monday.getDate()} al ${sunday.getDate()} de ${sunday.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })}`;
+
+      container.innerHTML = '<div style="text-align:center; padding: 2rem;"><div class="mini-spinner" style="margin: 0 auto 0.5rem;"></div><p style="color:var(--color-text-secondary); font-size: 0.85rem;">Cargando calendario semanal...</p></div>';
+
+      const fechaDesde = toIsoDate(monday);
+      const fechaHasta = toIsoDate(sunday);
+
+      try {
+        const resp = await adminFetch(`${ADMIN_N8N_PREFIX}/turnos-v2?fecha_desde=${fechaDesde}&fecha_hasta=${fechaHasta}&limit=100&offset=0`);
+        if (!resp.ok) throw new Error('Error al cargar');
+        const data = await resp.json();
+
+        const rawTurnos = (data.data || []).filter(t => t.id_turno);
+        const filteredTurnos = rawTurnos.filter(t => {
+          if (!t.fecha) return false;
+          const tDate = t.fecha.split('T')[0];
+          return tDate >= fechaDesde && tDate <= fechaHasta;
+        });
+
+        renderDashboardWeekGrid(container, monday, filteredTurnos);
+      } catch (err) {
+        container.innerHTML = '<p style="text-align:center; padding: 1.5rem; color:var(--color-error-text); font-size: 0.85rem;">No se pudieron cargar los turnos de la semana.</p>';
+      }
+    }
+
+    function renderDashboardWeekGrid(container, mondayDate, turnos) {
+      const weekDays = [];
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(mondayDate);
+        d.setDate(d.getDate() + i);
+        weekDays.push(d);
+      }
+
+      const slots = generarHorarios(); // 08:00 a 17:30
+      const todayIso = toIsoDate(new Date());
+
+      let html = '<div class="calendar-week-grid">';
+      
+      // Encabezados de días
+      html += '<div class="calendar-week-header">Hora</div>';
+      weekDays.forEach(d => {
+        const dIso = toIsoDate(d);
+        const isToday = dIso === todayIso;
+        const dayName = d.toLocaleDateString('es-AR', { weekday: 'short' });
+        const dayNum = d.getDate();
+        html += `<div class="calendar-week-header ${isToday ? 'today' : ''}">${dayName.toUpperCase()} ${dayNum}</div>`;
+      });
+
+      // Filas por cada horario
+      slots.forEach(slot => {
+        html += `<div class="calendar-slot-time" style="padding:0.4rem; text-align:center;">${slot}</div>`;
+        weekDays.forEach(d => {
+          const dIso = toIsoDate(d);
+          const cellTurnos = turnos.filter(t => {
+            const tDate = (t.fecha || '').split('T')[0];
+            const tHora = (t.hora || '').substring(0, 5);
+            return tDate === dIso && tHora === slot;
+          });
+
+          html += `<div class="calendar-week-cell">`;
+          cellTurnos.forEach(t => {
+            const clienteNombre = safeVal(`${t.cliente_nombre || ''} ${t.cliente_apellido || ''}`.trim(), 'Cliente');
+            const estado = (t.estado || 'pendiente').toLowerCase();
+            html += `
+              <div class="calendar-event-card status-${estado}" style="min-width:auto; padding:0.25rem 0.4rem;" onclick="window.location.href='turnos.html'" title="${clienteNombre} - ${safeVal(t.servicio_nombre)}">
+                <div class="calendar-event-title" style="font-size:0.72rem;">${clienteNombre}</div>
+                <div class="calendar-event-sub" style="font-size:0.68rem;">${safeVal(t.servicio_nombre)}</div>
+              </div>
+            `;
+          });
+          html += `</div>`;
+        });
+      });
+
+      html += '</div>';
+      container.innerHTML = html;
+      refreshIcons(container);
     }
   </script>
   <script>lucide.createIcons();</script>
