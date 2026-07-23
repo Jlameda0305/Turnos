@@ -121,6 +121,16 @@
       .detail-grid { grid-template-columns: 1fr; }
       .client-hero { flex-direction: column; align-items: flex-start; }
     }
+    .field-label {
+      color: var(--color-text-primary) !important;
+      font-family: var(--font-heading) !important;
+      font-size: 0.85rem !important;
+      font-weight: 600 !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.05em !important;
+      margin-bottom: 0.4rem !important;
+      display: block !important;
+    }
   </style>
   <script src="https://unpkg.com/lucide@latest"></script>
 </head>
@@ -155,25 +165,25 @@
         </div>
 
         <!-- Formulario de Datos -->
-        <div id="clienteForm" class="detail-grid">
+        <form id="clienteForm" class="detail-grid">
           <div class="field detail-item">
-            <div class="field-label" style="color: #F5F5F5 !important; font-size: 0.85rem !important; font-weight: 600 !important; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem !important;">DNI <span title="Campo fijo por seguridad, no se puede editar" style="cursor:help; font-size: 0.8rem; margin-left: 0.25rem;">🔒</span></div>
+            <label class="field-label">DNI <span title="Campo fijo por seguridad, no se puede editar" style="cursor:help; font-size: 0.8rem; margin-left: 0.25rem;">🔒</span></label>
             <input type="text" id="dni" disabled />
           </div>
           <div class="field detail-item">
-            <div class="field-label" style="color: #F5F5F5 !important; font-size: 0.85rem !important; font-weight: 600 !important; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem !important;">EMAIL <span title="Campo fijo por seguridad, no se puede editar" style="cursor:help; font-size: 0.8rem; margin-left: 0.25rem;">🔒</span></div>
+            <label class="field-label">EMAIL <span title="Campo fijo por seguridad, no se puede editar" style="cursor:help; font-size: 0.8rem; margin-left: 0.25rem;">🔒</span></label>
             <input type="email" id="email" disabled />
           </div>
           <div class="field detail-item">
-            <div class="field-label" style="color: #F5F5F5 !important; font-size: 0.85rem !important; font-weight: 600 !important; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem !important;">NOMBRE</div>
+            <label class="field-label">NOMBRE</label>
             <input type="text" id="nombre" disabled />
           </div>
           <div class="field detail-item">
-            <div class="field-label" style="color: #F5F5F5 !important; font-size: 0.85rem !important; font-weight: 600 !important; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem !important;">APELLIDO</div>
+            <label class="field-label">APELLIDO</label>
             <input type="text" id="apellido" disabled />
           </div>
           <div class="field detail-item">
-            <div class="field-label" style="color: #F5F5F5 !important; font-size: 0.85rem !important; font-weight: 600 !important; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem !important;">SEXO</div>
+            <label class="field-label">SEXO</label>
             <select id="sexo" disabled>
               <option value="M">Masculino</option>
               <option value="F">Femenino</option>
@@ -181,11 +191,11 @@
             </select>
           </div>
           <div class="field detail-item">
-            <div class="field-label" style="color: #F5F5F5 !important; font-size: 0.85rem !important; font-weight: 600 !important; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem !important;">FECHA DE NACIMIENTO</div>
+            <label class="field-label">FECHA DE NACIMIENTO</label>
             <input type="date" id="fecha_nacimiento" disabled />
           </div>
           <div class="field detail-item">
-            <div class="field-label" style="color: #F5F5F5 !important; font-size: 0.85rem !important; font-weight: 600 !important; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem !important;">TELÉFONO</div>
+            <label class="field-label">TELÉFONO</label>
             <div style="display: flex; gap: 0.5rem; align-items: center;">
               <input type="text" id="telefono" disabled style="flex: 1;" />
               <a id="btnWhatsAppForm" href="#" target="_blank" rel="noopener" class="btn-secondary" style="display: none; align-items: center; gap: 0.4rem; color: #25D366; border-color: rgba(37, 211, 102, 0.3); text-decoration: none; padding: 0.75rem 1rem; font-size: 0.85rem; white-space: nowrap;" title="Abrir chat de WhatsApp">
@@ -194,16 +204,16 @@
             </div>
           </div>
           <div class="field detail-item">
-            <div class="field-label" style="color: #F5F5F5 !important; font-size: 0.85rem !important; font-weight: 600 !important; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem !important;">DIRECCIÓN</div>
+            <label class="field-label">DIRECCIÓN</label>
             <input type="text" id="direccion" disabled />
           </div>
 
           <div class="form-actions">
             <button type="button" class="btn-secondary" id="editBtn" style="padding: 0.75rem 1.5rem;">Editar Datos</button>
             <button type="button" class="btn-secondary" id="cancelBtn" style="display: none; padding: 0.75rem 1.5rem;">Cancelar</button>
-            <button type="button" class="submit-btn" id="saveBtn" style="display: none; padding: 0.75rem 1.5rem; width: auto;" disabled>Guardar Cambios</button>
+            <button type="submit" class="submit-btn" id="saveBtn" style="display: none; padding: 0.75rem 1.5rem; width: auto;" disabled>Guardar Cambios</button>
           </div>
-        </div>
+        </form>
 
         <!-- Turnos Recientes -->
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
@@ -283,7 +293,8 @@
         input.addEventListener('change', () => { if (isEditing) saveBtn.disabled = false; });
       });
 
-      document.getElementById('saveBtn').addEventListener('click', () => {
+      document.getElementById('clienteForm').addEventListener('submit', (e) => {
+        e.preventDefault();
         document.getElementById('modal-confirm-changes').showModal();
         refreshIcons(document.getElementById('modal-confirm-changes'));
       });
