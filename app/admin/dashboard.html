@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,16 +9,19 @@
   <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet" />
   <link rel="stylesheet" href="../css/base.css" />
   <link rel="stylesheet" href="../css/components.css" />
   <link rel="stylesheet" href="../css/pages/admin-layout.css" />
   <link rel="stylesheet" href="../css/pages/admin-tables.css" />
   <script src="https://unpkg.com/lucide@latest"></script>
 </head>
+
 <body>
   <div class="bg"></div>
-  
+
   <div class="admin-layout">
     <!-- Sidebar -->
     <header class="admin-topnav"></header>
@@ -28,34 +32,36 @@
         <div class="admin-title">
           <div style="display: flex; align-items: center; gap: 1rem;">
             <h1 style="margin: 0;">Dashboard</h1>
-            <button class="btn-secondary" style="padding: 0.25rem 0.75rem; font-size: 0.85rem;" onclick="cargarDashboardStats()" title="Actualizar métricas">🔄 Refrescar</button>
+            <button class="btn-secondary" style="padding: 0.25rem 0.75rem; font-size: 0.85rem;"
+              onclick="cargarDashboardStats()" title="Actualizar métricas">🔄 Refrescar</button>
           </div>
-          <p>Resumen general del sistema <span id="lastRefreshTime" style="font-size: 0.8rem; color: var(--text-faint); margin-left: 0.5rem;"></span></p>
-        </div>
-        <div class="user-pill" style="position: relative; right: 0; top: 0;">
-          <div class="avatar">A</div>
-          <span>Administrador</span>
+          <p>Resumen general del sistema <span id="lastRefreshTime"
+              style="font-size: 0.8rem; color: var(--text-faint); margin-left: 0.5rem;"></span></p>
         </div>
       </div>
 
       <!-- Metrics -->
       <div class="metrics-grid">
-        <div class="metric-card" onclick="window.location.href='clientes.html'" style="cursor: pointer;" title="Ir a Clientes">
+        <div class="metric-card" onclick="window.location.href='clientes.html'" style="cursor: pointer;"
+          title="Ir a Clientes">
           <div class="icon"><i data-lucide="users"></i></div>
           <div class="value" id="metricClientes">-</div>
           <div class="label">Clientes Totales</div>
         </div>
-        <div class="metric-card" onclick="window.location.href='turnos.html'" style="cursor: pointer;" title="Ir a Turnos">
+        <div class="metric-card" onclick="window.location.href='turnos.html'" style="cursor: pointer;"
+          title="Ir a Turnos">
           <div class="icon"><i data-lucide="calendar"></i></div>
           <div class="value" id="metricTurnosHoy">-</div>
           <div class="label">Turnos de Hoy</div>
         </div>
-        <div class="metric-card" onclick="window.location.href='turnos.html'" style="cursor: pointer;" title="Ir a Turnos">
+        <div class="metric-card" onclick="window.location.href='turnos.html'" style="cursor: pointer;"
+          title="Ir a Turnos">
           <div class="icon" style="color: var(--color-success-text);"><i data-lucide="calendar-check"></i></div>
           <div class="value" id="metricTurnosActivos">-</div>
           <div class="label">Turnos Activos (Futuros)</div>
         </div>
-        <div class="metric-card" onclick="window.location.href='turnos.html'" style="cursor: pointer;" title="Ir a Turnos">
+        <div class="metric-card" onclick="window.location.href='turnos.html'" style="cursor: pointer;"
+          title="Ir a Turnos">
           <div class="icon" style="color: var(--color-error-text);"><i data-lucide="calendar-x"></i></div>
           <div class="value" id="metricCancelados">-</div>
           <div class="label">Cancelaciones (Mes)</div>
@@ -64,14 +70,16 @@
 
       <!-- 1. Turnos de Hoy (Lista / Tabla) -->
       <div class="panel" style="margin-top: 1.5rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.5rem;">
+        <div
+          style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.5rem;">
           <div>
             <h2 style="font-size: 1.15rem; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
               <i data-lucide="clock" style="color: var(--color-accent);"></i> Turnos de Hoy
             </h2>
             <span id="dateHoyLabel" style="font-size: 0.85rem; color: var(--color-text-secondary);">—</span>
           </div>
-          <a href="turnos.html" class="btn-secondary" style="font-size: 0.85rem; padding: 0.35rem 0.75rem; text-decoration: none;">Ver Todos en Agenda →</a>
+          <a href="turnos.html" class="btn-secondary"
+            style="font-size: 0.85rem; padding: 0.35rem 0.75rem; text-decoration: none;">Ver Todos en Agenda →</a>
         </div>
 
         <div class="table-container" style="border: 1px solid var(--glass-border); border-radius: var(--radius-md);">
@@ -94,14 +102,16 @@
             <p style="color: var(--color-text-secondary); font-size: 0.85rem;">Cargando turnos de hoy...</p>
           </div>
           <div id="emptyTurnosHoy" style="padding: 2rem; text-align: center; display: none;">
-            <p style="color: var(--color-text-secondary); font-size: 0.9rem;">No hay turnos programados para el día de hoy.</p>
+            <p style="color: var(--color-text-secondary); font-size: 0.9rem;">No hay turnos programados para el día de
+              hoy.</p>
           </div>
         </div>
       </div>
 
       <!-- 2. Turnos en la Semana (Vista Calendario Semanal) -->
       <div class="panel" style="margin-top: 2rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.5rem;">
+        <div
+          style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.5rem;">
           <div>
             <h2 style="font-size: 1.15rem; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
               <i data-lucide="calendar-days" style="color: var(--color-accent);"></i> Turnos en la Semana
@@ -109,9 +119,12 @@
             <span id="dateSemanaLabel" style="font-size: 0.85rem; color: var(--color-text-secondary);">—</span>
           </div>
           <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <button class="btn-secondary" id="dashWeekPrev" style="padding: 0.35rem 0.7rem; font-size: 0.8rem;">← Anterior</button>
-            <button class="btn-secondary" id="dashWeekToday" style="padding: 0.35rem 0.7rem; font-size: 0.8rem;">Esta Semana</button>
-            <button class="btn-secondary" id="dashWeekNext" style="padding: 0.35rem 0.7rem; font-size: 0.8rem;">Siguiente →</button>
+            <button class="btn-secondary" id="dashWeekPrev" style="padding: 0.35rem 0.7rem; font-size: 0.8rem;">←
+              Anterior</button>
+            <button class="btn-secondary" id="dashWeekToday" style="padding: 0.35rem 0.7rem; font-size: 0.8rem;">Esta
+              Semana</button>
+            <button class="btn-secondary" id="dashWeekNext"
+              style="padding: 0.35rem 0.7rem; font-size: 0.8rem;">Siguiente →</button>
           </div>
         </div>
 
@@ -175,14 +188,14 @@
       try {
         const resp = await adminFetch(`${ADMIN_N8N_PREFIX}/dashboard`);
         if (!resp.ok) throw new Error('Error de red');
-        
+
         const data = await resp.json();
-        
+
         document.getElementById('metricClientes').textContent = data.clientes_totales || '0';
         document.getElementById('metricTurnosHoy').textContent = data.turnos_hoy || '0';
         document.getElementById('metricTurnosActivos').textContent = data.turnos_activos || '0';
         document.getElementById('metricCancelados').textContent = data.cancelaciones_mes || '0';
-        
+
         const now = new Date();
         document.getElementById('lastRefreshTime').textContent = `(Actualizado: ${now.toLocaleTimeString()})`;
       } catch (err) {
@@ -204,10 +217,10 @@
         const resp = await adminFetch(`${ADMIN_N8N_PREFIX}/turnos-v2?fecha_desde=${todayIso}&fecha_hasta=${todayIso}&limit=50&offset=0`);
         if (!resp.ok) throw new Error('Error de red');
         const data = await resp.json();
-        
+
         loading.style.display = 'none';
         const rawTurnos = (data.data || []).filter(t => t.id_turno);
-        
+
         // Filtrar estrictamente hoy
         const turnosHoy = rawTurnos.filter(t => (t.fecha || '').split('T')[0] === todayIso);
 
@@ -290,7 +303,7 @@
       const todayIso = toIsoDate(new Date());
 
       let html = '<div class="calendar-week-grid">';
-      
+
       // Encabezados de días
       html += '<div class="calendar-week-header">Hora</div>';
       weekDays.forEach(d => {
@@ -334,4 +347,5 @@
   </script>
   <script>lucide.createIcons();</script>
 </body>
+
 </html>

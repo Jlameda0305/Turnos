@@ -87,11 +87,10 @@ function renderAdminNav(activePage = '') {
       <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Abrir menú">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
       </button>
-      <div class="brand" style="margin-bottom: 0;">
-        <div class="brand-icon" style="width:32px; height:32px;"><img src="../assets/logo-aionex.svg" alt="AIONEX" /></div>
-        <span class="brand-name" style="font-size:1.2rem;">AIONEX</span>
-        <span class="admin-badge-inline">ADMIN</span>
-      </div>
+      <a href="dashboard.html" class="admin-topnav-brand" style="display:flex; align-items:center; gap:0.75rem; text-decoration:none; color:inherit;">
+        <div class="brand-icon" style="width:32px; height:32px;"><img src="../assets/logo-aionex.svg" alt="Logo" /></div>
+        <span class="status-badge" style="font-size:0.65rem; padding:0.15rem 0.4rem; background:rgba(201,204,209,0.1); border:1px solid rgba(201,204,209,0.2); color:var(--color-accent); font-weight:600; font-family:var(--font-mono);">ADMIN</span>
+      </a>
     </div>
 
     <nav class="nav-menu" id="navMenu">
