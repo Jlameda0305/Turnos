@@ -32,13 +32,15 @@
           </h1>
           <p>Control y administración del padrón de usuarios</p>
         </div>
+        <div>
+          <button class="submit-btn" style="padding: 0.75rem 1.5rem;" onclick="abrirModalNuevoCliente()">+ Nuevo Cliente</button>
+        </div>
       </div>
 
-      <div class="admin-toolbar" style="display: flex; justify-content: space-between; align-items: center;">
+      <div class="admin-toolbar">
         <div class="search-box">
           <input type="text" id="searchInput" placeholder="Buscar por nombre o DNI..." />
         </div>
-        <button class="btn btn-primary" onclick="abrirModalNuevoCliente()">+ Nuevo Cliente</button>
       </div>
 
       <div class="table-container">
@@ -82,53 +84,60 @@
 
   <!-- Modal Alta Cliente -->
   <dialog id="modal-nuevo-cliente" class="modal">
-    <div class="modal-content" style="max-width: 500px;">
+    <div class="modal-content" style="max-width: 540px;">
       <div class="modal-header">
-        <h3>Nuevo Cliente</h3>
-        <button type="button" class="close-btn" onclick="document.getElementById('modal-nuevo-cliente').close()">×</button>
+        <h3 style="display: flex; align-items: center; gap: 0.5rem; font-size: 1.1rem;">
+          <i data-lucide="user-plus" style="color: var(--color-accent);"></i> Nuevo Cliente
+        </h3>
+        <button type="button" class="close-modal" onclick="cerrarModalNuevoCliente()" style="background:none; border:none; color:var(--color-text-secondary); font-size:1.5rem; cursor:pointer;">&times;</button>
       </div>
-      <form id="form-nuevo-cliente">
+      <form id="form-nuevo-cliente" style="margin-top: 1rem;">
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
           <div class="form-group">
-            <label>DNI</label>
-            <input type="text" id="nuevoClienteDni" required />
+            <label style="display:block; margin-bottom:0.4rem; color:var(--color-text-secondary); font-size:0.85rem; font-family:var(--font-heading);">DNI</label>
+            <input type="text" id="nuevoClienteDni" class="form-control" required placeholder="Ej. 12345678" style="width:100%; background:var(--glass-bg); border:1px solid var(--glass-border); padding:0.75rem; border-radius:var(--radius-md); color:var(--color-text-primary); font-family:inherit;" />
           </div>
           <div class="form-group">
-            <label>Nombre</label>
-            <input type="text" id="nuevoClienteNombre" required />
-          </div>
-          <div class="form-group">
-            <label>Apellido</label>
-            <input type="text" id="nuevoClienteApellido" required />
-          </div>
-          <div class="form-group">
-            <label>Sexo</label>
-            <select id="nuevoClienteSexo">
+            <label style="display:block; margin-bottom:0.4rem; color:var(--color-text-secondary); font-size:0.85rem; font-family:var(--font-heading);">Sexo</label>
+            <select id="nuevoClienteSexo" class="form-control" style="width:100%; background:var(--glass-bg); border:1px solid var(--glass-border); padding:0.75rem; border-radius:var(--radius-md); color:var(--color-text-primary); font-family:inherit;">
               <option value="M">Masculino</option>
               <option value="F">Femenino</option>
               <option value="X">Otro</option>
             </select>
           </div>
         </div>
-        <div class="form-group" style="margin-bottom: 1rem;">
-          <label>Fecha de Nacimiento</label>
-          <input type="date" id="nuevoClienteFechaNac" required />
-        </div>
-        <div class="form-group" style="margin-bottom: 1rem;">
-          <label>Dirección</label>
-          <input type="text" id="nuevoClienteDireccion" required />
-        </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
           <div class="form-group">
-            <label>Email</label>
-            <input type="email" id="nuevoClienteEmail" required />
+            <label style="display:block; margin-bottom:0.4rem; color:var(--color-text-secondary); font-size:0.85rem; font-family:var(--font-heading);">Nombre</label>
+            <input type="text" id="nuevoClienteNombre" class="form-control" required style="width:100%; background:var(--glass-bg); border:1px solid var(--glass-border); padding:0.75rem; border-radius:var(--radius-md); color:var(--color-text-primary); font-family:inherit;" />
           </div>
           <div class="form-group">
-            <label>Teléfono</label>
-            <input type="text" id="nuevoClienteTelefono" required />
+            <label style="display:block; margin-bottom:0.4rem; color:var(--color-text-secondary); font-size:0.85rem; font-family:var(--font-heading);">Apellido</label>
+            <input type="text" id="nuevoClienteApellido" class="form-control" required style="width:100%; background:var(--glass-bg); border:1px solid var(--glass-border); padding:0.75rem; border-radius:var(--radius-md); color:var(--color-text-primary); font-family:inherit;" />
           </div>
         </div>
-        <button type="submit" id="btnGuardarCliente" class="btn btn-primary" style="width: 100%;">Crear Cliente</button>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+          <div class="form-group">
+            <label style="display:block; margin-bottom:0.4rem; color:var(--color-text-secondary); font-size:0.85rem; font-family:var(--font-heading);">Email</label>
+            <input type="email" id="nuevoClienteEmail" class="form-control" required placeholder="ejemplo@correo.com" style="width:100%; background:var(--glass-bg); border:1px solid var(--glass-border); padding:0.75rem; border-radius:var(--radius-md); color:var(--color-text-primary); font-family:inherit;" />
+          </div>
+          <div class="form-group">
+            <label style="display:block; margin-bottom:0.4rem; color:var(--color-text-secondary); font-size:0.85rem; font-family:var(--font-heading);">Teléfono</label>
+            <input type="text" id="nuevoClienteTelefono" class="form-control" required placeholder="Ej. 1122334455" style="width:100%; background:var(--glass-bg); border:1px solid var(--glass-border); padding:0.75rem; border-radius:var(--radius-md); color:var(--color-text-primary); font-family:inherit;" />
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label style="display:block; margin-bottom:0.4rem; color:var(--color-text-secondary); font-size:0.85rem; font-family:var(--font-heading);">Fecha de Nacimiento</label>
+          <input type="date" id="nuevoClienteFechaNac" class="form-control" required style="width:100%; background:var(--glass-bg); border:1px solid var(--glass-border); padding:0.75rem; border-radius:var(--radius-md); color:var(--color-text-primary); font-family:inherit;" />
+        </div>
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label style="display:block; margin-bottom:0.4rem; color:var(--color-text-secondary); font-size:0.85rem; font-family:var(--font-heading);">Dirección</label>
+          <input type="text" id="nuevoClienteDireccion" class="form-control" required placeholder="Ej. Calle 123" style="width:100%; background:var(--glass-bg); border:1px solid var(--glass-border); padding:0.75rem; border-radius:var(--radius-md); color:var(--color-text-primary); font-family:inherit;" />
+        </div>
+        <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+          <button type="button" class="btn-secondary" onclick="cerrarModalNuevoCliente()" style="padding: 0.6rem 1.4rem;">Cancelar</button>
+          <button type="submit" id="btnGuardarCliente" class="submit-btn" style="width: auto; padding: 0.6rem 1.4rem;">Crear Cliente</button>
+        </div>
       </form>
     </div>
   </dialog>
@@ -304,6 +313,11 @@
       }
       
       modal.showModal();
+      refreshIcons(modal);
+    }
+
+    function cerrarModalNuevoCliente() {
+      document.getElementById('modal-nuevo-cliente').close();
     }
 
     document.getElementById('form-nuevo-cliente').addEventListener('submit', async (e) => {
