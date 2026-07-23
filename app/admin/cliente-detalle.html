@@ -345,6 +345,35 @@
       
       document.getElementById('telefono').value = safeVal(data.telefono, '');
       document.getElementById('direccion').value = safeVal(data.direccion, '');
+
+      // Inyectar etiquetas (labels) dinámicamente si faltan en el DOM
+      const labelsMap = [
+        { id: 'dni', text: 'DNI <span title="Campo fijo por seguridad, no se puede editar" style="cursor:help; font-size: 0.8rem; margin-left: 0.25rem;">🔒</span>' },
+        { id: 'email', text: 'EMAIL <span title="Campo fijo por seguridad, no se puede editar" style="cursor:help; font-size: 0.8rem; margin-left: 0.25rem;">🔒</span>' },
+        { id: 'nombre', text: 'NOMBRE' },
+        { id: 'apellido', text: 'APELLIDO' },
+        { id: 'sexo', text: 'SEXO' },
+        { id: 'fecha_nacimiento', text: 'FECHA DE NACIMIENTO' },
+        { id: 'telefono', text: 'TELÉFONO' },
+        { id: 'direccion', text: 'DIRECCIÓN' }
+      ];
+
+      labelsMap.forEach(item => {
+        const inputEl = document.getElementById(item.id);
+        if (inputEl) {
+          let container = inputEl.parentElement;
+          if (container && container.tagName === 'DIV' && container.style.display === 'flex') {
+            container = container.parentElement;
+          }
+          if (container && !container.querySelector('.field-label')) {
+            const lbl = document.createElement('div');
+            lbl.className = 'field-label';
+            lbl.style.cssText = 'color: #F5F5F5 !important; font-family: var(--font-heading); font-size: 0.85rem !important; font-weight: 600 !important; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem !important; display: block !important;';
+            lbl.innerHTML = item.text;
+            container.insertBefore(lbl, container.firstChild);
+          }
+        }
+      });
     }
 
     function toggleEdit() {
