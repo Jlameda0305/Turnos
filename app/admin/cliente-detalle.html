@@ -131,7 +131,7 @@
       <div class="admin-header" style="margin-bottom: 1rem;">
         <div class="admin-title">
           <a href="clientes.html" style="color:var(--color-indigo-light); text-decoration:none; font-size: 0.9rem; display:inline-block; margin-bottom: 0.5rem;">← Volver a Clientes</a>
-          <h1 style="font-size: 1.6rem; margin: 0;">Detalle cliente</h1>
+          <h1 style="font-size: 1.6rem; margin: 0;">Detalle de Cliente</h1>
         </div>
       </div>
 
@@ -336,7 +336,11 @@
       document.getElementById('nombre').value = safeVal(data.nombre, '');
       document.getElementById('apellido').value = safeVal(data.apellido, '');
       document.getElementById('sexo').value = safeVal(data.sexo, 'X');
-      document.getElementById('fecha_nacimiento').value = safeVal(data.fecha_nacimiento, '');
+      
+      let fnac = safeVal(data.fecha_nacimiento, '');
+      if (fnac && fnac.length > 10) fnac = fnac.substring(0, 10);
+      document.getElementById('fecha_nacimiento').value = fnac;
+      
       document.getElementById('telefono').value = safeVal(data.telefono, '');
       document.getElementById('direccion').value = safeVal(data.direccion, '');
     }
