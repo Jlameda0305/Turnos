@@ -381,6 +381,9 @@ dialog.modal {
   width: 90%;
   max-width: 500px;
   backdrop-filter: blur(10px);
+  margin: auto;
+  inset: 0;
+  position: fixed;
 }
 
 dialog.modal::backdrop {

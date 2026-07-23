@@ -215,6 +215,7 @@
                 <th>Hora</th>
                 <th>Estado</th>
                 <th>Observaciones</th>
+                <th style="width: 60px;">Acciones</th>
               </tr>
             </thead>
             <tbody id="turnosTableBody">
@@ -247,6 +248,67 @@
     </div>
   </dialog>
 
+  <!-- Modal Editar Turno -->
+  <dialog id="editTurnoModal" class="modal">
+    <div class="modal-content" style="max-width: 520px;">
+      <div class="modal-header">
+        <h3 style="display: flex; align-items: center; gap: 0.5rem; font-size: 1.1rem;">
+          <i data-lucide="pencil" style="color: var(--color-accent);"></i> Editar Turno
+        </h3>
+        <button class="close-modal" onclick="cerrarEditarTurnoModal()" style="background:none; border:none; color:var(--color-text-secondary); font-size:1.5rem; cursor:pointer;">&times;</button>
+      </div>
+      <form id="editTurnoForm" style="margin-top: 1rem;">
+        <input type="hidden" id="edit_id_turno" />
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label style="display:block; margin-bottom:0.4rem; color:var(--color-text-secondary); font-size:0.85rem; font-family:var(--font-heading);">Servicio</label>
+          <select id="edit_id_servicio" class="form-control" required style="width:100%; background:var(--glass-bg); border:1px solid var(--glass-border); padding:0.75rem; border-radius:var(--radius-md); color:var(--color-text-primary); font-family:inherit;"></select>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+          <div>
+            <label style="display:block; margin-bottom:0.4rem; color:var(--color-text-secondary); font-size:0.85rem; font-family:var(--font-heading);">Fecha</label>
+            <input type="date" id="edit_fecha" class="form-control" required style="width:100%; background:var(--glass-bg); border:1px solid var(--glass-border); padding:0.75rem; border-radius:var(--radius-md); color:var(--color-text-primary); font-family:inherit;" />
+          </div>
+          <div>
+            <label style="display:block; margin-bottom:0.4rem; color:var(--color-text-secondary); font-size:0.85rem; font-family:var(--font-heading);">Hora</label>
+            <input type="time" id="edit_hora" class="form-control" required style="width:100%; background:var(--glass-bg); border:1px solid var(--glass-border); padding:0.75rem; border-radius:var(--radius-md); color:var(--color-text-primary); font-family:inherit;" />
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label style="display:block; margin-bottom:0.4rem; color:var(--color-text-secondary); font-size:0.85rem; font-family:var(--font-heading);">Estado</label>
+          <select id="edit_estado" class="form-control" required style="width:100%; background:var(--glass-bg); border:1px solid var(--glass-border); padding:0.75rem; border-radius:var(--radius-md); color:var(--color-text-primary); font-family:inherit;">
+            <option value="pendiente">Pendiente</option>
+            <option value="confirmado">Confirmado</option>
+            <option value="cancelado">Cancelado</option>
+            <option value="completado">Completado</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label style="display:block; margin-bottom:0.4rem; color:var(--color-text-secondary); font-size:0.85rem; font-family:var(--font-heading);">Observaciones</label>
+          <textarea id="edit_observaciones" class="form-control" rows="3" style="width:100%; background:var(--glass-bg); border:1px solid var(--glass-border); padding:0.75rem; border-radius:var(--radius-md); color:var(--color-text-primary); font-family:inherit; resize:vertical;"></textarea>
+        </div>
+        <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+          <button type="button" class="btn-secondary" onclick="cerrarEditarTurnoModal()" style="padding: 0.6rem 1.4rem;">Cancelar</button>
+          <button type="submit" class="submit-btn" id="saveEditTurnoBtn" style="width: auto; padding: 0.6rem 1.4rem;">Guardar Cambios</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <!-- Modal Confirmar Eliminación -->
+  <div class="modal-overlay" id="deleteTurnoModal">
+    <div class="modal-card">
+      <div class="modal-title">Eliminar Turno</div>
+      <div class="modal-body">
+        <p>¿Estás seguro de que deseas eliminar este turno?</p>
+        <p style="margin-top: 1rem; color: var(--color-error-text); font-size: 0.9rem;">⚠ <strong>ATENCIÓN:</strong> Esta acción no se puede deshacer.</p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeDeleteTurnoModal()">Cancelar</button>
+        <button class="btn-danger" id="confirmDeleteTurnoBtn">Sí, eliminar</button>
+      </div>
+    </div>
+  </div>
+
   <div class="toast" id="toast" aria-live="polite"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -258,6 +320,8 @@
     const clientId = urlParams.get('id');
     let originalData = {};
     let isEditing = false;
+    let clienteTurnos = [];
+    let deleteTargetId = null;
 
     document.addEventListener('DOMContentLoaded', async () => {
       renderAdminNav('cliente-detalle');
@@ -287,8 +351,11 @@
       });
 
       document.getElementById('btnConfirmSave').addEventListener('click', executeSaveChanges);
+      document.getElementById('editTurnoForm').addEventListener('submit', handleEditTurnoSubmit);
+      document.getElementById('confirmDeleteTurnoBtn').addEventListener('click', doEliminarTurno);
 
       cargarDetalle();
+      cargarServiciosParaEdicion();
     });
 
     async function cargarDetalle() {
@@ -303,9 +370,26 @@
 
         originalData = { ...data };
         fillForm(data);
-        renderTurnos(data.turnos || []);
         
         document.getElementById('btnVerTodosTurnos').href = `turnos.html?cliente=${encodeURIComponent(data.dni)}`;
+
+        // Cargar turnos desde /turnos-v2 (trae id_turno, id_servicio, etc.)
+        if (data.dni) {
+          try {
+            const turnosResp = await adminFetch(`${ADMIN_N8N_PREFIX}/turnos-v2?cliente=${encodeURIComponent(data.dni)}&limit=100&offset=0&estado=todos`);
+            if (turnosResp.ok) {
+              const turnosData = await turnosResp.json();
+              renderTurnos((turnosData.data || []).filter(t => t.id_turno));
+            } else {
+              renderTurnos([]);
+            }
+          } catch (e) {
+            console.warn('Error cargando turnos desde turnos-v2:', e);
+            renderTurnos(data.turnos || []);
+          }
+        } else {
+          renderTurnos(data.turnos || []);
+        }
 
         // Configurar WhatsApp en el campo de teléfono
         const waUrl = buildWhatsAppUrl(data.telefono);
@@ -383,7 +467,10 @@
         return;
       }
 
+      clienteTurnos = turnos;
+
       turnos.forEach(t => {
+        const turnoId = t.id_turno || t.id || t.turno_id;
         const tr = document.createElement('tr');
         const statusClass = 'status-badge--' + (t.estado || 'pendiente').toLowerCase();
         
@@ -396,10 +483,126 @@
             </span>
           </td>
           <td>${safeVal(t.observaciones)}</td>
+          <td>
+            <div class="actions-cell">
+              <button class="btn-icon" title="Editar Turno" onclick="abrirEditarTurnoModal('${turnoId}')">
+                <i data-lucide="pencil" style="width:15px; height:15px;"></i>
+              </button>
+              <button class="btn-icon danger" title="Eliminar Turno" onclick="eliminarTurno('${turnoId}')">
+                <i data-lucide="trash-2" style="width:15px; height:15px;"></i>
+              </button>
+            </div>
+          </td>
         `;
         tbody.appendChild(tr);
       });
       refreshIcons(tbody);
+    }
+
+    async function cargarServiciosParaEdicion() {
+      try {
+        const resp = await fetch(`${N8N_BASE_URL}/webhook/public/servicios-activos`);
+        if (resp.ok) {
+          const servicios = await resp.json();
+          const select = document.getElementById('edit_id_servicio');
+          select.innerHTML = servicios.map(s => `<option value="${s.id_servicio}">${s.nombre} (${s.duracion} min)</option>`).join('');
+        }
+      } catch (err) {
+        console.warn('Error cargando servicios', err);
+      }
+    }
+
+    function abrirEditarTurnoModal(id_turno) {
+      console.log('[cliente-detalle] abrirEditarTurnoModal called with:', id_turno);
+      const turno = clienteTurnos.find(t => (t.id_turno || t.id || t.turno_id) === id_turno);
+      if (!turno) { console.warn('[cliente-detalle] turno not found for id:', id_turno); return; }
+
+      const realId = turno.id_turno || turno.id || turno.turno_id;
+      document.getElementById('edit_id_turno').value = realId;
+      if (turno.id_servicio) document.getElementById('edit_id_servicio').value = turno.id_servicio;
+      document.getElementById('edit_fecha').value = turno.fecha || '';
+      document.getElementById('edit_hora').value = (turno.hora || '').substring(0, 5);
+      document.getElementById('edit_estado').value = turno.estado || 'pendiente';
+      document.getElementById('edit_observaciones').value = turno.observaciones || '';
+
+      const modal = document.getElementById('editTurnoModal');
+      modal.showModal();
+      refreshIcons(modal);
+    }
+
+    function cerrarEditarTurnoModal() {
+      document.getElementById('editTurnoModal').close();
+    }
+
+    async function handleEditTurnoSubmit(e) {
+      e.preventDefault();
+
+      const payload = {
+        id_turno: document.getElementById('edit_id_turno').value,
+        id_servicio: document.getElementById('edit_id_servicio').value,
+        fecha: document.getElementById('edit_fecha').value,
+        hora: document.getElementById('edit_hora').value,
+        estado: document.getElementById('edit_estado').value,
+        observaciones: document.getElementById('edit_observaciones').value
+      };
+
+      const btn = document.getElementById('saveEditTurnoBtn');
+      const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Guardando...';
+
+      try {
+        const resp = await adminFetch(`${ADMIN_N8N_PREFIX}/turno-editar`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!resp.ok) {
+          if (resp.status === 409) throw new Error('El horario seleccionado no está disponible');
+          throw new Error('Error al actualizar el turno');
+        }
+
+        showToast('Turno actualizado correctamente', 'success');
+        cerrarEditarTurnoModal();
+        cargarDetalle();
+      } catch (err) {
+        showToast(err.message || 'Error al actualizar el turno', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+      }
+    }
+
+    function eliminarTurno(idTurno) {
+      deleteTargetId = idTurno;
+      document.getElementById('deleteTurnoModal').classList.add('visible');
+    }
+
+    function closeDeleteTurnoModal() {
+      deleteTargetId = null;
+      document.getElementById('deleteTurnoModal').classList.remove('visible');
+    }
+
+    async function doEliminarTurno() {
+      if (!deleteTargetId) return;
+      const idTurno = deleteTargetId;
+      const btn = document.getElementById('confirmDeleteTurnoBtn');
+      btn.disabled = true;
+      btn.textContent = 'Eliminando...';
+      
+      try {
+        const resp = await adminFetch(`${ADMIN_N8N_PREFIX}/turno-eliminar?id=${idTurno}`, { method: 'DELETE' });
+        if (!resp.ok) throw new Error('Error al eliminar');
+        showToast('Turno eliminado correctamente', 'success');
+        closeDeleteTurnoModal();
+        cargarDetalle();
+      } catch (err) {
+        showToast('Error al eliminar turno', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Sí, eliminar';
+      }
     }
 
     async function executeSaveChanges() {
