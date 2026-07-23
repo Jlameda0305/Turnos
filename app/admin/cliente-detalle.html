@@ -147,60 +147,58 @@
             <div class="client-avatar" id="clientAvatarHero">C</div>
             <div>
               <div class="client-hero-name" id="pageTitle">Detalle cliente</div>
-              <div class="client-hero-meta">
-                <span>DNI: <strong id="heroDni" style="color: var(--color-text-primary);">—</strong></span>
-                <span>•</span>
-                <span id="heroEmail" style="color: var(--color-text-secondary);">—</span>
-              </div>
             </div>
           </div>
-          <div style="display: flex; align-items: center; gap: 1rem;">
-            <a id="btnWhatsAppHeader" href="#" target="_blank" rel="noopener" class="btn-secondary" style="display: none; align-items: center; gap: 0.4rem; color: #25D366; border-color: rgba(37, 211, 102, 0.3); text-decoration: none; padding: 0.5rem 1rem; font-size: 0.85rem;" title="Abrir chat de WhatsApp">
-              <i data-lucide="message-circle"></i> WhatsApp
-            </a>
-          </div>
         </div>
-        <!-- Formulario -->
-        <form id="clienteForm" class="detail-grid editing">
+
+        <!-- Formulario de Datos -->
+        <form id="clienteForm" class="detail-grid">
           <div class="detail-item">
             <label>DNI <span title="Campo fijo por seguridad, no se puede editar" style="cursor:help; font-size: 0.8rem; margin-left: 0.25rem;">🔒</span></label>
             <input type="text" id="dni" disabled />
           </div>
           <div class="detail-item">
-            <label>Email <span title="Campo fijo por seguridad, no se puede editar" style="cursor:help; font-size: 0.8rem; margin-left: 0.25rem;">🔒</span></label>
+            <label>EMAIL <span title="Campo fijo por seguridad, no se puede editar" style="cursor:help; font-size: 0.8rem; margin-left: 0.25rem;">🔒</span></label>
             <input type="email" id="email" disabled />
           </div>
           <div class="detail-item">
-            <label>Nombre</label>
-            <input type="text" id="nombre" />
+            <label>NOMBRE</label>
+            <input type="text" id="nombre" disabled />
           </div>
           <div class="detail-item">
-            <label>Apellido</label>
-            <input type="text" id="apellido" />
+            <label>APELLIDO</label>
+            <input type="text" id="apellido" disabled />
           </div>
           <div class="detail-item">
-            <label>Sexo</label>
-            <select id="sexo">
+            <label>SEXO</label>
+            <select id="sexo" disabled>
               <option value="M">Masculino</option>
               <option value="F">Femenino</option>
               <option value="X">No especifica</option>
             </select>
           </div>
           <div class="detail-item">
-            <label>Fecha de Nacimiento</label>
-            <input type="date" id="fecha_nacimiento" />
+            <label>FECHA DE NACIMIENTO</label>
+            <input type="date" id="fecha_nacimiento" disabled />
           </div>
           <div class="detail-item">
-            <label>Teléfono</label>
-            <input type="text" id="telefono" />
+            <label>TELÉFONO</label>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+              <input type="text" id="telefono" disabled style="flex: 1;" />
+              <a id="btnWhatsAppForm" href="#" target="_blank" rel="noopener" class="btn-secondary" style="display: none; align-items: center; gap: 0.4rem; color: #25D366; border-color: rgba(37, 211, 102, 0.3); text-decoration: none; padding: 0.75rem 1rem; font-size: 0.85rem; white-space: nowrap;" title="Abrir chat de WhatsApp">
+                <i data-lucide="message-circle"></i> Chat
+              </a>
+            </div>
           </div>
           <div class="detail-item">
-            <label>Dirección</label>
-            <input type="text" id="direccion" />
+            <label>DIRECCIÓN</label>
+            <input type="text" id="direccion" disabled />
           </div>
 
           <div class="form-actions">
-            <button type="submit" class="submit-btn" id="saveBtn" disabled style="padding: 0.75rem 1.5rem; width: auto;">Guardar Cambios</button>
+            <button type="button" class="btn-secondary" id="editBtn" style="padding: 0.75rem 1.5rem;">Editar Datos</button>
+            <button type="button" class="btn-secondary" id="cancelBtn" style="display: none; padding: 0.75rem 1.5rem;">Cancelar</button>
+            <button type="submit" class="submit-btn" id="saveBtn" style="display: none; padding: 0.75rem 1.5rem; width: auto;" disabled>Guardar Cambios</button>
           </div>
         </form>
 
@@ -259,6 +257,7 @@
     const urlParams = new URLSearchParams(window.location.search);
     const clientId = urlParams.get('id');
     let originalData = {};
+    let isEditing = false;
 
     document.addEventListener('DOMContentLoaded', async () => {
       renderAdminNav('cliente-detalle');
@@ -269,13 +268,16 @@
         return;
       }
 
+      document.getElementById('editBtn').addEventListener('click', toggleEdit);
+      document.getElementById('cancelBtn').addEventListener('click', cancelEdit);
+
       const saveBtn = document.getElementById('saveBtn');
 
       // Escuchar cambios en campos editables para habilitar boton Guardar Cambios
       const editableInputs = document.querySelectorAll('#nombre, #apellido, #sexo, #fecha_nacimiento, #telefono, #direccion');
       editableInputs.forEach(input => {
-        input.addEventListener('input', () => { saveBtn.disabled = false; });
-        input.addEventListener('change', () => { saveBtn.disabled = false; });
+        input.addEventListener('input', () => { if (isEditing) saveBtn.disabled = false; });
+        input.addEventListener('change', () => { if (isEditing) saveBtn.disabled = false; });
       });
 
       document.getElementById('clienteForm').addEventListener('submit', (e) => {
@@ -305,9 +307,9 @@
         
         document.getElementById('btnVerTodosTurnos').href = `turnos.html?cliente=${encodeURIComponent(data.dni)}`;
 
-        // Configurar WhatsApp
+        // Configurar WhatsApp en el campo de teléfono
         const waUrl = buildWhatsAppUrl(data.telefono);
-        const waBtn = document.getElementById('btnWhatsAppHeader');
+        const waBtn = document.getElementById('btnWhatsAppForm');
         if (waBtn) {
           if (waUrl) {
             waBtn.href = waUrl;
@@ -325,12 +327,6 @@
       const fullName = safeVal(`${data.nombre || ''} ${data.apellido || ''}`.trim(), 'Detalle cliente');
       document.getElementById('pageTitle').textContent = fullName;
       
-      const heroDni = document.getElementById('heroDni');
-      if (heroDni) heroDni.textContent = safeVal(data.dni);
-      
-      const heroEmail = document.getElementById('heroEmail');
-      if (heroEmail) heroEmail.textContent = safeVal(data.email);
-      
       const initials = `${(data.nombre || '').charAt(0)}${(data.apellido || '').charAt(0)}`.toUpperCase() || 'C';
       const avatarEl = document.getElementById('clientAvatarHero');
       if (avatarEl) avatarEl.textContent = initials;
@@ -343,7 +339,37 @@
       document.getElementById('fecha_nacimiento').value = safeVal(data.fecha_nacimiento, '');
       document.getElementById('telefono').value = safeVal(data.telefono, '');
       document.getElementById('direccion').value = safeVal(data.direccion, '');
-      
+    }
+
+    function toggleEdit() {
+      isEditing = true;
+      const form = document.getElementById('clienteForm');
+      if (form) form.classList.add('editing');
+
+      const inputs = document.querySelectorAll('#clienteForm input, #clienteForm select');
+      inputs.forEach(el => {
+        if (el.id !== 'dni' && el.id !== 'email') el.disabled = false;
+      });
+
+      document.getElementById('editBtn').style.display = 'none';
+      document.getElementById('cancelBtn').style.display = 'inline-block';
+      document.getElementById('saveBtn').style.display = 'inline-block';
+      document.getElementById('saveBtn').disabled = true;
+    }
+
+    function cancelEdit() {
+      isEditing = false;
+      const form = document.getElementById('clienteForm');
+      if (form) form.classList.remove('editing');
+
+      fillForm(originalData);
+
+      const inputs = document.querySelectorAll('#clienteForm input, #clienteForm select');
+      inputs.forEach(el => el.disabled = true);
+
+      document.getElementById('editBtn').style.display = 'inline-block';
+      document.getElementById('cancelBtn').style.display = 'none';
+      document.getElementById('saveBtn').style.display = 'none';
       document.getElementById('saveBtn').disabled = true;
     }
 
@@ -403,9 +429,7 @@
         
         showToast('Datos actualizados en la base de datos correctamente', 'success');
         originalData = { ...originalData, ...payload };
-        fillForm(originalData);
-        btn.textContent = 'Guardar Cambios';
-        btn.disabled = true;
+        cancelEdit();
       } catch (err) {
         showToast('Error al actualizar datos del cliente', 'error');
         btn.disabled = false;
