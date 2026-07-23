@@ -26,8 +26,11 @@
     <main class="admin-content">
       <div class="admin-header">
         <div class="admin-title">
-          <h1>Clientes</h1>
-          <p>Gestión del padrón de usuarios</p>
+          <h1 style="display: flex; align-items: center; gap: 0.75rem;">
+            <div class="brand-icon" style="width:36px; height:36px;"><img src="../assets/logo-aionex.svg" alt="AIONEX" /></div>
+            Gestión de Clientes
+          </h1>
+          <p>Control y administración del padrón de usuarios</p>
         </div>
       </div>
 
@@ -220,23 +223,22 @@
         
         const fecha = c.created_at ? new Date(c.created_at).toLocaleDateString('es-AR') : '—';
         const nombreCompleto = safeVal(`${c.nombre || ''} ${c.apellido || ''}`.trim(), 'Sin Nombre');
+        const telDisplay = safeVal(c.telefono);
         const waUrl = buildWhatsAppUrl(c.telefono);
-        const waBtn = waUrl 
-          ? `<a href="${waUrl}" target="_blank" rel="noopener" class="btn-icon" style="color: #25D366;" title="Contactar por WhatsApp (${safeVal(c.telefono)})"><i data-lucide="message-circle"></i></a>` 
-          : '';
+        const telefonoCellHtml = waUrl 
+          ? `<a href="${waUrl}" target="_blank" rel="noopener" style="display:inline-flex; align-items:center; gap:0.4rem; color: var(--color-text-primary); text-decoration:none; background: rgba(37,211,102,0.1); border: 1px solid rgba(37,211,102,0.25); padding: 0.25rem 0.65rem; border-radius: var(--radius-pill); font-size: 0.85rem; font-weight: 500; transition: background 0.2s;" title="Abrir chat de WhatsApp"><i data-lucide="message-circle" style="color:#25D366; width:15px; height:15px;"></i> ${telDisplay}</a>`
+          : telDisplay;
 
         tr.innerHTML = `
           <td>${safeVal(c.dni)}</td>
           <td><strong>${nombreCompleto}</strong></td>
           <td>${safeVal(c.email)}</td>
-          <td>${safeVal(c.telefono)}</td>
+          <td>${telefonoCellHtml}</td>
           <td>${fecha}</td>
           <td>
             <div class="actions-cell">
-              ${waBtn}
-              <button class="btn-icon" title="Ver detalle" onclick="window.location.href='cliente-detalle.html?id=${c.id_cliente}'"><i data-lucide="eye"></i></button>
-              <button class="btn-icon" title="Editar" onclick="window.location.href='cliente-detalle.html?id=${c.id_cliente}&edit=true'"><i data-lucide="pencil"></i></button>
-              <button class="btn-icon danger" title="Eliminar" onclick="openDeleteModal('${c.id_cliente}', '${nombreCompleto}')"><i data-lucide="trash-2"></i></button>
+              <button class="btn-icon" title="Ver detalle cliente" onclick="window.location.href='cliente-detalle.html?id=${c.id_cliente}'"><i data-lucide="eye"></i></button>
+              <button class="btn-icon danger" title="Eliminar cliente" onclick="openDeleteModal('${c.id_cliente}', '${nombreCompleto}')"><i data-lucide="trash-2"></i></button>
             </div>
           </td>
         `;

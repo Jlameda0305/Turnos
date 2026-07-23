@@ -131,6 +131,7 @@
       <div class="admin-header" style="margin-bottom: 1rem;">
         <div class="admin-title">
           <a href="clientes.html" style="color:var(--color-indigo-light); text-decoration:none; font-size: 0.9rem; display:inline-block; margin-bottom: 0.5rem;">← Volver a Clientes</a>
+          <h1 style="font-size: 1.6rem; margin: 0;">Detalle cliente</h1>
         </div>
       </div>
 
@@ -145,7 +146,7 @@
           <div class="client-hero-left">
             <div class="client-avatar" id="clientAvatarHero">C</div>
             <div>
-              <div class="client-hero-name" id="pageTitle">Detalle del Cliente</div>
+              <div class="client-hero-name" id="pageTitle">Detalle cliente</div>
               <div class="client-hero-meta">
                 <span>DNI: <strong id="heroDni" style="color: var(--color-text-primary);">—</strong></span>
                 <span>•</span>
@@ -157,15 +158,10 @@
             <a id="btnWhatsAppHeader" href="#" target="_blank" rel="noopener" class="btn-secondary" style="display: none; align-items: center; gap: 0.4rem; color: #25D366; border-color: rgba(37, 211, 102, 0.3); text-decoration: none; padding: 0.5rem 1rem; font-size: 0.85rem;" title="Abrir chat de WhatsApp">
               <i data-lucide="message-circle"></i> WhatsApp
             </a>
-            <label class="toggle-switch" title="Cambiar estado del cliente">
-              <input type="checkbox" id="toggleClienteActivo">
-              <span class="toggle-slider"></span>
-              <span id="labelClienteActivo" style="font-size: 0.9rem; font-weight: 600; color: var(--color-text-primary); min-width: 60px;">Activo</span>
-            </label>
           </div>
         </div>
         <!-- Formulario -->
-        <form id="clienteForm" class="detail-grid">
+        <form id="clienteForm" class="detail-grid editing">
           <div class="detail-item">
             <label>DNI <span title="Campo fijo por seguridad, no se puede editar" style="cursor:help; font-size: 0.8rem; margin-left: 0.25rem;">🔒</span></label>
             <input type="text" id="dni" disabled />
@@ -176,15 +172,15 @@
           </div>
           <div class="detail-item">
             <label>Nombre</label>
-            <input type="text" id="nombre" disabled />
+            <input type="text" id="nombre" />
           </div>
           <div class="detail-item">
             <label>Apellido</label>
-            <input type="text" id="apellido" disabled />
+            <input type="text" id="apellido" />
           </div>
           <div class="detail-item">
             <label>Sexo</label>
-            <select id="sexo" disabled>
+            <select id="sexo">
               <option value="M">Masculino</option>
               <option value="F">Femenino</option>
               <option value="X">No especifica</option>
@@ -192,21 +188,19 @@
           </div>
           <div class="detail-item">
             <label>Fecha de Nacimiento</label>
-            <input type="date" id="fecha_nacimiento" disabled />
+            <input type="date" id="fecha_nacimiento" />
           </div>
           <div class="detail-item">
             <label>Teléfono</label>
-            <input type="text" id="telefono" disabled />
+            <input type="text" id="telefono" />
           </div>
           <div class="detail-item">
             <label>Dirección</label>
-            <input type="text" id="direccion" disabled />
+            <input type="text" id="direccion" />
           </div>
 
           <div class="form-actions">
-            <button type="button" class="btn-secondary" id="editBtn">Editar Datos</button>
-            <button type="button" class="btn-secondary" id="cancelBtn" style="display:none;">Cancelar</button>
-            <button type="submit" class="submit-btn" id="saveBtn" style="display:none; padding: 0.75rem 1.5rem; width: auto;">Guardar Cambios</button>
+            <button type="submit" class="submit-btn" id="saveBtn" disabled style="padding: 0.75rem 1.5rem; width: auto;">Guardar Cambios</button>
           </div>
         </form>
 
@@ -237,6 +231,24 @@
     </main>
   </div>
 
+  <!-- Modal Confirmación de Guardado -->
+  <dialog id="modal-confirm-changes" class="modal">
+    <div class="modal-content" style="max-width: 440px; text-align: center;">
+      <div class="modal-header" style="justify-content: center; border-bottom: none; padding-bottom: 0;">
+        <h3 style="display: flex; align-items: center; gap: 0.5rem; font-size: 1.2rem;">
+          <i data-lucide="help-circle" style="color: var(--color-accent);"></i> Confirmar Cambios
+        </h3>
+      </div>
+      <p style="color: var(--color-text-secondary); margin: 1rem 0 1.5rem; font-size: 0.95rem;">
+        ¿Confirmás aplicar las modificaciones del cliente en la base de datos?
+      </p>
+      <div style="display: flex; gap: 1rem; justify-content: center;">
+        <button type="button" class="btn-secondary" onclick="document.getElementById('modal-confirm-changes').close()">Cancelar</button>
+        <button type="button" class="submit-btn" id="btnConfirmSave" style="width: auto; padding: 0.6rem 1.4rem;">Confirmar y Guardar</button>
+      </div>
+    </div>
+  </dialog>
+
   <div class="toast" id="toast" aria-live="polite"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -246,7 +258,6 @@
   <script>
     const urlParams = new URLSearchParams(window.location.search);
     const clientId = urlParams.get('id');
-    let isEditing = false;
     let originalData = {};
 
     document.addEventListener('DOMContentLoaded', async () => {
@@ -258,9 +269,22 @@
         return;
       }
 
-      document.getElementById('editBtn').addEventListener('click', toggleEdit);
-      document.getElementById('cancelBtn').addEventListener('click', cancelEdit);
-      document.getElementById('clienteForm').addEventListener('submit', saveChanges);
+      const saveBtn = document.getElementById('saveBtn');
+
+      // Escuchar cambios en campos editables para habilitar boton Guardar Cambios
+      const editableInputs = document.querySelectorAll('#nombre, #apellido, #sexo, #fecha_nacimiento, #telefono, #direccion');
+      editableInputs.forEach(input => {
+        input.addEventListener('input', () => { saveBtn.disabled = false; });
+        input.addEventListener('change', () => { saveBtn.disabled = false; });
+      });
+
+      document.getElementById('clienteForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        document.getElementById('modal-confirm-changes').showModal();
+        refreshIcons(document.getElementById('modal-confirm-changes'));
+      });
+
+      document.getElementById('btnConfirmSave').addEventListener('click', executeSaveChanges);
 
       cargarDetalle();
     });
@@ -292,50 +316,13 @@
             waBtn.style.display = 'none';
           }
         }
-
-        // Configurar Toggle Activo/Inactivo
-        const toggle = document.getElementById('toggleClienteActivo');
-        const label = document.getElementById('labelClienteActivo');
-        if (toggle && label) {
-          const isActivo = data.activo !== false;
-          toggle.checked = isActivo;
-          label.textContent = isActivo ? 'Activo' : 'Inactivo';
-          label.style.color = isActivo ? 'var(--color-success-text)' : 'var(--color-error-text)';
-
-          toggle.onchange = async (e) => {
-            const isChecked = e.target.checked;
-            label.textContent = isChecked ? 'Activo' : 'Inactivo';
-            label.style.color = isChecked ? 'var(--color-success-text)' : 'var(--color-error-text)';
-
-            try {
-              const resp = await adminFetch(`${ADMIN_N8N_PREFIX}/clientes/${clientId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ activo: isChecked })
-              });
-              if (!resp.ok) throw new Error('Error al actualizar estado');
-              showToast(`Cliente ${isChecked ? 'activado' : 'desactivado'} correctamente`, 'success');
-              originalData.activo = isChecked;
-            } catch (err) {
-              showToast('Error al actualizar estado', 'error');
-              toggle.checked = !isChecked;
-              label.textContent = !isChecked ? 'Activo' : 'Inactivo';
-              label.style.color = !isChecked ? 'var(--color-success-text)' : 'var(--color-error-text)';
-            }
-          };
-        }
-        
-        if (urlParams.get('edit') === 'true') {
-          toggleEdit();
-        }
-
       } catch (err) {
         showToast('Error al cargar detalle', 'error');
       }
     }
 
     function fillForm(data) {
-      const fullName = safeVal(`${data.nombre || ''} ${data.apellido || ''}`.trim(), 'Cliente');
+      const fullName = safeVal(`${data.nombre || ''} ${data.apellido || ''}`.trim(), 'Detalle cliente');
       document.getElementById('pageTitle').textContent = fullName;
       
       const heroDni = document.getElementById('heroDni');
@@ -356,6 +343,8 @@
       document.getElementById('fecha_nacimiento').value = safeVal(data.fecha_nacimiento, '');
       document.getElementById('telefono').value = safeVal(data.telefono, '');
       document.getElementById('direccion').value = safeVal(data.direccion, '');
+      
+      document.getElementById('saveBtn').disabled = true;
     }
 
     function renderTurnos(turnos) {
@@ -387,37 +376,10 @@
       refreshIcons(tbody);
     }
 
-    function toggleEdit() {
-      isEditing = true;
-      const form = document.getElementById('clienteForm');
-      if (form) form.classList.add('editing');
+    async function executeSaveChanges() {
+      const modal = document.getElementById('modal-confirm-changes');
+      modal.close();
 
-      const inputs = document.querySelectorAll('#clienteForm input, #clienteForm select');
-      inputs.forEach(el => {
-        if (el.id !== 'dni' && el.id !== 'email') el.disabled = false;
-      });
-      document.getElementById('editBtn').style.display = 'none';
-      document.getElementById('cancelBtn').style.display = 'block';
-      document.getElementById('saveBtn').style.display = 'block';
-    }
-
-    function cancelEdit() {
-      isEditing = false;
-      const form = document.getElementById('clienteForm');
-      if (form) form.classList.remove('editing');
-
-      fillForm(originalData);
-      const inputs = document.querySelectorAll('#clienteForm input, #clienteForm select');
-      inputs.forEach(el => el.disabled = true);
-      
-      document.getElementById('editBtn').style.display = 'block';
-      document.getElementById('cancelBtn').style.display = 'none';
-      document.getElementById('saveBtn').style.display = 'none';
-    }
-
-    async function saveChanges(e) {
-      e.preventDefault();
-      
       const btn = document.getElementById('saveBtn');
       btn.disabled = true;
       btn.textContent = 'Guardando...';
@@ -432,17 +394,20 @@
       };
 
       try {
-        const resp = await adminFetch(`${ADMIN_N8N_PREFIX}/clientes/${clientId}`, { method: 'PUT', body: JSON.stringify(payload) });
+        const resp = await adminFetch(`${ADMIN_N8N_PREFIX}/clientes/${clientId}`, { 
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload) 
+        });
         if (!resp.ok) throw new Error('Error al actualizar');
         
-        showToast('Datos actualizados correctamente', 'success');
+        showToast('Datos actualizados en la base de datos correctamente', 'success');
         originalData = { ...originalData, ...payload };
-        cancelEdit();
-        btn.disabled = false;
+        fillForm(originalData);
         btn.textContent = 'Guardar Cambios';
-        document.getElementById('pageTitle').textContent = `${originalData.nombre} ${originalData.apellido}`;
+        btn.disabled = true;
       } catch (err) {
-        showToast('Error al actualizar', 'error');
+        showToast('Error al actualizar datos del cliente', 'error');
         btn.disabled = false;
         btn.textContent = 'Guardar Cambios';
       }

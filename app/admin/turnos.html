@@ -27,8 +27,11 @@
     <main class="admin-content">
       <div class="admin-header">
         <div class="admin-title">
-          <h1>Gestión de Turnos</h1>
-          <p>Control de agenda y reservas</p>
+          <h1 style="display: flex; align-items: center; gap: 0.75rem;">
+            <div class="brand-icon" style="width:36px; height:36px;"><img src="../assets/logo-aionex.svg" alt="AIONEX" /></div>
+            Turnos
+          </h1>
+          <p>Control de agenda y reservas de turnos</p>
         </div>
         <div>
           <a href="nuevo-turno.html" class="submit-btn" style="text-decoration:none; padding: 0.75rem 1.5rem; display:inline-block;">+ Nuevo Turno</a>
@@ -62,9 +65,13 @@
           <label class="filter-label">Buscar Cliente</label>
           <input type="text" id="searchCliente" placeholder="DNI o Nombre..." class="filter-input">
         </div>
-        <div class="filter-group" style="max-width: 200px;">
-          <label class="filter-label">Fecha</label>
-          <input type="date" id="searchFecha" class="filter-input" style="color-scheme: dark;">
+        <div class="filter-group" style="max-width: 170px;">
+          <label class="filter-label">Fecha Desde</label>
+          <input type="date" id="searchFechaDesde" class="filter-input" style="color-scheme: dark;">
+        </div>
+        <div class="filter-group" style="max-width: 170px;">
+          <label class="filter-label">Fecha Hasta</label>
+          <input type="date" id="searchFechaHasta" class="filter-input" style="color-scheme: dark;">
         </div>
         <div style="display: flex; align-items: flex-end;">
           <button id="btnSearch" class="btn-secondary" style="padding: 0.5rem 1rem;">Buscar</button>
@@ -254,7 +261,8 @@
       document.getElementById('btnSearch').addEventListener('click', () => { currentPage = 1; cargarTurnos(); });
       document.getElementById('btnClearSearch').addEventListener('click', () => { 
         document.getElementById('searchCliente').value = ''; 
-        document.getElementById('searchFecha').value = ''; 
+        document.getElementById('searchFechaDesde').value = ''; 
+        document.getElementById('searchFechaHasta').value = ''; 
         currentPage = 1; 
         if (currentViewMode === 'tabla') cargarTurnos(); else cargarTurnosCalendar();
       });
@@ -487,11 +495,13 @@
       try {
         const offset = (currentPage - 1) * currentLimit;
         const searchCliente = encodeURIComponent(document.getElementById('searchCliente').value.trim());
-        const searchFecha = encodeURIComponent(document.getElementById('searchFecha').value);
+        const searchFechaDesde = document.getElementById('searchFechaDesde').value;
+        const searchFechaHasta = document.getElementById('searchFechaHasta').value;
         
-        let url = `${ADMIN_N8N_PREFIX}/turnos-v2?estado=${currentFilter}&limit=${currentLimit}&offset=${offset}`;
+        let url = `${ADMIN_N8N_PREFIX}/turnos-v2?estado=${currentFilter}&limit=100&offset=${offset}`;
         if (searchCliente) url += `&cliente=${searchCliente}`;
-        if (searchFecha) url += `&fecha=${searchFecha}`;
+        if (searchFechaDesde) url += `&fecha_desde=${encodeURIComponent(searchFechaDesde)}`;
+        if (searchFechaHasta) url += `&fecha_hasta=${encodeURIComponent(searchFechaHasta)}`;
         
         const resp = await adminFetch(url);
         
@@ -500,15 +510,28 @@
         
         loading.style.display = 'none';
 
-        if (!data.data || data.data.length === 0 || !data.data[0].id_turno) {
+        let turnosList = (data.data || []).filter(t => t.id_turno);
+
+        // Filtrado fallback client-side para asegurar precisión del rango de fechas
+        if (searchFechaDesde || searchFechaHasta) {
+          turnosList = turnosList.filter(t => {
+            if (!t.fecha) return false;
+            const tDate = t.fecha.split('T')[0];
+            if (searchFechaDesde && tDate < searchFechaDesde) return false;
+            if (searchFechaHasta && tDate > searchFechaHasta) return false;
+            return true;
+          });
+        }
+
+        if (turnosList.length === 0) {
           empty.style.display = 'block';
           windowTurnos = [];
         } else {
-          windowTurnos = data.data.filter(t => t.id_turno);
+          windowTurnos = turnosList;
           renderTable(windowTurnos);
         }
         
-        updatePagination(data.total || 0, (data.data || []).length);
+        updatePagination(data.total || 0, turnosList.length);
 
       } catch (err) {
         showToast('Error al cargar turnos', 'error');
