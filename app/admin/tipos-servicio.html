@@ -62,30 +62,32 @@
   </div>
 
   <!-- Modal Crear/Editar -->
-  <div class="modal-overlay" id="formModal">
-    <div class="modal-card">
-      <div class="modal-title" id="modalTitle">Nuevo Tipo de Servicio</div>
-      <form id="tipoForm">
+  <!-- Modal Crear/Editar Tipo de Servicio -->
+  <dialog id="formModal" class="modal">
+    <div class="modal-content" style="max-width: 500px;">
+      <div class="modal-header">
+        <h3 style="display: flex; align-items: center; gap: 0.5rem; font-size: 1.1rem;">
+          <i data-lucide="tag" style="color: var(--color-accent);"></i> <span id="modalTitle">Nuevo Tipo de Servicio</span>
+        </h3>
+        <button type="button" class="close-modal" onclick="closeModal()" style="background:none; border:none; color:var(--color-text-secondary); font-size:1.5rem; cursor:pointer;">&times;</button>
+      </div>
+      <form id="tipoForm" style="margin-top: 1rem;">
         <input type="hidden" id="tipoId" />
-        <div class="field">
-          <label for="nombre">Nombre</label>
-          <input type="text" id="nombre" required placeholder="Ej. Consulta General" />
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label style="display:block; margin-bottom:0.4rem; color:var(--color-text-secondary); font-size:0.85rem; font-family:var(--font-heading);">Nombre</label>
+          <input type="text" id="nombre" class="form-control" required placeholder="Ej. Consulta General" style="width:100%; background:var(--glass-bg); border:1px solid var(--glass-border); padding:0.75rem; border-radius:var(--radius-md); color:var(--color-text-primary); font-family:inherit;" />
         </div>
-        <div class="field">
-          <label for="descripcion">Descripción</label>
-          <textarea id="descripcion" rows="3" placeholder="Descripción opcional..."></textarea>
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label style="display:block; margin-bottom:0.4rem; color:var(--color-text-secondary); font-size:0.85rem; font-family:var(--font-heading);">Descripción</label>
+          <textarea id="descripcion" class="form-control" rows="3" placeholder="Descripción opcional..." style="width:100%; background:var(--glass-bg); border:1px solid var(--glass-border); padding:0.75rem; border-radius:var(--radius-md); color:var(--color-text-primary); font-family:inherit; resize:vertical;"></textarea>
         </div>
-        <div class="field" id="activoField" style="display: none; align-items: center; gap: 0.5rem; flex-direction: row;">
-          <input type="checkbox" id="activo" checked />
-          <label for="activo" style="margin: 0;">Activo</label>
-        </div>
-        <div class="modal-actions" style="margin-top: 1.5rem;">
-          <button type="button" class="btn-secondary" onclick="closeModal()">Cancelar</button>
-          <button type="submit" class="submit-btn" id="saveBtn">Guardar</button>
+        <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+          <button type="button" class="btn-secondary" onclick="closeModal()" style="padding: 0.6rem 1.4rem;">Cancelar</button>
+          <button type="submit" class="submit-btn" id="saveBtn" style="width: auto; padding: 0.6rem 1.4rem;">Guardar</button>
         </div>
       </form>
     </div>
-  </div>
+  </dialog>
 
   <div class="toast" id="toast" aria-live="polite"></div>
 
@@ -137,9 +139,6 @@
       
       items.forEach(item => {
         const tr = document.createElement('tr');
-        
-        const badgeClass = item.activo ? 'badge-confirmado' : 'badge-cancelado';
-        const badgeText = item.activo ? 'Activo' : 'Inactivo';
         const descVal = safeVal(item.descripcion);
 
         tr.innerHTML = `
@@ -147,11 +146,16 @@
           <td style="max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${descVal}">
             ${descVal}
           </td>
-          <td><span class="turno-badge ${badgeClass}">${badgeText}</span></td>
+          <td>
+            <label class="toggle-switch" title="Cambiar estado activo">
+              <input type="checkbox" ${item.activo ? 'checked' : ''} onchange="toggleTipoActivo('${item.id_tipo_servicio}', this.checked, this)">
+              <span class="toggle-slider"></span>
+            </label>
+          </td>
           <td>
             <div class="actions-cell">
               <button class="btn-icon" title="Editar" onclick="editTipo('${item.id_tipo_servicio}')"><i data-lucide="pencil"></i></button>
-              <button class="btn-icon" title="Eliminar" style="color: var(--color-error-text);" onclick="deleteTipo('${item.id_tipo_servicio}')"><i data-lucide="trash-2"></i></button>
+              <button class="btn-icon danger" title="Eliminar" onclick="deleteTipo('${item.id_tipo_servicio}')"><i data-lucide="trash-2"></i></button>
             </div>
           </td>
         `;
@@ -160,14 +164,41 @@
       refreshIcons(tbody);
     }
 
+    async function toggleTipoActivo(id, nuevoEstado, checkboxEl) {
+      const item = currentData.find(i => i.id_tipo_servicio === id);
+      if (!item) return;
+
+      try {
+        const resp = await adminFetch(`${ADMIN_N8N_PREFIX}/tipo-servicio-editar`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: item.id_tipo_servicio,
+            id_tipo_servicio: item.id_tipo_servicio,
+            nombre: item.nombre,
+            descripcion: item.descripcion,
+            activo: nuevoEstado
+          })
+        });
+
+        if (!resp.ok) throw new Error('Error al actualizar estado');
+        item.activo = nuevoEstado;
+        showToast(`Tipo de servicio ${nuevoEstado ? 'activado' : 'desactivado'} correctamente`, 'success');
+      } catch (err) {
+        showToast(err.message || 'Error al cambiar estado', 'error');
+        if (checkboxEl) checkboxEl.checked = !nuevoEstado;
+      }
+    }
+
     function openModal() {
       document.getElementById('tipoId').value = '';
       document.getElementById('nombre').value = '';
       document.getElementById('descripcion').value = '';
-      document.getElementById('activo').checked = true;
-      document.getElementById('activoField').style.display = 'none'; // Al crear, por defecto activo
       document.getElementById('modalTitle').textContent = 'Nuevo Tipo de Servicio';
-      document.getElementById('formModal').classList.add('visible');
+      
+      const modal = document.getElementById('formModal');
+      modal.showModal();
+      refreshIcons(modal);
     }
 
     function editTipo(id) {
@@ -177,14 +208,15 @@
       document.getElementById('tipoId').value = item.id_tipo_servicio;
       document.getElementById('nombre').value = item.nombre;
       document.getElementById('descripcion').value = item.descripcion || '';
-      document.getElementById('activo').checked = item.activo;
-      document.getElementById('activoField').style.display = 'flex';
       document.getElementById('modalTitle').textContent = 'Editar Tipo de Servicio';
-      document.getElementById('formModal').classList.add('visible');
+      
+      const modal = document.getElementById('formModal');
+      modal.showModal();
+      refreshIcons(modal);
     }
 
     function closeModal() {
-      document.getElementById('formModal').classList.remove('visible');
+      document.getElementById('formModal').close();
     }
 
     async function saveTipo(e) {
@@ -192,7 +224,9 @@
       const id = document.getElementById('tipoId').value;
       const nombre = document.getElementById('nombre').value.trim();
       const descripcion = document.getElementById('descripcion').value.trim();
-      const activo = document.getElementById('activo').checked;
+
+      const existingItem = currentData.find(i => i.id_tipo_servicio === id);
+      const activo = existingItem ? existingItem.activo : true;
 
       const btn = document.getElementById('saveBtn');
       btn.disabled = true;

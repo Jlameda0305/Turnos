@@ -63,42 +63,44 @@
     </main>
   </div>
 
-  <!-- Modal Crear/Editar -->
-  <div class="modal-overlay" id="formModal">
-    <div class="modal-card">
-      <div class="modal-title" id="modalTitle">Nuevo Servicio</div>
-      <form id="servicioForm">
+  <!-- Modal Crear/Editar Servicio -->
+  <dialog id="formModal" class="modal">
+    <div class="modal-content" style="max-width: 520px;">
+      <div class="modal-header">
+        <h3 style="display: flex; align-items: center; gap: 0.5rem; font-size: 1.1rem;">
+          <i data-lucide="wrench" style="color: var(--color-accent);"></i> <span id="modalTitle">Nuevo Servicio</span>
+        </h3>
+        <button type="button" class="close-modal" onclick="closeModal()" style="background:none; border:none; color:var(--color-text-secondary); font-size:1.5rem; cursor:pointer;">&times;</button>
+      </div>
+      <form id="servicioForm" style="margin-top: 1rem;">
         <input type="hidden" id="servicioId" />
-        <div class="field">
-          <label for="id_tipo_servicio">Tipo de Servicio</label>
-          <select id="id_tipo_servicio" required>
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label style="display:block; margin-bottom:0.4rem; color:var(--color-text-secondary); font-size:0.85rem; font-family:var(--font-heading);">Tipo de Servicio</label>
+          <select id="id_tipo_servicio" class="form-control" required style="width:100%; background:var(--glass-bg); border:1px solid var(--glass-border); padding:0.75rem; border-radius:var(--radius-md); color:var(--color-text-primary); font-family:inherit;">
             <option value="">Cargando tipos...</option>
           </select>
         </div>
-        <div class="field">
-          <label for="nombre">Nombre del Servicio</label>
-          <input type="text" id="nombre" required placeholder="Ej. Consulta Pediátrica" />
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label style="display:block; margin-bottom:0.4rem; color:var(--color-text-secondary); font-size:0.85rem; font-family:var(--font-heading);">Nombre del Servicio</label>
+          <input type="text" id="nombre" class="form-control" required placeholder="Ej. Consulta Pediátrica" style="width:100%; background:var(--glass-bg); border:1px solid var(--glass-border); padding:0.75rem; border-radius:var(--radius-md); color:var(--color-text-primary); font-family:inherit;" />
         </div>
-        <div class="field">
-          <label for="duracion">Duración (minutos)</label>
-          <input type="number" id="duracion" required min="1" placeholder="Ej. 30, 45, 60" />
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+          <div class="form-group">
+            <label style="display:block; margin-bottom:0.4rem; color:var(--color-text-secondary); font-size:0.85rem; font-family:var(--font-heading);">Duración (minutos)</label>
+            <input type="number" id="duracion" class="form-control" required min="1" placeholder="Ej. 30" style="width:100%; background:var(--glass-bg); border:1px solid var(--glass-border); padding:0.75rem; border-radius:var(--radius-md); color:var(--color-text-primary); font-family:inherit;" />
+          </div>
+          <div class="form-group">
+            <label style="display:block; margin-bottom:0.4rem; color:var(--color-text-secondary); font-size:0.85rem; font-family:var(--font-heading);">Costo ($)</label>
+            <input type="number" id="costo" class="form-control" required min="0" step="any" placeholder="Ej. 1500" style="width:100%; background:var(--glass-bg); border:1px solid var(--glass-border); padding:0.75rem; border-radius:var(--radius-md); color:var(--color-text-primary); font-family:inherit;" />
+          </div>
         </div>
-        <div class="field">
-          <label for="costo">Costo ($)</label>
-          <input type="number" id="costo" required min="0" step="any" placeholder="Ej. 1500" />
-        </div>
-        <div class="field" id="activoField" style="display: none; align-items: center; gap: 0.5rem; flex-direction: row;">
-          <input type="checkbox" id="activo" checked />
-          <label for="activo" style="margin: 0;">Activo</label>
-        </div>
-        <p id="activoHelpText" style="font-size: 0.8rem; color: var(--color-text-secondary); margin-top: -0.5rem; margin-bottom: 1rem; display: none;">Los servicios nuevos se crean activos por defecto. Podés desactivarlos más tarde editándolos.</p>
-        <div class="modal-actions" style="margin-top: 1.5rem;">
-          <button type="button" class="btn-secondary" onclick="closeModal()">Cancelar</button>
-          <button type="submit" class="submit-btn" id="saveBtn">Guardar</button>
+        <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+          <button type="button" class="btn-secondary" onclick="closeModal()" style="padding: 0.6rem 1.4rem;">Cancelar</button>
+          <button type="submit" class="submit-btn" id="saveBtn" style="width: auto; padding: 0.6rem 1.4rem;">Guardar</button>
         </div>
       </form>
     </div>
-  </div>
+  </dialog>
 
   <!-- Modal Confirmar Eliminación -->
   <div class="modal-overlay" id="deleteModal">
@@ -193,19 +195,21 @@
       items.forEach(item => {
         const tr = document.createElement('tr');
         
-        const badgeClass = item.activo ? 'badge-confirmado' : 'badge-cancelado';
-        const badgeText = item.activo ? 'Activo' : 'Inactivo';
-
         tr.innerHTML = `
           <td><strong>${safeVal(item.nombre)}</strong></td>
-          <td><span style="color:var(--text-secondary)">${safeVal(item.tipo_nombre)}</span></td>
+          <td><span style="color:var(--color-text-secondary);">${safeVal(item.tipo_nombre)}</span></td>
           <td>⏱ ${safeVal(item.duracion, '0')} min</td>
           <td>$${safeVal(item.costo, '0')}</td>
-          <td><span class="turno-badge ${badgeClass}">${badgeText}</span></td>
+          <td>
+            <label class="toggle-switch" title="Cambiar estado activo">
+              <input type="checkbox" ${item.activo ? 'checked' : ''} onchange="toggleServicioActivo('${item.id_servicio}', this.checked, this)">
+              <span class="toggle-slider"></span>
+            </label>
+          </td>
           <td>
             <div class="actions-cell">
               <button class="btn-icon" title="Editar" onclick="editServicio('${item.id_servicio}')"><i data-lucide="pencil"></i></button>
-              <button class="btn-icon" title="Eliminar" style="color: var(--color-error-text);" onclick="openDeleteModal('${item.id_servicio}')"><i data-lucide="trash-2"></i></button>
+              <button class="btn-icon danger" title="Eliminar" onclick="openDeleteModal('${item.id_servicio}')"><i data-lucide="trash-2"></i></button>
             </div>
           </td>
         `;
@@ -214,17 +218,44 @@
       refreshIcons(tbody);
     }
 
+    async function toggleServicioActivo(id, nuevoEstado, checkboxEl) {
+      const item = currentData.find(i => i.id_servicio === id);
+      if (!item) return;
+
+      try {
+        const resp = await adminFetch(`${ADMIN_N8N_PREFIX}/servicio-editar`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id_servicio: item.id_servicio,
+            id_tipo_servicio: item.id_tipo_servicio,
+            nombre: item.nombre,
+            duracion: item.duracion,
+            costo: item.costo,
+            activo: nuevoEstado
+          })
+        });
+
+        if (!resp.ok) throw new Error('Error al actualizar estado');
+        item.activo = nuevoEstado;
+        showToast(`Servicio ${nuevoEstado ? 'activado' : 'desactivado'} correctamente`, 'success');
+      } catch (err) {
+        showToast(err.message || 'Error al cambiar estado', 'error');
+        if (checkboxEl) checkboxEl.checked = !nuevoEstado;
+      }
+    }
+
     function openModal() {
       document.getElementById('servicioId').value = '';
       document.getElementById('id_tipo_servicio').value = '';
       document.getElementById('nombre').value = '';
       document.getElementById('duracion').value = '30';
       document.getElementById('costo').value = '';
-      document.getElementById('activo').checked = true;
-      document.getElementById('activoField').style.display = 'none';
-      if (document.getElementById('activoHelpText')) document.getElementById('activoHelpText').style.display = 'block';
       document.getElementById('modalTitle').textContent = 'Nuevo Servicio';
-      document.getElementById('formModal').classList.add('visible');
+      
+      const modal = document.getElementById('formModal');
+      modal.showModal();
+      refreshIcons(modal);
     }
 
     function editServicio(id) {
@@ -245,15 +276,15 @@
       document.getElementById('nombre').value = item.nombre;
       document.getElementById('duracion').value = item.duracion;
       document.getElementById('costo').value = item.costo;
-      document.getElementById('activo').checked = item.activo;
-      document.getElementById('activoField').style.display = 'flex';
-      if (document.getElementById('activoHelpText')) document.getElementById('activoHelpText').style.display = 'none';
       document.getElementById('modalTitle').textContent = 'Editar Servicio';
-      document.getElementById('formModal').classList.add('visible');
+      
+      const modal = document.getElementById('formModal');
+      modal.showModal();
+      refreshIcons(modal);
     }
 
     function closeModal() {
-      document.getElementById('formModal').classList.remove('visible');
+      document.getElementById('formModal').close();
     }
 
     async function saveServicio(e) {
@@ -263,7 +294,9 @@
       const nombre = document.getElementById('nombre').value.trim();
       const duracion = parseInt(document.getElementById('duracion').value, 10);
       const costo = parseFloat(document.getElementById('costo').value);
-      const activo = document.getElementById('activo').checked;
+
+      const existingItem = currentData.find(i => i.id_servicio === id);
+      const activo = existingItem ? existingItem.activo : true;
 
       const btn = document.getElementById('saveBtn');
       btn.disabled = true;
