@@ -1,0 +1,150 @@
+{
+  "updatedAt": "2026-07-17T03:28:23.294Z",
+  "createdAt": "2026-07-14T05:40:43.045Z",
+  "id": "azjXyfWUDWfy5jOU",
+  "name": "Crear turno",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "admin/turno-crear",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "de255139-884d-406c-a010-311c2f64feef",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        -240,
+        16
+      ],
+      "webhookId": "ca2db7d6-d127-4697-a2dd-4befd92161b8"
+    },
+    {
+      "parameters": {
+        "url": "https://fosblgvcfhmkvbbejiid.supabase.co/auth/v1/user",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $json.headers.authorization }}"
+            },
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvc2JsZ3ZjZmhta3ZiYmVqaWlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2NTA0MjEsImV4cCI6MjA5OTIyNjQyMX0.shrNEOCsWnD7i9VuMRt2nNuLzaq3qot3uq82PAYkQ2c"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6b854ee9-5131-4627-b355-567dc1ccb887",
+      "name": "Validar Sesi\u00f3n",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -48,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO turnos (id_cliente, fecha, hora, estado, observaciones) VALUES ($1, $2, $3, $4, $5) RETURNING id_turno;",
+        "options": {
+          "queryReplacement": "={{ $('Webhook').item.json.body.id_cliente }},{{ $('Webhook').item.json.body.fecha }},{{ $('Webhook').item.json.body.hora }},{{ $('Webhook').item.json.body.estado }},{{ $('Webhook').item.json.body.observaciones || '' }}"
+        }
+      },
+      "id": "3e8f0a97-f0d2-4bb2-837a-8f56573f2685",
+      "name": "Insertar Turno",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.2,
+      "position": [
+        160,
+        16
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": true\n}",
+        "options": {}
+      },
+      "id": "2ca2e75d-a1d4-4c50-b3bf-88b4bf2952e1",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        368,
+        16
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validar Sesi\u00f3n",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar Sesi\u00f3n": {
+      "main": [
+        [
+          {
+            "node": "Insertar Turno",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insertar Turno": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "0cd7f5e9-40e4-46be-90ca-d149feb97ba1",
+  "activeVersionId": null,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-07-14T05:40:43.045Z",
+      "createdAt": "2026-07-14T05:40:43.045Z",
+      "role": "workflow:owner",
+      "workflowId": "azjXyfWUDWfy5jOU",
+      "projectId": "Iy2SCF8ACRv0KbuJ"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}

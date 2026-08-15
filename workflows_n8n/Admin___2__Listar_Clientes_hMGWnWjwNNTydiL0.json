@@ -1,0 +1,407 @@
+{
+  "updatedAt": "2026-07-14T05:43:54.724Z",
+  "createdAt": "2026-07-14T04:21:40.019Z",
+  "id": "hMGWnWjwNNTydiL0",
+  "name": "Admin - 2. Listar Clientes",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "path": "admin/clientes",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "6d206ee5-9cae-472a-ab78-007bc1ee3c10",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        -400,
+        112
+      ],
+      "webhookId": "e663bb97-4188-4c82-91f8-23a92eec0b62"
+    },
+    {
+      "parameters": {
+        "url": "https://fosblgvcfhmkvbbejiid.supabase.co/auth/v1/user",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $json.headers.authorization }}"
+            },
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvc2JsZ3ZjZmhta3ZiYmVqaWlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2NTA0MjEsImV4cCI6MjA5OTIyNjQyMX0.shrNEOCsWnD7i9VuMRt2nNuLzaq3qot3uq82PAYkQ2c"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5dc43913-c2fa-48db-9719-99904e1ce1a2",
+      "name": "Validar Sesi\u00f3n",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -208,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT count(*) as total FROM clientes WHERE ($1 = '' OR nombre ILIKE '%' || $1 || '%' OR apellido ILIKE '%' || $1 || '%' OR dni ILIKE '%' || $1 || '%');",
+        "options": {
+          "queryReplacement": "={{ $('Webhook').item.json.query.q || '' }}"
+        }
+      },
+      "id": "19aa8203-9e5f-483c-ab98-877ee0f80682",
+      "name": "Contar Clientes",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        0
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id_cliente, dni, nombre, apellido, email, telefono, created_at FROM clientes WHERE ($1 = '' OR nombre ILIKE '%' || $1 || '%' OR apellido ILIKE '%' || $1 || '%' OR dni ILIKE '%' || $1 || '%') ORDER BY created_at DESC LIMIT $2 OFFSET $3;",
+        "options": {
+          "queryReplacement": "={{ $('Webhook').item.json.query.q || '' }},{{ $('Webhook').item.json.query.limit || 10 }},{{ $('Webhook').item.json.query.offset || 0 }}"
+        }
+      },
+      "id": "7f5e51ca-b07b-4743-b311-ae4bf97d4d25",
+      "name": "Listar Clientes",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        208
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch"
+      },
+      "id": "48c346dd-dde0-4877-9be6-c19d234ae1f6",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        208,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ \n  {\n    \"total\": $json.total,\n    \"data\": $('Listar Clientes').all().map(e => e.json)\n  } \n}}",
+        "options": {}
+      },
+      "id": "ff8df68a-6864-47cc-a61e-01f95ebfaffe",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        400,
+        112
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validar Sesi\u00f3n",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar Sesi\u00f3n": {
+      "main": [
+        [
+          {
+            "node": "Contar Clientes",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Listar Clientes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Contar Clientes": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Listar Clientes": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "bad0326a-04c0-463f-a8c6-32f43078b378",
+  "activeVersionId": "bad0326a-04c0-463f-a8c6-32f43078b378",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-07-14T04:21:40.019Z",
+      "createdAt": "2026-07-14T04:21:40.019Z",
+      "role": "workflow:owner",
+      "workflowId": "hMGWnWjwNNTydiL0",
+      "projectId": "Iy2SCF8ACRv0KbuJ"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-07-14T05:43:56.795Z",
+    "createdAt": "2026-07-14T05:43:54.725Z",
+    "versionId": "bad0326a-04c0-463f-a8c6-32f43078b378",
+    "workflowId": "hMGWnWjwNNTydiL0",
+    "nodes": [
+      {
+        "parameters": {
+          "path": "admin/clientes",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "id": "6d206ee5-9cae-472a-ab78-007bc1ee3c10",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 1.1,
+        "position": [
+          -400,
+          112
+        ],
+        "webhookId": "e663bb97-4188-4c82-91f8-23a92eec0b62"
+      },
+      {
+        "parameters": {
+          "url": "https://fosblgvcfhmkvbbejiid.supabase.co/auth/v1/user",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "={{ $json.headers.authorization }}"
+              },
+              {
+                "name": "apikey",
+                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvc2JsZ3ZjZmhta3ZiYmVqaWlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2NTA0MjEsImV4cCI6MjA5OTIyNjQyMX0.shrNEOCsWnD7i9VuMRt2nNuLzaq3qot3uq82PAYkQ2c"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "5dc43913-c2fa-48db-9719-99904e1ce1a2",
+        "name": "Validar Sesi\u00f3n",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          -208,
+          112
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT count(*) as total FROM clientes WHERE ($1 = '' OR nombre ILIKE '%' || $1 || '%' OR apellido ILIKE '%' || $1 || '%' OR dni ILIKE '%' || $1 || '%');",
+          "options": {
+            "queryReplacement": "={{ $('Webhook').item.json.query.q || '' }}"
+          }
+        },
+        "id": "19aa8203-9e5f-483c-ab98-877ee0f80682",
+        "name": "Contar Clientes",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.2,
+        "position": [
+          0,
+          0
+        ],
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "DI7VdrXRMXAIJibS",
+            "name": "NFC_Turnos"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT id_cliente, dni, nombre, apellido, email, telefono, created_at FROM clientes WHERE ($1 = '' OR nombre ILIKE '%' || $1 || '%' OR apellido ILIKE '%' || $1 || '%' OR dni ILIKE '%' || $1 || '%') ORDER BY created_at DESC LIMIT $2 OFFSET $3;",
+          "options": {
+            "queryReplacement": "={{ $('Webhook').item.json.query.q || '' }},{{ $('Webhook').item.json.query.limit || 10 }},{{ $('Webhook').item.json.query.offset || 0 }}"
+          }
+        },
+        "id": "7f5e51ca-b07b-4743-b311-ae4bf97d4d25",
+        "name": "Listar Clientes",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.2,
+        "position": [
+          0,
+          208
+        ],
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "DI7VdrXRMXAIJibS",
+            "name": "NFC_Turnos"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "mode": "chooseBranch"
+        },
+        "id": "48c346dd-dde0-4877-9be6-c19d234ae1f6",
+        "name": "Merge",
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 2.1,
+        "position": [
+          208,
+          112
+        ]
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ \n  {\n    \"total\": $json.total,\n    \"data\": $('Listar Clientes').all().map(e => e.json)\n  } \n}}",
+          "options": {}
+        },
+        "id": "ff8df68a-6864-47cc-a61e-01f95ebfaffe",
+        "name": "Respond",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1,
+        "position": [
+          400,
+          112
+        ]
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Validar Sesi\u00f3n",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Validar Sesi\u00f3n": {
+        "main": [
+          [
+            {
+              "node": "Contar Clientes",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Listar Clientes",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Contar Clientes": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Listar Clientes": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Merge": {
+        "main": [
+          [
+            {
+              "node": "Respond",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "In\u00e9s Risso",
+    "name": "Version bad0326a",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}

@@ -1,0 +1,82 @@
+{
+  "updatedAt": "2026-07-16T21:19:10.441Z",
+  "createdAt": "2026-07-16T21:17:34.459Z",
+  "id": "P9eZacTHTjhwZ0h9",
+  "name": "Test MCP Workflow - Antigravity",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "id": "5da87888-7536-46f0-94da-30b4ccb6ead0",
+      "name": "Start",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "dad35c6a-a043-40cf-a6ee-079dea4de9c3",
+      "name": "Set Test Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        0
+      ],
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": true,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "test",
+              "name": "test_field",
+              "value": "hello world",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Set Test Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "staticData": null,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "pinData": null,
+  "versionId": "ae4207fc-7714-4dac-92ca-5a6962b9c592",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-07-16T21:17:34.459Z",
+      "createdAt": "2026-07-16T21:17:34.459Z",
+      "role": "workflow:owner",
+      "workflowId": "P9eZacTHTjhwZ0h9",
+      "projectId": "Iy2SCF8ACRv0KbuJ"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}

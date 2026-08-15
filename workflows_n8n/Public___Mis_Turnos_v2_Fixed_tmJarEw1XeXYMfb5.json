@@ -1,0 +1,116 @@
+{
+  "updatedAt": "2026-07-17T03:50:53.419Z",
+  "createdAt": "2026-07-17T03:50:46.102Z",
+  "id": "tmJarEw1XeXYMfb5",
+  "name": "Public - Mis Turnos v2 Fixed",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "id": "3ef87be9-70f1-4945-97e1-df15793d10bb",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "public/mis-turnos-v2",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "webhookId": "4ee87faa-fc7c-4581-a4cf-bac139e3275f"
+    },
+    {
+      "id": "0fecfe22-c588-4013-95f0-cefb01811caa",
+      "name": "Get Mis Turnos",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        224,
+        0
+      ],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "\n        SELECT t.id_turno, t.fecha, t.hora, t.hora_fin, t.estado, t.observaciones,\n               s.nombre AS servicio_nombre, s.duracion, s.costo, ts.nombre AS tipo_nombre\n        FROM turnos t\n        JOIN servicios s ON t.id_servicio = s.id_servicio\n        JOIN tipos_servicio ts ON s.id_tipo_servicio = ts.id_tipo_servicio\n        JOIN clientes c ON t.id_cliente = c.id_cliente\n        WHERE c.id_cliente = $1::uuid\n        ORDER BY t.fecha DESC, t.hora DESC\n      ",
+        "options": {
+          "queryReplacement": "={{ $json.body.session_id }}"
+        }
+      },
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "c1ca4dfb-687d-4ae0-b9f9-070f06630f62",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        448,
+        0
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ turnos: $('Get Mis Turnos').all().map(i => i.json).filter(j => j.id_turno) }) }}",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get Mis Turnos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Mis Turnos": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "staticData": null,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "pinData": null,
+  "versionId": "32c5304d-d0e5-4f56-8713-6079667fc5cb",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-07-17T03:50:46.102Z",
+      "createdAt": "2026-07-17T03:50:46.102Z",
+      "role": "workflow:owner",
+      "workflowId": "tmJarEw1XeXYMfb5",
+      "projectId": "Iy2SCF8ACRv0KbuJ"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}

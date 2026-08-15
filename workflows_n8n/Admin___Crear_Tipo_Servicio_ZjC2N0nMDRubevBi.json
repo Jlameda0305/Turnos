@@ -1,0 +1,534 @@
+{
+  "updatedAt": "2026-07-17T03:23:48.139Z",
+  "createdAt": "2026-07-16T22:29:35.878Z",
+  "id": "ZjC2N0nMDRubevBi",
+  "name": "Admin - Crear Tipo Servicio",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "admin/tipo-servicio-crear",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "4c5e054f-43eb-40c8-83a9-a0ab13d5df75",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        96
+      ],
+      "webhookId": "36cecdd1-96d6-4f70-810e-e4ca54347299"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "nombre",
+              "name": "nombre",
+              "value": "={{ ($json.body?.nombre ?? $json.nombre ?? \"\").trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "descripcion",
+              "name": "descripcion",
+              "value": "={{ $json.body?.descripcion ?? $json.descripcion ?? \"\" }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "88eb6003-8fec-48ea-af34-6b478c7f80b8",
+      "name": "Normalize Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO tipos_servicio (nombre, descripcion) VALUES ($1, $2) RETURNING id_tipo_servicio, nombre, activo",
+        "options": {
+          "queryReplacement": "={{ $json.nombre }}, {{ $json.descripcion }}"
+        }
+      },
+      "id": "95a4e891-b4a0-43e7-a312-36b85f2d6eee",
+      "name": "Insert Tipo Servicio",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        672,
+        0
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, data: $json }) }}",
+        "options": {
+          "responseCode": 201
+        }
+      },
+      "id": "952c786c-3c64-49f8-b0a8-69c3691c8ec3",
+      "name": "Respond Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        880,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{ \"success\": false, \"message\": \"Ya existe un tipo de servicio con ese nombre\" }",
+        "options": {
+          "responseCode": 409
+        }
+      },
+      "id": "4e659fd0-a317-47e9-b7e4-7113fef467e6",
+      "name": "Respond Duplicate Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        880,
+        48
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{ \"success\": false, \"message\": \"El nombre del tipo es obligatorio\" }",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "id": "2a3e5e8b-bf32-44fb-b3d9-58131860f57a",
+      "name": "Respond Validation Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        672,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d987541d-0c40-474b-878d-844db2e86549",
+              "leftValue": "={{ $json.nombre }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        416,
+        96
+      ],
+      "id": "46e97d7a-2d97-415d-9514-33f54baa3604",
+      "name": "If"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Input": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Tipo Servicio": {
+      "main": [
+        [
+          {
+            "node": "Respond Success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Duplicate Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond Success": {
+      "main": [
+        [],
+        []
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Insert Tipo Servicio",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Validation Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "vps-6207995-x.dattaweb.com",
+            "x-real-ip": "186.158.237.71",
+            "x-forwarded-for": "186.158.237.71",
+            "x-forwarded-proto": "https",
+            "connection": "upgrade",
+            "content-length": "43",
+            "sec-ch-ua-platform": "\"Linux\"",
+            "authorization": "Bearer eyJhbGciOiJFUzI1NiIsImtpZCI6IjZiYjk3NGJkLWMwZmEtNDA4Zi1iZDMxLWFjMGU4NzI5OGQ3ZCIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2Zvc2JsZ3ZjZmhta3ZiYmVqaWlkLnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiI5NDI2ZWU5Yy01ZTA0LTQ2M2ItYWJhNS0xNjA3MjhmYjViZWYiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzg0MjYxNzYyLCJpYXQiOjE3ODQyNTgxNjIsImVtYWlsIjoiYWRtaW5AYWlvbmV4LmNvbSIsInBob25lIjoiIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiXX0sInVzZXJfbWV0YWRhdGEiOnt9LCJyb2xlIjoiYXV0aGVudGljYXRlZCIsImFhbCI6ImFhbDEiLCJhbXIiOlt7Im1ldGhvZCI6InBhc3N3b3JkIiwidGltZXN0YW1wIjoxNzg0MjU4MTYyfV0sInNlc3Npb25faWQiOiJiN2Y1ZjNjMS1lN2MwLTQyMzctYjk5NS0yM2I5YjZiMWRiZWIiLCJpc19hbm9ueW1vdXMiOmZhbHNlfQ.mcDN3nmsj7mgU4C1cIcLiCW9arfMTfs4sUiuged2pY4T9GOqPyLAcdRFH60rD5dVCmirVwbEk5Ul5NGOaQR-SA",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36",
+            "sec-ch-ua": "\"Not;A=Brand\";v=\"8\", \"Chromium\";v=\"150\", \"Brave\";v=\"150\"",
+            "content-type": "application/json",
+            "sec-ch-ua-mobile": "?0",
+            "accept": "*/*",
+            "sec-gpc": "1",
+            "accept-language": "es-419,es;q=0.8",
+            "origin": "http://127.0.0.1:5500",
+            "sec-fetch-site": "cross-site",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-dest": "empty",
+            "referer": "http://127.0.0.1:5500/",
+            "accept-encoding": "gzip, deflate, br, zstd"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "nombre": "Joseq",
+            "descripcion": "asdasdsd"
+          },
+          "webhookUrl": "https://vps-6207995-x.dattaweb.com/webhook/admin/tipo-servicio-crear",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "versionId": "979d609c-e855-4b04-8cef-1010abf5e440",
+  "activeVersionId": "979d609c-e855-4b04-8cef-1010abf5e440",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-07-16T22:29:35.878Z",
+      "createdAt": "2026-07-16T22:29:35.878Z",
+      "role": "workflow:owner",
+      "workflowId": "ZjC2N0nMDRubevBi",
+      "projectId": "Iy2SCF8ACRv0KbuJ"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-07-17T03:23:52.748Z",
+    "createdAt": "2026-07-17T03:23:48.140Z",
+    "versionId": "979d609c-e855-4b04-8cef-1010abf5e440",
+    "workflowId": "ZjC2N0nMDRubevBi",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "admin/tipo-servicio-crear",
+          "responseMode": "responseNode",
+          "options": {
+            "allowedOrigins": "*"
+          }
+        },
+        "id": "4c5e054f-43eb-40c8-83a9-a0ab13d5df75",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          0,
+          96
+        ],
+        "webhookId": "36cecdd1-96d6-4f70-810e-e4ca54347299"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "nombre",
+                "name": "nombre",
+                "value": "={{ ($json.body?.nombre ?? $json.nombre ?? \"\").trim() }}",
+                "type": "string"
+              },
+              {
+                "id": "descripcion",
+                "name": "descripcion",
+                "value": "={{ $json.body?.descripcion ?? $json.descripcion ?? \"\" }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "88eb6003-8fec-48ea-af34-6b478c7f80b8",
+        "name": "Normalize Input",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          224,
+          96
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "INSERT INTO tipos_servicio (nombre, descripcion) VALUES ($1, $2) RETURNING id_tipo_servicio, nombre, activo",
+          "options": {
+            "queryReplacement": "={{ $json.nombre }}, {{ $json.descripcion }}"
+          }
+        },
+        "id": "95a4e891-b4a0-43e7-a312-36b85f2d6eee",
+        "name": "Insert Tipo Servicio",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          672,
+          0
+        ],
+        "credentials": {
+          "postgres": {
+            "id": "DI7VdrXRMXAIJibS",
+            "name": "NFC_Turnos"
+          }
+        },
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ JSON.stringify({ success: true, data: $json }) }}",
+          "options": {
+            "responseCode": 201
+          }
+        },
+        "id": "952c786c-3c64-49f8-b0a8-69c3691c8ec3",
+        "name": "Respond Success",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          880,
+          -80
+        ]
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "{ \"success\": false, \"message\": \"Ya existe un tipo de servicio con ese nombre\" }",
+          "options": {
+            "responseCode": 409
+          }
+        },
+        "id": "4e659fd0-a317-47e9-b7e4-7113fef467e6",
+        "name": "Respond Duplicate Error",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          880,
+          48
+        ]
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "{ \"success\": false, \"message\": \"El nombre del tipo es obligatorio\" }",
+          "options": {
+            "responseCode": 400
+          }
+        },
+        "id": "2a3e5e8b-bf32-44fb-b3d9-58131860f57a",
+        "name": "Respond Validation Error",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          672,
+          192
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "d987541d-0c40-474b-878d-844db2e86549",
+                "leftValue": "={{ $json.nombre }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "exists",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          416,
+          96
+        ],
+        "id": "46e97d7a-2d97-415d-9514-33f54baa3604",
+        "name": "If"
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Normalize Input",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Normalize Input": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Insert Tipo Servicio": {
+        "main": [
+          [
+            {
+              "node": "Respond Success",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Respond Duplicate Error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Respond Success": {
+        "main": [
+          [],
+          []
+        ]
+      },
+      "If": {
+        "main": [
+          [
+            {
+              "node": "Insert Tipo Servicio",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Respond Validation Error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "In\u00e9s Risso",
+    "name": "Version 979d609c",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}

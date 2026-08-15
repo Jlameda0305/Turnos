@@ -2,7 +2,7 @@
    AIONEX — Shared Utilities
    ══════════════════════════════════════════════════ */
 
-const N8N_BASE_URL = 'https://vps-6071355-x.dattaweb.com';
+const N8N_BASE_URL = 'https://vps-6207995-x.dattaweb.com';
 
 // ── Cookies ──────────────────────────────────────
 

@@ -1,0 +1,328 @@
+{
+  "updatedAt": "2026-07-17T04:23:39.427Z",
+  "createdAt": "2026-07-17T04:17:41.531Z",
+  "id": "DyIaRRdNk34xLZnJ",
+  "name": "Public - Reservar Turno v2 (Fixed)",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{ \"success\": false, \"message\": \"No se pudo reservar el turno (horario no disponible o error de validaci\u00f3n).\" }",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "id": "33fb6278-5295-45ec-9fba-6ffc9a77b12f",
+      "name": "Respond Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1568,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, id_turno: $json.id_turno }) }}",
+        "options": {
+          "responseCode": 201
+        }
+      },
+      "id": "f52e7de8-db63-4716-93c2-11f4245ecba4",
+      "name": "Respond Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1568,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.id_turno }}",
+              "operator": {
+                "type": "string",
+                "operation": "isNotEmpty"
+              },
+              "rightValue": ""
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "7d5b0e87-6bea-4bd9-91a8-d2292a82c34d",
+      "name": "Insert Success?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1344,
+        48
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO turnos (id_cliente, id_servicio, fecha, hora, hora_fin, observaciones, estado) VALUES ($1::uuid, $2::uuid, $3::date, $4::time, $5::time, $6, 'pendiente') RETURNING id_turno",
+        "options": {
+          "queryReplacement": "={{ $json.id_cliente }}, {{ $json.id_servicio }}, {{ $json.fecha }}, {{ $json.hora }}, {{ $json.hora_fin }}, {{ $json.observaciones }}"
+        }
+      },
+      "id": "98ca2247-c7ed-4823-98a0-21dea4640a6e",
+      "name": "Insert Turno",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1120,
+        48
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.error }}",
+              "operator": {
+                "type": "string",
+                "operation": "isEmpty"
+              },
+              "rightValue": ""
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "3f130290-fa2a-4e3e-9bc4-db2e7c84cdfa",
+      "name": "Is Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        896,
+        128
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "c81fde8f-c707-48bb-8839-ccb618aaeb55",
+      "name": "Calculate Hora Fin",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2.2,
+      "position": [
+        672,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT duracion FROM servicios WHERE id_servicio = $1::uuid LIMIT 1",
+        "options": {
+          "queryReplacement": "={{ $('Webhook').item.json.body.id_servicio }}"
+        }
+      },
+      "id": "1da89cf7-a60b-4beb-bf18-9333d2b2bbe6",
+      "name": "Get Servicio",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        448,
+        112
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id_cliente FROM clientes WHERE session_id = $1::uuid LIMIT 1",
+        "options": {
+          "queryReplacement": "={{ $json.body.session_id }}"
+        }
+      },
+      "id": "264b0f58-219e-4227-9ae1-9260dd37bc2a",
+      "name": "Get Cliente",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        224,
+        128
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "public/reservar-turno-v2",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "ea1bc90d-6589-47f2-ac0a-ddc8473a37a3",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        128
+      ],
+      "webhookId": "ec194338-4721-4200-8e84-10c18c7cdb11"
+    }
+  ],
+  "connections": {
+    "Insert Success?": {
+      "main": [
+        [
+          {
+            "node": "Respond Success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Turno": {
+      "main": [
+        [
+          {
+            "node": "Insert Success?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Valid?": {
+      "main": [
+        [
+          {
+            "node": "Insert Turno",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Hora Fin": {
+      "main": [
+        [
+          {
+            "node": "Is Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Servicio": {
+      "main": [
+        [
+          {
+            "node": "Calculate Hora Fin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Cliente": {
+      "main": [
+        [
+          {
+            "node": "Get Servicio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get Cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "pinData": {},
+  "versionId": "9686e21b-2dd8-4d05-8057-6ed3751522e1",
+  "activeVersionId": null,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-07-17T04:17:41.531Z",
+      "createdAt": "2026-07-17T04:17:41.531Z",
+      "role": "workflow:owner",
+      "workflowId": "DyIaRRdNk34xLZnJ",
+      "projectId": "Iy2SCF8ACRv0KbuJ"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}

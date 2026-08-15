@@ -1,0 +1,324 @@
+{
+  "updatedAt": "2026-07-17T04:18:53.007Z",
+  "createdAt": "2026-07-16T22:56:47.166Z",
+  "id": "g5Yx5S9rt2s8uc4C",
+  "name": "Admin - Crear Turno v2",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "cb77ab28-1464-4295-8f5c-8b3323c1a413",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "admin/turno-crear-v2",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "webhookId": "e802d4f3-d79c-44eb-86ad-bd6e76fadbb4"
+    },
+    {
+      "id": "e380b816-4276-4e9d-b9e8-bea4aee55890",
+      "name": "Get Servicio",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        224,
+        0
+      ],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT duracion FROM servicios WHERE id_servicio = $1",
+        "options": {
+          "queryParameters": "={{ $json.body.id_servicio }}"
+        }
+      },
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      }
+    },
+    {
+      "id": "2264ed1d-2ff9-4d88-acd9-9f89f41fd7a3",
+      "name": "Calcular Hora Fin",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ],
+      "parameters": {
+        "jsCode": "\n        const duracion = $input.item.json.duracion || 30;\n        const horaInicio = $('Webhook').first().json.body.hora;\n        \n        const [horas, min] = horaInicio.split(':').map(Number);\n        const totalMin = horas * 60 + min + duracion;\n        \n        const endHoras = Math.floor(totalMin / 60);\n        const endMin = totalMin % 60;\n        \n        const horaFin = `${endHoras.toString().padStart(2, '0')}:${endMin.toString().padStart(2, '0')}`;\n        \n        return { hora_fin: horaFin };\n      "
+      }
+    },
+    {
+      "id": "6775efa4-3a90-4839-9ad5-0dc1733cfe3f",
+      "name": "Insertar Turno",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        672,
+        0
+      ],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "\n        INSERT INTO turnos (id_cliente, id_servicio, fecha, hora, hora_fin, estado, observaciones)\n        VALUES ($1, $2, $3, $4, $5, $6, $7)\n        RETURNING id_turno;\n      ",
+        "options": {
+          "queryParameters": "={{ $('Webhook').first().json.body.id_cliente }},{{ $('Webhook').first().json.body.id_servicio }},{{ $('Webhook').first().json.body.fecha }},{{ $('Webhook').first().json.body.hora }},{{ $json.hora_fin }},{{ $('Webhook').first().json.body.estado }},{{ $('Webhook').first().json.body.observaciones }}"
+        }
+      },
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      }
+    },
+    {
+      "id": "38b14a61-b382-4d65-9961-046c36c22779",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        896,
+        0
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ message: \"Turno creado correctamente\", id_turno: $json.id_turno }) }}",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get Servicio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Servicio": {
+      "main": [
+        [
+          {
+            "node": "Calcular Hora Fin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calcular Hora Fin": {
+      "main": [
+        [
+          {
+            "node": "Insertar Turno",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insertar Turno": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "staticData": null,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "pinData": null,
+  "versionId": "9c801053-529e-47c8-ac93-66011a368590",
+  "activeVersionId": "9c801053-529e-47c8-ac93-66011a368590",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-07-16T22:56:47.166Z",
+      "createdAt": "2026-07-16T22:56:47.166Z",
+      "role": "workflow:owner",
+      "workflowId": "g5Yx5S9rt2s8uc4C",
+      "projectId": "Iy2SCF8ACRv0KbuJ"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-07-16T22:56:47.166Z",
+    "createdAt": "2026-07-16T22:56:47.166Z",
+    "versionId": "9c801053-529e-47c8-ac93-66011a368590",
+    "workflowId": "g5Yx5S9rt2s8uc4C",
+    "nodes": [
+      {
+        "id": "cb77ab28-1464-4295-8f5c-8b3323c1a413",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "admin/turno-crear-v2",
+          "responseMode": "responseNode",
+          "options": {
+            "allowedOrigins": "*"
+          }
+        },
+        "webhookId": "e802d4f3-d79c-44eb-86ad-bd6e76fadbb4"
+      },
+      {
+        "id": "e380b816-4276-4e9d-b9e8-bea4aee55890",
+        "name": "Get Servicio",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          224,
+          0
+        ],
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT duracion FROM servicios WHERE id_servicio = $1",
+          "options": {
+            "queryParameters": "={{ $json.body.id_servicio }}"
+          }
+        },
+        "credentials": {
+          "postgres": {
+            "id": "DI7VdrXRMXAIJibS",
+            "name": "NFC_Turnos"
+          }
+        }
+      },
+      {
+        "id": "2264ed1d-2ff9-4d88-acd9-9f89f41fd7a3",
+        "name": "Calcular Hora Fin",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          448,
+          0
+        ],
+        "parameters": {
+          "jsCode": "\n        const duracion = $input.item.json.duracion || 30;\n        const horaInicio = $('Webhook').first().json.body.hora;\n        \n        const [horas, min] = horaInicio.split(':').map(Number);\n        const totalMin = horas * 60 + min + duracion;\n        \n        const endHoras = Math.floor(totalMin / 60);\n        const endMin = totalMin % 60;\n        \n        const horaFin = `${endHoras.toString().padStart(2, '0')}:${endMin.toString().padStart(2, '0')}`;\n        \n        return { hora_fin: horaFin };\n      "
+        }
+      },
+      {
+        "id": "6775efa4-3a90-4839-9ad5-0dc1733cfe3f",
+        "name": "Insertar Turno",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          672,
+          0
+        ],
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "\n        INSERT INTO turnos (id_cliente, id_servicio, fecha, hora, hora_fin, estado, observaciones)\n        VALUES ($1, $2, $3, $4, $5, $6, $7)\n        RETURNING id_turno;\n      ",
+          "options": {
+            "queryParameters": "={{ $('Webhook').first().json.body.id_cliente }},{{ $('Webhook').first().json.body.id_servicio }},{{ $('Webhook').first().json.body.fecha }},{{ $('Webhook').first().json.body.hora }},{{ $json.hora_fin }},{{ $('Webhook').first().json.body.estado }},{{ $('Webhook').first().json.body.observaciones }}"
+          }
+        },
+        "credentials": {
+          "postgres": {
+            "id": "DI7VdrXRMXAIJibS",
+            "name": "NFC_Turnos"
+          }
+        }
+      },
+      {
+        "id": "38b14a61-b382-4d65-9961-046c36c22779",
+        "name": "Respond",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          896,
+          0
+        ],
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ JSON.stringify({ message: \"Turno creado correctamente\", id_turno: $json.id_turno }) }}",
+          "options": {}
+        }
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Get Servicio",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get Servicio": {
+        "main": [
+          [
+            {
+              "node": "Calcular Hora Fin",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Calcular Hora Fin": {
+        "main": [
+          [
+            {
+              "node": "Insertar Turno",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Insertar Turno": {
+        "main": [
+          [
+            {
+              "node": "Respond",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "In\u00e9s Risso",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "tags": []
+}

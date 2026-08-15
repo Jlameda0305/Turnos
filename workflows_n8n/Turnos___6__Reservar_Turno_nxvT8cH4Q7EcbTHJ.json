@@ -1,0 +1,201 @@
+{
+  "updatedAt": "2026-07-16T22:58:39.792Z",
+  "createdAt": "2026-07-14T02:59:42.036Z",
+  "id": "nxvT8cH4Q7EcbTHJ",
+  "name": "Turnos - 6. Reservar Turno",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "reservar",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "84794568-5bd6-423d-a2a7-ebcbcab09041",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        -784,
+        64
+      ],
+      "webhookId": "a40bc023-056c-4933-a008-1297678eb180"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id_turno FROM public.turnos WHERE fecha = $1 AND hora = $2 AND estado != 'cancelado' LIMIT 1;",
+        "options": {
+          "queryReplacement": "={{ $json.body.fecha }},{{ $json.body.hora }}"
+        }
+      },
+      "id": "3c3cc03c-3968-4c2d-94a2-07a5ae778247",
+      "name": "Check Disponibilidad",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.2,
+      "position": [
+        -576,
+        64
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.id_turno }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "id": "afa4ae6d-f724-4215-8f80-d6d2633a5417",
+      "name": "Est\u00e1 Ocupado?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -384,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": false,\n  \"message\": \"Ese horario ya fue reservado. Eleg\u00ed otro.\"\n}",
+        "options": {
+          "responseCode": 409
+        }
+      },
+      "id": "62d9b384-d986-46cb-8649-bd0abf409015",
+      "name": "Respond (Ocupado)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -176,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO public.turnos (id_cliente, fecha, hora, observaciones, estado) VALUES ($1, $2, $3, $4, 'confirmado') RETURNING id_turno;",
+        "options": {
+          "queryReplacement": "={{ $('Webhook').item.json.body.session_id }},{{ $('Webhook').item.json.body.fecha }},{{ $('Webhook').item.json.body.hora }},{{ $('Webhook').item.json.body.observaciones }}"
+        }
+      },
+      "id": "de8dad9c-27cc-4cc5-b846-e8f7c2fa8686",
+      "name": "Insertar Reserva",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.2,
+      "position": [
+        -176,
+        208
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"id_turno\": \"{{ $json.id_turno }}\"\n}",
+        "options": {}
+      },
+      "id": "b170ff1a-6cfd-4ebd-9666-38718d7a9d57",
+      "name": "Respond (\u00c9xito)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        32,
+        208
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Check Disponibilidad",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Disponibilidad": {
+      "main": [
+        [
+          {
+            "node": "Est\u00e1 Ocupado?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Est\u00e1 Ocupado?": {
+      "main": [
+        [
+          {
+            "node": "Respond (Ocupado)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Insertar Reserva",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insertar Reserva": {
+      "main": [
+        [
+          {
+            "node": "Respond (\u00c9xito)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "749349ba-a2d2-4515-afff-51e2385bf59e",
+  "activeVersionId": null,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-07-14T02:59:42.036Z",
+      "createdAt": "2026-07-14T02:59:42.036Z",
+      "role": "workflow:owner",
+      "workflowId": "nxvT8cH4Q7EcbTHJ",
+      "projectId": "Iy2SCF8ACRv0KbuJ"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}

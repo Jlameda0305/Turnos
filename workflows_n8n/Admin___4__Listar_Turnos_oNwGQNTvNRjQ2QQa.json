@@ -1,0 +1,218 @@
+{
+  "updatedAt": "2026-07-14T04:23:10.624Z",
+  "createdAt": "2026-07-14T04:22:29.698Z",
+  "id": "oNwGQNTvNRjQ2QQa",
+  "name": "Admin - 4. Listar Turnos",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "path": "admin/turnos",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "c0a64091-fe81-4878-b815-c562f7ab40f5",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        -672,
+        80
+      ],
+      "webhookId": "8a3529b3-a999-489e-9e94-5f8bd40033c3"
+    },
+    {
+      "parameters": {
+        "url": "https://fosblgvcfhmkvbbejiid.supabase.co/auth/v1/user",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $json.headers.authorization }}"
+            },
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvc2JsZ3ZjZmhta3ZiYmVqaWlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2NTA0MjEsImV4cCI6MjA5OTIyNjQyMX0.shrNEOCsWnD7i9VuMRt2nNuLzaq3qot3uq82PAYkQ2c"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "85c08c85-9ea7-4979-8edc-497a0212d745",
+      "name": "Validar Sesi\u00f3n",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -480,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT count(*) as total FROM turnos WHERE ($1 = 'todos' OR estado = $1);",
+        "options": {
+          "queryReplacement": "={{ $('Webhook').item.json.query.estado || 'todos' }}"
+        }
+      },
+      "id": "140da510-30ee-4f62-b3f3-3fa4629c2140",
+      "name": "Contar Turnos",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.2,
+      "position": [
+        -272,
+        -32
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT t.id_turno, t.fecha, t.hora, t.estado, t.observaciones, json_build_object('id_cliente', c.id_cliente, 'dni', c.dni, 'nombre', c.nombre, 'apellido', c.apellido) as cliente FROM turnos t JOIN clientes c ON t.id_cliente = c.id_cliente WHERE ($1 = 'todos' OR t.estado = $1) ORDER BY t.fecha DESC, t.hora DESC LIMIT $2 OFFSET $3;",
+        "options": {
+          "queryReplacement": "={{ $('Webhook').item.json.query.estado || 'todos' }},{{ $('Webhook').item.json.query.limit || 10 }},{{ $('Webhook').item.json.query.offset || 0 }}"
+        }
+      },
+      "id": "7d8fc7b6-7d26-4ff6-8f1f-43586c2802d2",
+      "name": "Listar Turnos",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.2,
+      "position": [
+        -272,
+        176
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "mergeByFields": {
+          "values": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "id": "26258088-9aa7-4cf1-b3c2-772809653373",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        -80,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"total\": {{ $json.total }},\n  \"data\": {{ $('Listar Turnos').all().map(e => e.json) }}\n}",
+        "options": {}
+      },
+      "id": "340ce4c4-e12b-44e7-b9e2-c976c4a7bcb0",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        128,
+        80
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validar Sesi\u00f3n",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar Sesi\u00f3n": {
+      "main": [
+        [
+          {
+            "node": "Contar Turnos",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Listar Turnos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Contar Turnos": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Listar Turnos": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "b7f187fa-b28c-4abc-864e-665929b66482",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-07-14T04:22:29.698Z",
+      "createdAt": "2026-07-14T04:22:29.698Z",
+      "role": "workflow:owner",
+      "workflowId": "oNwGQNTvNRjQ2QQa",
+      "projectId": "Iy2SCF8ACRv0KbuJ"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}

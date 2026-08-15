@@ -1,0 +1,252 @@
+{
+  "updatedAt": "2026-07-17T03:53:07.957Z",
+  "createdAt": "2026-07-16T22:36:14.369Z",
+  "id": "zGqpsTgfKzpP3FKE",
+  "name": "Public - Mis Turnos v2",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "public/mis-turnos-v2",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "0927cee2-a1e5-4e9e-b996-2e42ae4fb2f6",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "f828126d-830f-4834-bf45-832553ccdfeb"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "\n        SELECT t.id_turno, t.fecha, t.hora, t.hora_fin, t.estado, t.observaciones,\n               s.nombre AS servicio_nombre, s.duracion, s.costo, ts.nombre AS tipo_nombre\n        FROM turnos t\n        JOIN servicios s ON t.id_servicio = s.id_servicio\n        JOIN tipos_servicio ts ON s.id_tipo_servicio = ts.id_tipo_servicio\n        JOIN clientes c ON t.id_cliente = c.id_cliente\n        WHERE c.id_cliente = $1::uuid\n        ORDER BY t.fecha DESC, t.hora DESC\n      ",
+        "options": {
+          "queryReplacement": "={{ $json.body.session_id }}"
+        }
+      },
+      "id": "1aace31c-04e7-4af9-9097-86005b1657aa",
+      "name": "Get Mis Turnos",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        224,
+        0
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ turnos: $('Get Mis Turnos').all().map(i => i.json).filter(j => j.id_turno) }) }}",
+        "options": {}
+      },
+      "id": "4a28ac90-d820-4cef-9b4a-5f17db73989c",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        480,
+        -16
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get Mis Turnos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Mis Turnos": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "vps-6207995-x.dattaweb.com",
+            "x-real-ip": "186.158.237.71",
+            "x-forwarded-for": "186.158.237.71",
+            "x-forwarded-proto": "https",
+            "connection": "upgrade",
+            "content-length": "53",
+            "sec-ch-ua-platform": "\"Linux\"",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36",
+            "sec-ch-ua": "\"Not;A=Brand\";v=\"8\", \"Chromium\";v=\"150\", \"Brave\";v=\"150\"",
+            "content-type": "application/json",
+            "sec-ch-ua-mobile": "?0",
+            "accept": "*/*",
+            "sec-gpc": "1",
+            "accept-language": "es-419,es;q=0.8",
+            "origin": "http://127.0.0.1:5500",
+            "sec-fetch-site": "cross-site",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-dest": "empty",
+            "referer": "http://127.0.0.1:5500/",
+            "accept-encoding": "gzip, deflate, br, zstd"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "session_id": "cd4dde47-e910-427d-acb4-b6e7e10c8dbd"
+          },
+          "webhookUrl": "https://vps-6207995-x.dattaweb.com/webhook/public/mis-turnos-v2",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "versionId": "a2269741-9d3b-437f-a38b-e0b40dcd514e",
+  "activeVersionId": "a2269741-9d3b-437f-a38b-e0b40dcd514e",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-07-16T22:36:14.369Z",
+      "createdAt": "2026-07-16T22:36:14.369Z",
+      "role": "workflow:owner",
+      "workflowId": "zGqpsTgfKzpP3FKE",
+      "projectId": "Iy2SCF8ACRv0KbuJ"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-07-17T03:53:30.395Z",
+    "createdAt": "2026-07-17T03:53:07.958Z",
+    "versionId": "a2269741-9d3b-437f-a38b-e0b40dcd514e",
+    "workflowId": "zGqpsTgfKzpP3FKE",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "public/mis-turnos-v2",
+          "responseMode": "responseNode",
+          "options": {
+            "allowedOrigins": "*"
+          }
+        },
+        "id": "0927cee2-a1e5-4e9e-b996-2e42ae4fb2f6",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          0,
+          0
+        ],
+        "webhookId": "f828126d-830f-4834-bf45-832553ccdfeb"
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "\n        SELECT t.id_turno, t.fecha, t.hora, t.hora_fin, t.estado, t.observaciones,\n               s.nombre AS servicio_nombre, s.duracion, s.costo, ts.nombre AS tipo_nombre\n        FROM turnos t\n        JOIN servicios s ON t.id_servicio = s.id_servicio\n        JOIN tipos_servicio ts ON s.id_tipo_servicio = ts.id_tipo_servicio\n        JOIN clientes c ON t.id_cliente = c.id_cliente\n        WHERE c.id_cliente = $1::uuid\n        ORDER BY t.fecha DESC, t.hora DESC\n      ",
+          "options": {
+            "queryReplacement": "={{ $json.body.session_id }}"
+          }
+        },
+        "id": "1aace31c-04e7-4af9-9097-86005b1657aa",
+        "name": "Get Mis Turnos",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          224,
+          0
+        ],
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "DI7VdrXRMXAIJibS",
+            "name": "NFC_Turnos"
+          }
+        },
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ JSON.stringify({ turnos: $('Get Mis Turnos').all().map(i => i.json).filter(j => j.id_turno) }) }}",
+          "options": {}
+        },
+        "id": "4a28ac90-d820-4cef-9b4a-5f17db73989c",
+        "name": "Respond",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          480,
+          -16
+        ]
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Get Mis Turnos",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get Mis Turnos": {
+        "main": [
+          [
+            {
+              "node": "Respond",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "In\u00e9s Risso",
+    "name": "Version a2269741",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}

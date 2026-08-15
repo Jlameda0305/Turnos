@@ -1,0 +1,315 @@
+{
+  "updatedAt": "2026-07-14T03:45:02.052Z",
+  "createdAt": "2026-07-14T02:01:37.727Z",
+  "id": "GnAX0icOyu2CxasE",
+  "name": "Turnos - 1. Router (Validar Sesi\u00f3n)",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "router",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "id": "8904d14b-35f1-4019-a38c-e3f4b1473303",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        -2384,
+        144
+      ],
+      "webhookId": "router-turnos-id"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id_cliente FROM public.clientes WHERE id_cliente = $1;",
+        "options": {
+          "queryReplacement": "={{ $json.body.session_id }}"
+        }
+      },
+      "id": "69d5fcbb-cbd8-42be-b343-1564cb2e65ec",
+      "name": "Supabase Postgres",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.2,
+      "position": [
+        -2176,
+        144
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.dni }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "id": "30802f66-cb07-4b14-8d1a-417b944a3697",
+      "name": "Existe Cliente?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -1984,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"valid\": true\n}",
+        "options": {}
+      },
+      "id": "9e1353eb-bdc5-4a6d-8a3c-e0a5e71e8329",
+      "name": "Respond to Webhook (V\u00e1lido)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -1776,
+        32
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"valid\": false\n}",
+        "options": {}
+      },
+      "id": "d999eb21-c5ba-4c72-bfa7-0ba4c90e29f4",
+      "name": "Respond to Webhook (Inv\u00e1lido)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -1776,
+        240
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Supabase Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Postgres": {
+      "main": [
+        [
+          {
+            "node": "Existe Cliente?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Existe Cliente?": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook (V\u00e1lido)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook (Inv\u00e1lido)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "94f14f1c-ece3-4f3c-a806-e5e4e220591c",
+  "activeVersionId": "94f14f1c-ece3-4f3c-a806-e5e4e220591c",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-07-14T02:01:37.727Z",
+      "createdAt": "2026-07-14T02:01:37.727Z",
+      "role": "workflow:owner",
+      "workflowId": "GnAX0icOyu2CxasE",
+      "projectId": "Iy2SCF8ACRv0KbuJ"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-07-14T02:38:40.514Z",
+    "createdAt": "2026-07-14T02:38:35.923Z",
+    "versionId": "94f14f1c-ece3-4f3c-a806-e5e4e220591c",
+    "workflowId": "GnAX0icOyu2CxasE",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "router",
+          "responseMode": "responseNode",
+          "options": {
+            "rawBody": true
+          }
+        },
+        "id": "8904d14b-35f1-4019-a38c-e3f4b1473303",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 1.1,
+        "position": [
+          -2384,
+          144
+        ],
+        "webhookId": "router-turnos-id"
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT id_cliente FROM public.clientes WHERE id_cliente = $1;",
+          "options": {
+            "queryReplacement": "={{ $json.body.session_id }}"
+          }
+        },
+        "id": "69d5fcbb-cbd8-42be-b343-1564cb2e65ec",
+        "name": "Supabase Postgres",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.2,
+        "position": [
+          -2176,
+          144
+        ],
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "DI7VdrXRMXAIJibS",
+            "name": "NFC_Turnos"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "string": [
+              {
+                "value1": "={{ $json.dni }}",
+                "operation": "isNotEmpty"
+              }
+            ]
+          }
+        },
+        "id": "30802f66-cb07-4b14-8d1a-417b944a3697",
+        "name": "Existe Cliente?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 1,
+        "position": [
+          -1984,
+          144
+        ]
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "{\n  \"valid\": true\n}",
+          "options": {}
+        },
+        "id": "9e1353eb-bdc5-4a6d-8a3c-e0a5e71e8329",
+        "name": "Respond to Webhook (V\u00e1lido)",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1,
+        "position": [
+          -1776,
+          32
+        ]
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "{\n  \"valid\": false\n}",
+          "options": {}
+        },
+        "id": "d999eb21-c5ba-4c72-bfa7-0ba4c90e29f4",
+        "name": "Respond to Webhook (Inv\u00e1lido)",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1,
+        "position": [
+          -1776,
+          240
+        ]
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Supabase Postgres",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Supabase Postgres": {
+        "main": [
+          [
+            {
+              "node": "Existe Cliente?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Existe Cliente?": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook (V\u00e1lido)",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Respond to Webhook (Inv\u00e1lido)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "In\u00e9s Risso",
+    "name": "Version 94f14f1c",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}

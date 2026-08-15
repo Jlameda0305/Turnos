@@ -1,0 +1,279 @@
+{
+  "updatedAt": "2026-07-14T05:38:13.777Z",
+  "createdAt": "2026-07-14T05:31:16.628Z",
+  "id": "Vgwan6tW9SaTxOkR",
+  "name": "Admin - 7. Eliminar cliente",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "DELETE",
+        "path": "admin/cliente-eliminar",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "c335eb5f-019a-446c-9a3d-a582bdc16abf",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        -16,
+        -112
+      ],
+      "webhookId": "ffc5cbc9-2fe3-4eb0-9734-dfb335cb4484"
+    },
+    {
+      "parameters": {
+        "url": "https://fosblgvcfhmkvbbejiid.supabase.co/auth/v1/user",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $json.headers.authorization }}"
+            },
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvc2JsZ3ZjZmhta3ZiYmVqaWlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2NTA0MjEsImV4cCI6MjA5OTIyNjQyMX0.shrNEOCsWnD7i9VuMRt2nNuLzaq3qot3uq82PAYkQ2c"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a01f8479-f622-476b-bc17-f66864a37c32",
+      "name": "Validar Sesi\u00f3n",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        192,
+        -112
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "DELETE FROM clientes WHERE id_cliente = $1;",
+        "options": {
+          "queryReplacement": "={{ $('Webhook').item.json.query.id }}"
+        }
+      },
+      "id": "56b61b8c-73a2-42cd-820d-855f4f1a9c30",
+      "name": "Eliminar Cliente",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.2,
+      "position": [
+        384,
+        -112
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": true\n}",
+        "options": {}
+      },
+      "id": "dbf14e98-84ac-4456-ab65-a710c28c08e2",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        592,
+        -112
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validar Sesi\u00f3n",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar Sesi\u00f3n": {
+      "main": [
+        [
+          {
+            "node": "Eliminar Cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Eliminar Cliente": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "be6c004d-99e3-4861-8883-d96512d728a6",
+  "activeVersionId": "be6c004d-99e3-4861-8883-d96512d728a6",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-07-14T05:31:16.628Z",
+      "createdAt": "2026-07-14T05:31:16.628Z",
+      "role": "workflow:owner",
+      "workflowId": "Vgwan6tW9SaTxOkR",
+      "projectId": "Iy2SCF8ACRv0KbuJ"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-07-14T05:32:24.997Z",
+    "createdAt": "2026-07-14T05:32:23.630Z",
+    "versionId": "be6c004d-99e3-4861-8883-d96512d728a6",
+    "workflowId": "Vgwan6tW9SaTxOkR",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "DELETE",
+          "path": "admin/cliente-eliminar",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "id": "c335eb5f-019a-446c-9a3d-a582bdc16abf",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 1.1,
+        "position": [
+          -16,
+          -112
+        ],
+        "webhookId": "ffc5cbc9-2fe3-4eb0-9734-dfb335cb4484"
+      },
+      {
+        "parameters": {
+          "url": "https://fosblgvcfhmkvbbejiid.supabase.co/auth/v1/user",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "={{ $json.headers.authorization }}"
+              },
+              {
+                "name": "apikey",
+                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvc2JsZ3ZjZmhta3ZiYmVqaWlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2NTA0MjEsImV4cCI6MjA5OTIyNjQyMX0.shrNEOCsWnD7i9VuMRt2nNuLzaq3qot3uq82PAYkQ2c"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "a01f8479-f622-476b-bc17-f66864a37c32",
+        "name": "Validar Sesi\u00f3n",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          192,
+          -112
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "DELETE FROM clientes WHERE id_cliente = $1;",
+          "options": {
+            "queryReplacement": "={{ $('Webhook').item.json.query.id }}"
+          }
+        },
+        "id": "56b61b8c-73a2-42cd-820d-855f4f1a9c30",
+        "name": "Eliminar Cliente",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.2,
+        "position": [
+          384,
+          -112
+        ],
+        "credentials": {
+          "postgres": {
+            "id": "DI7VdrXRMXAIJibS",
+            "name": "NFC_Turnos"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "{\n  \"success\": true\n}",
+          "options": {}
+        },
+        "id": "dbf14e98-84ac-4456-ab65-a710c28c08e2",
+        "name": "Respond",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1,
+        "position": [
+          592,
+          -112
+        ]
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Validar Sesi\u00f3n",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Validar Sesi\u00f3n": {
+        "main": [
+          [
+            {
+              "node": "Eliminar Cliente",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Eliminar Cliente": {
+        "main": [
+          [
+            {
+              "node": "Respond",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "In\u00e9s Risso",
+    "name": "Version be6c004d",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}

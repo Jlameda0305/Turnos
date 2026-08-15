@@ -1,0 +1,403 @@
+{
+  "updatedAt": "2026-07-14T05:26:17.761Z",
+  "createdAt": "2026-07-14T04:22:05.616Z",
+  "id": "KmtCwzOT8aKeU5Sq",
+  "name": "Admin - 3. Detalle Cliente",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "path": "admin/cliente-detalle",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "3bca7961-46ff-43b3-b59e-8b7f42314043",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        -1312,
+        160
+      ],
+      "webhookId": "2b58fd70-93d2-42b5-81bb-cd5aa8707c73"
+    },
+    {
+      "parameters": {
+        "url": "https://fosblgvcfhmkvbbejiid.supabase.co/auth/v1/user",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $json.headers.authorization }}"
+            },
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvc2JsZ3ZjZmhta3ZiYmVqaWlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2NTA0MjEsImV4cCI6MjA5OTIyNjQyMX0.shrNEOCsWnD7i9VuMRt2nNuLzaq3qot3uq82PAYkQ2c"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f306e4cc-b7ad-4af7-a9dc-d3882a010aad",
+      "name": "Validar Sesi\u00f3n",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -1120,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM clientes WHERE id_cliente = $1;",
+        "options": {
+          "queryReplacement": "={{ $('Webhook').item.json.query.id }}"
+        }
+      },
+      "id": "651cbf7b-7b63-4b58-99f5-e2ffedce4ffd",
+      "name": "Obtener Cliente",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.2,
+      "position": [
+        -912,
+        48
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT fecha, hora, estado, observaciones FROM turnos WHERE id_cliente = $1 ORDER BY fecha DESC, hora DESC LIMIT 10;",
+        "options": {
+          "queryReplacement": "={{ $('Webhook').item.json.query.id }}"
+        }
+      },
+      "id": "d5217f35-1b4d-491e-9763-598416795f74",
+      "name": "Obtener Turnos",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.2,
+      "position": [
+        -912,
+        256
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch"
+      },
+      "id": "6085d878-71ba-4b8d-8954-39fa6f7f8d54",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        -720,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ...$('Obtener Cliente').first().json, turnos: $('Obtener Turnos').all().map(e => e.json) } }}",
+        "options": {}
+      },
+      "id": "9622f1ac-7f3d-456d-8136-787483946b84",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -512,
+        160
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validar Sesi\u00f3n",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar Sesi\u00f3n": {
+      "main": [
+        [
+          {
+            "node": "Obtener Cliente",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Obtener Turnos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obtener Cliente": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obtener Turnos": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "04e7307e-9781-4588-8cb0-ba8d46e42de1",
+  "activeVersionId": "04e7307e-9781-4588-8cb0-ba8d46e42de1",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-07-14T04:22:05.616Z",
+      "createdAt": "2026-07-14T04:22:05.616Z",
+      "role": "workflow:owner",
+      "workflowId": "KmtCwzOT8aKeU5Sq",
+      "projectId": "Iy2SCF8ACRv0KbuJ"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-07-14T05:26:28.015Z",
+    "createdAt": "2026-07-14T05:26:17.762Z",
+    "versionId": "04e7307e-9781-4588-8cb0-ba8d46e42de1",
+    "workflowId": "KmtCwzOT8aKeU5Sq",
+    "nodes": [
+      {
+        "parameters": {
+          "path": "admin/cliente-detalle",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "id": "3bca7961-46ff-43b3-b59e-8b7f42314043",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 1.1,
+        "position": [
+          -1312,
+          160
+        ],
+        "webhookId": "2b58fd70-93d2-42b5-81bb-cd5aa8707c73"
+      },
+      {
+        "parameters": {
+          "url": "https://fosblgvcfhmkvbbejiid.supabase.co/auth/v1/user",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "={{ $json.headers.authorization }}"
+              },
+              {
+                "name": "apikey",
+                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvc2JsZ3ZjZmhta3ZiYmVqaWlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2NTA0MjEsImV4cCI6MjA5OTIyNjQyMX0.shrNEOCsWnD7i9VuMRt2nNuLzaq3qot3uq82PAYkQ2c"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "f306e4cc-b7ad-4af7-a9dc-d3882a010aad",
+        "name": "Validar Sesi\u00f3n",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          -1120,
+          160
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT * FROM clientes WHERE id_cliente = $1;",
+          "options": {
+            "queryReplacement": "={{ $('Webhook').item.json.query.id }}"
+          }
+        },
+        "id": "651cbf7b-7b63-4b58-99f5-e2ffedce4ffd",
+        "name": "Obtener Cliente",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.2,
+        "position": [
+          -912,
+          48
+        ],
+        "credentials": {
+          "postgres": {
+            "id": "DI7VdrXRMXAIJibS",
+            "name": "NFC_Turnos"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT fecha, hora, estado, observaciones FROM turnos WHERE id_cliente = $1 ORDER BY fecha DESC, hora DESC LIMIT 10;",
+          "options": {
+            "queryReplacement": "={{ $('Webhook').item.json.query.id }}"
+          }
+        },
+        "id": "d5217f35-1b4d-491e-9763-598416795f74",
+        "name": "Obtener Turnos",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.2,
+        "position": [
+          -912,
+          256
+        ],
+        "credentials": {
+          "postgres": {
+            "id": "DI7VdrXRMXAIJibS",
+            "name": "NFC_Turnos"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "mode": "chooseBranch"
+        },
+        "id": "6085d878-71ba-4b8d-8954-39fa6f7f8d54",
+        "name": "Merge",
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 2.1,
+        "position": [
+          -720,
+          160
+        ]
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ { ...$('Obtener Cliente').first().json, turnos: $('Obtener Turnos').all().map(e => e.json) } }}",
+          "options": {}
+        },
+        "id": "9622f1ac-7f3d-456d-8136-787483946b84",
+        "name": "Respond",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1,
+        "position": [
+          -512,
+          160
+        ]
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Validar Sesi\u00f3n",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Validar Sesi\u00f3n": {
+        "main": [
+          [
+            {
+              "node": "Obtener Cliente",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Obtener Turnos",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Obtener Cliente": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Obtener Turnos": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Merge": {
+        "main": [
+          [
+            {
+              "node": "Respond",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "In\u00e9s Risso",
+    "name": "Version 04e7307e",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}

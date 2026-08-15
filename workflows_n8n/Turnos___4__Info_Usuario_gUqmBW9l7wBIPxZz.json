@@ -1,0 +1,203 @@
+{
+  "updatedAt": "2026-07-14T03:45:07.896Z",
+  "createdAt": "2026-07-14T02:55:04.877Z",
+  "id": "gUqmBW9l7wBIPxZz",
+  "name": "Turnos - 4. Info Usuario",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "usuario",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "52ee36ca-1837-4906-87a1-5955e97b5738",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "ddb4bd31-3ee1-4c2f-8abb-bc523c578808"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT nombre, apellido FROM public.clientes WHERE id_cliente = $1;",
+        "options": {
+          "queryReplacement": "={{ $json.body.session_id }}"
+        }
+      },
+      "id": "afb95547-4892-4686-b26b-0b1c81f494bb",
+      "name": "Supabase Postgres",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.2,
+      "position": [
+        208,
+        0
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"nombre\": \"{{ $json.nombre }}\",\n  \"apellido\": \"{{ $json.apellido }}\"\n}",
+        "options": {}
+      },
+      "id": "7ae926c1-2a49-4b61-97f7-a023c756c3de",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        400,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Supabase Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Postgres": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "3c1d03fc-73e7-424d-9a98-1b3d4dc79747",
+  "activeVersionId": "3c1d03fc-73e7-424d-9a98-1b3d4dc79747",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-07-14T02:55:04.877Z",
+      "createdAt": "2026-07-14T02:55:04.877Z",
+      "role": "workflow:owner",
+      "workflowId": "gUqmBW9l7wBIPxZz",
+      "projectId": "Iy2SCF8ACRv0KbuJ"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-07-14T02:56:39.118Z",
+    "createdAt": "2026-07-14T02:55:12.386Z",
+    "versionId": "3c1d03fc-73e7-424d-9a98-1b3d4dc79747",
+    "workflowId": "gUqmBW9l7wBIPxZz",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "usuario",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "id": "52ee36ca-1837-4906-87a1-5955e97b5738",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 1.1,
+        "position": [
+          0,
+          0
+        ],
+        "webhookId": "ddb4bd31-3ee1-4c2f-8abb-bc523c578808"
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT nombre, apellido FROM public.clientes WHERE id_cliente = $1;",
+          "options": {
+            "queryReplacement": "={{ $json.body.session_id }}"
+          }
+        },
+        "id": "afb95547-4892-4686-b26b-0b1c81f494bb",
+        "name": "Supabase Postgres",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.2,
+        "position": [
+          208,
+          0
+        ],
+        "credentials": {
+          "postgres": {
+            "id": "DI7VdrXRMXAIJibS",
+            "name": "NFC_Turnos"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={\n  \"nombre\": \"{{ $json.nombre }}\",\n  \"apellido\": \"{{ $json.apellido }}\"\n}",
+          "options": {}
+        },
+        "id": "7ae926c1-2a49-4b61-97f7-a023c756c3de",
+        "name": "Respond to Webhook",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1,
+        "position": [
+          400,
+          0
+        ]
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Supabase Postgres",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Supabase Postgres": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "In\u00e9s Risso",
+    "name": "Version 3c1d03fc",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}

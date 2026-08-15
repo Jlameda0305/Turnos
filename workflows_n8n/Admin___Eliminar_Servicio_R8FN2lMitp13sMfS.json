@@ -1,0 +1,208 @@
+{
+  "updatedAt": "2026-07-17T04:18:54.383Z",
+  "createdAt": "2026-07-17T03:36:40.642Z",
+  "id": "R8FN2lMitp13sMfS",
+  "name": "Admin - Eliminar Servicio",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "id": "56d5d710-9573-46c2-a580-28661c794ff4",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "DELETE",
+        "path": "admin/servicio-eliminar",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "webhookId": "bb96583d-8baf-4efe-9a37-49ab325ad5f6"
+    },
+    {
+      "id": "efb58a20-9c66-496e-954f-40f745f9df08",
+      "name": "Delete Servicio",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        224,
+        0
+      ],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "DELETE FROM servicios WHERE id_servicio = $1::uuid",
+        "options": {
+          "queryReplacement": "={{ $json.body?.id_servicio }}"
+        }
+      },
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      }
+    },
+    {
+      "id": "0c69d1fc-cfa4-4a2c-80a4-bbefb131ca74",
+      "name": "Respond Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        448,
+        0
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true }) }}",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Delete Servicio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete Servicio": {
+      "main": [
+        [
+          {
+            "node": "Respond Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "staticData": null,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "pinData": null,
+  "versionId": "f07e9b9d-ed71-4e13-b618-ee3d344fd2f2",
+  "activeVersionId": "f07e9b9d-ed71-4e13-b618-ee3d344fd2f2",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-07-17T03:36:40.642Z",
+      "createdAt": "2026-07-17T03:36:40.642Z",
+      "role": "workflow:owner",
+      "workflowId": "R8FN2lMitp13sMfS",
+      "projectId": "Iy2SCF8ACRv0KbuJ"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-07-17T03:36:40.642Z",
+    "createdAt": "2026-07-17T03:36:40.642Z",
+    "versionId": "f07e9b9d-ed71-4e13-b618-ee3d344fd2f2",
+    "workflowId": "R8FN2lMitp13sMfS",
+    "nodes": [
+      {
+        "id": "56d5d710-9573-46c2-a580-28661c794ff4",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {
+          "httpMethod": "DELETE",
+          "path": "admin/servicio-eliminar",
+          "responseMode": "responseNode",
+          "options": {
+            "allowedOrigins": "*"
+          }
+        },
+        "webhookId": "bb96583d-8baf-4efe-9a37-49ab325ad5f6"
+      },
+      {
+        "id": "efb58a20-9c66-496e-954f-40f745f9df08",
+        "name": "Delete Servicio",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          224,
+          0
+        ],
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "DELETE FROM servicios WHERE id_servicio = $1::uuid",
+          "options": {
+            "queryReplacement": "={{ $json.body?.id_servicio }}"
+          }
+        },
+        "credentials": {
+          "postgres": {
+            "id": "DI7VdrXRMXAIJibS",
+            "name": "NFC_Turnos"
+          }
+        }
+      },
+      {
+        "id": "0c69d1fc-cfa4-4a2c-80a4-bbefb131ca74",
+        "name": "Respond Success",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          448,
+          0
+        ],
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ JSON.stringify({ success: true }) }}",
+          "options": {}
+        }
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Delete Servicio",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Delete Servicio": {
+        "main": [
+          [
+            {
+              "node": "Respond Success",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "In\u00e9s Risso",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "tags": []
+}

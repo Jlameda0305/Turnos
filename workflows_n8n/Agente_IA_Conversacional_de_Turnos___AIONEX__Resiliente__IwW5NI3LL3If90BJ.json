@@ -1,0 +1,1323 @@
+{
+  "updatedAt": "2026-07-28T03:02:46.554Z",
+  "createdAt": "2026-07-28T00:56:39.882Z",
+  "id": "IwW5NI3LL3If90BJ",
+  "name": "Agente IA Conversacional de Turnos - AIONEX (Resiliente)",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "// Normalizador de Payloads Omnicanal\nconst items = $input.all();\nconst normalized = [];\n\nfor (const item of items) {\n  const body = item.json.body || item.json;\n  \n  let canal = 'desconocido';\n  let sender_id = '';\n  let telefono = '';\n  let nombre_usuario = '';\n  let mensaje_texto = '';\n\n  // Telegram\n  if (body.message || body.callback_query) {\n    canal = 'telegram';\n    const msg = body.message || body.callback_query.message;\n    sender_id = String(msg.chat.id);\n    nombre_usuario = [msg.from.first_name, msg.from.last_name].filter(Boolean).join(' ');\n    mensaje_texto = body.callback_query ? body.callback_query.data : (msg.text || '');\n  } \n  // WhatsApp Meta Cloud API\n  else if (body.object === 'whatsapp_business_account' && body.entry) {\n    canal = 'whatsapp';\n    const entry = body.entry[0];\n    const changes = entry.changes[0];\n    const value = changes.value;\n    \n    if (item.json.query && item.json.query['hub.verify_token']) {\n      return [{ json: { challenge: item.json.query['hub.challenge'] } }];\n    }\n\n    if (value.messages && value.messages.length > 0) {\n      const waMsg = value.messages[0];\n      sender_id = waMsg.from;\n      telefono = '+' + waMsg.from;\n      nombre_usuario = value.contacts && value.contacts[0] ? value.contacts[0].profile.name : 'Usuario WhatsApp';\n      mensaje_texto = waMsg.type === 'text' ? waMsg.text.body : (waMsg.interactive?.button_reply?.id || waMsg.interactive?.list_reply?.id || '');\n    }\n  }\n\n  const session_id = `${canal}_${sender_id}`;\n\n  normalized.push({\n    json: {\n      session_id,\n      canal,\n      sender_id,\n      telefono,\n      nombre_usuario,\n      mensaje_texto,\n      timestamp: new Date().toISOString()\n    }\n  });\n}\n\nreturn normalized;"
+      },
+      "name": "Normalizador Omnicanal",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -928,
+        288
+      ],
+      "id": "aeb7afb5-aed1-4abf-baf4-50f2c3e9874e"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "name": "Enviar a Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.1,
+      "position": [
+        -16,
+        240
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "id": "740b6c81-f209-4ab6-8bcb-986ce98c5f41",
+      "webhookId": "4bcc36c0-3506-4e7f-8ef9-254333784ae5",
+      "credentials": {
+        "telegramApi": {
+          "id": "UKninKN9CczhcGfv",
+          "name": "Turnos_app_bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "deepseek-v4-pro",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [
+        -800,
+        496
+      ],
+      "id": "b5e9003c-893c-419f-aae8-83711be5bcec",
+      "name": "DeepSeek Chat Model",
+      "credentials": {
+        "deepSeekApi": {
+          "id": "DrLCO0thjTwtR8ql",
+          "name": "DeepSeek account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -1184,
+        160
+      ],
+      "id": "0a59f7ca-f96c-4097-b29e-f6ae3c75a9bb",
+      "name": "Telegram Trigger",
+      "webhookId": "22522237-3d7b-40de-8010-65ddd2290a39",
+      "credentials": {
+        "telegramApi": {
+          "id": "UKninKN9CczhcGfv",
+          "name": "Turnos_app_bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.session_id }}",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        -656,
+        496
+      ],
+      "id": "e1b4fefa-f8e8-4851-9159-fc08f728fc51",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": "clientes"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        -400,
+        528
+      ],
+      "name": "Tool_ConsultarPaciente",
+      "id": "87758dd1-14b8-4f65-b48b-f73dbc9b896d",
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "public",
+          "mode": "list",
+          "cachedResultName": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "clientes",
+          "mode": "list",
+          "cachedResultName": "clientes"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "dni": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('dni', `Ejemplo: 96405820`, 'string') }}",
+            "nombre": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('nombre', `Nombre del cliente`, 'string') }}",
+            "apellido": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('apellido', `Apellido del cliente`, 'string') }}",
+            "sexo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('sexo', `Sexo del cliente`, 'string') }}",
+            "fecha_nacimiento": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fecha_nacimiento', ``, 'string') }}",
+            "direccion": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('direccion', ``, 'string') }}",
+            "email": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('email', ``, 'string') }}",
+            "telefono": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('telefono', ``, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "id_cliente",
+              "displayName": "id_cliente",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "dni",
+              "displayName": "dni",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "nombre",
+              "displayName": "nombre",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "apellido",
+              "displayName": "apellido",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "sexo",
+              "displayName": "sexo",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "fecha_nacimiento",
+              "displayName": "fecha_nacimiento",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "direccion",
+              "displayName": "direccion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "telefono",
+              "displayName": "telefono",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        -224,
+        528
+      ],
+      "name": "Tool_RegistrarPaciente",
+      "id": "ea0028b3-12af-4a8b-99fd-20b622ed2da3",
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": "tipos_servicio"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        -400,
+        720
+      ],
+      "name": "Tool_ConsultarTiposServicio",
+      "id": "dbe13c98-c5c6-4131-9279-5b2e0eb05b01",
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": "turnos"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        -400,
+        928
+      ],
+      "name": "Tool_ConsultarDisponibilidad",
+      "id": "fbfea8fe-8fe4-4074-9892-fee0921df0fb",
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": "turnos"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "id_turno",
+              "displayName": "id_turno",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "id_cliente",
+              "displayName": "id_cliente",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "fecha",
+              "displayName": "fecha",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "hora",
+              "displayName": "hora",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "time",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "dia",
+              "displayName": "dia",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "options",
+              "canBeUsedToMatch": true,
+              "options": [
+                {
+                  "name": "lunes",
+                  "value": "lunes"
+                },
+                {
+                  "name": "martes",
+                  "value": "martes"
+                },
+                {
+                  "name": "mi\u00e9rcoles",
+                  "value": "mi\u00e9rcoles"
+                },
+                {
+                  "name": "jueves",
+                  "value": "jueves"
+                },
+                {
+                  "name": "viernes",
+                  "value": "viernes"
+                },
+                {
+                  "name": "s\u00e1bado",
+                  "value": "s\u00e1bado"
+                },
+                {
+                  "name": "domingo",
+                  "value": "domingo"
+                }
+              ]
+            },
+            {
+              "id": "estado",
+              "displayName": "estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "options",
+              "canBeUsedToMatch": true,
+              "options": [
+                {
+                  "name": "pendiente",
+                  "value": "pendiente"
+                },
+                {
+                  "name": "confirmado",
+                  "value": "confirmado"
+                },
+                {
+                  "name": "cancelado",
+                  "value": "cancelado"
+                },
+                {
+                  "name": "completado",
+                  "value": "completado"
+                }
+              ]
+            },
+            {
+              "id": "observaciones",
+              "displayName": "observaciones",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "updated_at",
+              "displayName": "updated_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "id_servicio",
+              "displayName": "id_servicio",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "hora_fin",
+              "displayName": "hora_fin",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "time",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        -192,
+        928
+      ],
+      "name": "Tool_ReservarTurno",
+      "id": "99b397d1-ae83-4c29-b227-bc14a5c9bc98",
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Telegram Trigger').item.json.message }}",
+        "options": {
+          "systemMessage": "=eres un agente para testear las tools que posees configuradas"
+        }
+      },
+      "name": "AI Agent Node",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.6,
+      "position": [
+        -656,
+        288
+      ],
+      "retryOnFail": false,
+      "notesInFlow": true,
+      "alwaysOutputData": true,
+      "id": "ebdf46f2-135f-4080-bde8-d793c21452c7",
+      "notes": "Timeout configurado a 12s para evitar freeze"
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": "servicios"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        -192,
+        720
+      ],
+      "name": "Tool_ConsultarServicios",
+      "id": "7baeda50-f18d-4713-b254-be55f7aed8ed",
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Normalizador Omnicanal": {
+      "main": [
+        [
+          {
+            "node": "AI Agent Node",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepSeek Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent Node",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Normalizador Omnicanal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent Node",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tool_ConsultarTiposServicio": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent Node",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tool_ConsultarPaciente": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent Node",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tool_RegistrarPaciente": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent Node",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent Node": {
+      "main": [
+        [
+          {
+            "node": "Enviar a Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tool_ConsultarServicios": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent Node",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tool_ConsultarDisponibilidad": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent Node",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tool_ReservarTurno": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent Node",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": true
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {
+    "Telegram Trigger": [
+      {
+        "json": {
+          "update_id": 872647386,
+          "message": {
+            "message_id": 38,
+            "from": {
+              "id": 8567681003,
+              "is_bot": false,
+              "first_name": "Jose",
+              "last_name": "Lameda",
+              "language_code": "es"
+            },
+            "chat": {
+              "id": 8567681003,
+              "first_name": "Jose",
+              "last_name": "Lameda",
+              "type": "private"
+            },
+            "date": 1785206885,
+            "text": "jlameda0305@gmail.com \n03 mayo 2000",
+            "entities": [
+              {
+                "offset": 0,
+                "length": 21,
+                "type": "email"
+              }
+            ],
+            "additional_kwargs": {},
+            "response_metadata": {}
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "versionId": "ddc0b9d5-08b5-499a-b355-fa2e32e03b4e",
+  "activeVersionId": "b623c278-16ef-4de2-b97b-ed128362ca95",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-07-28T00:56:39.882Z",
+      "createdAt": "2026-07-28T00:56:39.882Z",
+      "role": "workflow:owner",
+      "workflowId": "IwW5NI3LL3If90BJ",
+      "projectId": "Iy2SCF8ACRv0KbuJ"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-07-28T03:02:26.313Z",
+    "createdAt": "2026-07-28T03:02:18.260Z",
+    "versionId": "b623c278-16ef-4de2-b97b-ed128362ca95",
+    "workflowId": "IwW5NI3LL3If90BJ",
+    "nodes": [
+      {
+        "parameters": {
+          "jsCode": "// Normalizador de Payloads Omnicanal\nconst items = $input.all();\nconst normalized = [];\n\nfor (const item of items) {\n  const body = item.json.body || item.json;\n  \n  let canal = 'desconocido';\n  let sender_id = '';\n  let telefono = '';\n  let nombre_usuario = '';\n  let mensaje_texto = '';\n\n  // Telegram\n  if (body.message || body.callback_query) {\n    canal = 'telegram';\n    const msg = body.message || body.callback_query.message;\n    sender_id = String(msg.chat.id);\n    nombre_usuario = [msg.from.first_name, msg.from.last_name].filter(Boolean).join(' ');\n    mensaje_texto = body.callback_query ? body.callback_query.data : (msg.text || '');\n  } \n  // WhatsApp Meta Cloud API\n  else if (body.object === 'whatsapp_business_account' && body.entry) {\n    canal = 'whatsapp';\n    const entry = body.entry[0];\n    const changes = entry.changes[0];\n    const value = changes.value;\n    \n    if (item.json.query && item.json.query['hub.verify_token']) {\n      return [{ json: { challenge: item.json.query['hub.challenge'] } }];\n    }\n\n    if (value.messages && value.messages.length > 0) {\n      const waMsg = value.messages[0];\n      sender_id = waMsg.from;\n      telefono = '+' + waMsg.from;\n      nombre_usuario = value.contacts && value.contacts[0] ? value.contacts[0].profile.name : 'Usuario WhatsApp';\n      mensaje_texto = waMsg.type === 'text' ? waMsg.text.body : (waMsg.interactive?.button_reply?.id || waMsg.interactive?.list_reply?.id || '');\n    }\n  }\n\n  const session_id = `${canal}_${sender_id}`;\n\n  normalized.push({\n    json: {\n      session_id,\n      canal,\n      sender_id,\n      telefono,\n      nombre_usuario,\n      mensaje_texto,\n      timestamp: new Date().toISOString()\n    }\n  });\n}\n\nreturn normalized;"
+        },
+        "name": "Normalizador Omnicanal",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -928,
+          288
+        ],
+        "id": "aeb7afb5-aed1-4abf-baf4-50f2c3e9874e"
+      },
+      {
+        "parameters": {
+          "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+          "text": "={{ $json.output }}",
+          "additionalFields": {
+            "parse_mode": "Markdown"
+          }
+        },
+        "name": "Enviar a Telegram",
+        "type": "n8n-nodes-base.telegram",
+        "typeVersion": 1.1,
+        "position": [
+          -16,
+          240
+        ],
+        "retryOnFail": true,
+        "maxTries": 3,
+        "waitBetweenTries": 2000,
+        "id": "740b6c81-f209-4ab6-8bcb-986ce98c5f41",
+        "webhookId": "4bcc36c0-3506-4e7f-8ef9-254333784ae5",
+        "credentials": {
+          "telegramApi": {
+            "id": "UKninKN9CczhcGfv",
+            "name": "Turnos_app_bot"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "model": "deepseek-v4-pro",
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+        "typeVersion": 1,
+        "position": [
+          -800,
+          496
+        ],
+        "id": "b5e9003c-893c-419f-aae8-83711be5bcec",
+        "name": "DeepSeek Chat Model",
+        "credentials": {
+          "deepSeekApi": {
+            "id": "DrLCO0thjTwtR8ql",
+            "name": "DeepSeek account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "updates": [
+            "message"
+          ],
+          "additionalFields": {}
+        },
+        "type": "n8n-nodes-base.telegramTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          -1184,
+          160
+        ],
+        "id": "0a59f7ca-f96c-4097-b29e-f6ae3c75a9bb",
+        "name": "Telegram Trigger",
+        "webhookId": "22522237-3d7b-40de-8010-65ddd2290a39",
+        "credentials": {
+          "telegramApi": {
+            "id": "UKninKN9CczhcGfv",
+            "name": "Turnos_app_bot"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "sessionIdType": "customKey",
+          "sessionKey": "={{ $json.session_id }}",
+          "contextWindowLength": 10
+        },
+        "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+        "typeVersion": 1.4,
+        "position": [
+          -656,
+          496
+        ],
+        "id": "e1b4fefa-f8e8-4851-9159-fc08f728fc51",
+        "name": "Simple Memory"
+      },
+      {
+        "parameters": {
+          "operation": "select",
+          "schema": {
+            "__rl": true,
+            "mode": "list",
+            "value": "public"
+          },
+          "table": {
+            "__rl": true,
+            "mode": "list",
+            "value": "clientes"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgresTool",
+        "typeVersion": 2.6,
+        "position": [
+          -400,
+          528
+        ],
+        "name": "Tool_ConsultarPaciente",
+        "id": "87758dd1-14b8-4f65-b48b-f73dbc9b896d",
+        "credentials": {
+          "postgres": {
+            "id": "DI7VdrXRMXAIJibS",
+            "name": "NFC_Turnos"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "schema": {
+            "__rl": true,
+            "value": "public",
+            "mode": "list",
+            "cachedResultName": "public"
+          },
+          "table": {
+            "__rl": true,
+            "value": "clientes",
+            "mode": "list",
+            "cachedResultName": "clientes"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "dni": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('dni', `Ejemplo: 96405820`, 'string') }}",
+              "nombre": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('nombre', `Nombre del cliente`, 'string') }}",
+              "apellido": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('apellido', `Apellido del cliente`, 'string') }}",
+              "sexo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('sexo', `Sexo del cliente`, 'string') }}",
+              "fecha_nacimiento": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fecha_nacimiento', ``, 'string') }}",
+              "direccion": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('direccion', ``, 'string') }}",
+              "email": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('email', ``, 'string') }}",
+              "telefono": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('telefono', ``, 'string') }}"
+            },
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "id_cliente",
+                "displayName": "id_cliente",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": true
+              },
+              {
+                "id": "dni",
+                "displayName": "dni",
+                "required": true,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "nombre",
+                "displayName": "nombre",
+                "required": true,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "apellido",
+                "displayName": "apellido",
+                "required": true,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "sexo",
+                "displayName": "sexo",
+                "required": true,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "fecha_nacimiento",
+                "displayName": "fecha_nacimiento",
+                "required": true,
+                "defaultMatch": false,
+                "display": true,
+                "type": "dateTime",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "direccion",
+                "displayName": "direccion",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "email",
+                "displayName": "email",
+                "required": true,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "telefono",
+                "displayName": "telefono",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "created_at",
+                "displayName": "created_at",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "dateTime",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "updated_at",
+                "displayName": "updated_at",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "dateTime",
+                "canBeUsedToMatch": true
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgresTool",
+        "typeVersion": 2.6,
+        "position": [
+          -224,
+          528
+        ],
+        "name": "Tool_RegistrarPaciente",
+        "id": "ea0028b3-12af-4a8b-99fd-20b622ed2da3",
+        "credentials": {
+          "postgres": {
+            "id": "DI7VdrXRMXAIJibS",
+            "name": "NFC_Turnos"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "select",
+          "schema": {
+            "__rl": true,
+            "mode": "list",
+            "value": "public"
+          },
+          "table": {
+            "__rl": true,
+            "mode": "list",
+            "value": "tipos_servicio"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgresTool",
+        "typeVersion": 2.6,
+        "position": [
+          -400,
+          720
+        ],
+        "name": "Tool_ConsultarTiposServicio",
+        "id": "dbe13c98-c5c6-4131-9279-5b2e0eb05b01",
+        "credentials": {
+          "postgres": {
+            "id": "DI7VdrXRMXAIJibS",
+            "name": "NFC_Turnos"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "select",
+          "schema": {
+            "__rl": true,
+            "mode": "list",
+            "value": "public"
+          },
+          "table": {
+            "__rl": true,
+            "mode": "list",
+            "value": "turnos"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgresTool",
+        "typeVersion": 2.6,
+        "position": [
+          -400,
+          928
+        ],
+        "name": "Tool_ConsultarDisponibilidad",
+        "id": "fbfea8fe-8fe4-4074-9892-fee0921df0fb",
+        "credentials": {
+          "postgres": {
+            "id": "DI7VdrXRMXAIJibS",
+            "name": "NFC_Turnos"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "schema": {
+            "__rl": true,
+            "mode": "list",
+            "value": "public"
+          },
+          "table": {
+            "__rl": true,
+            "mode": "list",
+            "value": "turnos"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgresTool",
+        "typeVersion": 2.6,
+        "position": [
+          -192,
+          928
+        ],
+        "name": "Tool_ReservarTurno",
+        "id": "99b397d1-ae83-4c29-b227-bc14a5c9bc98",
+        "credentials": {
+          "postgres": {
+            "id": "DI7VdrXRMXAIJibS",
+            "name": "NFC_Turnos"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "={{ $('Telegram Trigger').item.json.message }}",
+          "options": {
+            "systemMessage": "=eres un agente para testear las tools que posees configuradas"
+          }
+        },
+        "name": "AI Agent Node",
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 1.6,
+        "position": [
+          -656,
+          288
+        ],
+        "retryOnFail": false,
+        "notesInFlow": true,
+        "alwaysOutputData": true,
+        "id": "ebdf46f2-135f-4080-bde8-d793c21452c7",
+        "notes": "Timeout configurado a 12s para evitar freeze"
+      },
+      {
+        "parameters": {
+          "operation": "select",
+          "schema": {
+            "__rl": true,
+            "mode": "list",
+            "value": "public"
+          },
+          "table": {
+            "__rl": true,
+            "mode": "list",
+            "value": "servicios"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgresTool",
+        "typeVersion": 2.6,
+        "position": [
+          -192,
+          720
+        ],
+        "name": "Tool_ConsultarServicios",
+        "id": "7baeda50-f18d-4713-b254-be55f7aed8ed",
+        "credentials": {
+          "postgres": {
+            "id": "DI7VdrXRMXAIJibS",
+            "name": "NFC_Turnos"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Normalizador Omnicanal": {
+        "main": [
+          [
+            {
+              "node": "AI Agent Node",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "DeepSeek Chat Model": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "AI Agent Node",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Telegram Trigger": {
+        "main": [
+          [
+            {
+              "node": "Normalizador Omnicanal",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Simple Memory": {
+        "ai_memory": [
+          [
+            {
+              "node": "AI Agent Node",
+              "type": "ai_memory",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Tool_ConsultarTiposServicio": {
+        "ai_tool": [
+          [
+            {
+              "node": "AI Agent Node",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Tool_ConsultarPaciente": {
+        "ai_tool": [
+          [
+            {
+              "node": "AI Agent Node",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Tool_RegistrarPaciente": {
+        "ai_tool": [
+          [
+            {
+              "node": "AI Agent Node",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "AI Agent Node": {
+        "main": [
+          [
+            {
+              "node": "Enviar a Telegram",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Tool_ConsultarServicios": {
+        "ai_tool": [
+          [
+            {
+              "node": "AI Agent Node",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Tool_ConsultarDisponibilidad": {
+        "ai_tool": [
+          [
+            {
+              "node": "AI Agent Node",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Tool_ReservarTurno": {
+        "ai_tool": [
+          [
+            {
+              "node": "AI Agent Node",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "In\u00e9s Risso",
+    "name": "Version b623c278",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}

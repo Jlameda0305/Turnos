@@ -1,0 +1,301 @@
+{
+  "updatedAt": "2026-07-16T20:42:28.785Z",
+  "createdAt": "2026-06-29T01:30:59.442Z",
+  "id": "lQIWSXSqMl4zDWmv",
+  "name": "SOS Venezuela 2026 \u2014 Bot de Difusi\u00f3n Multicanal",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes"
+            }
+          ]
+        }
+      },
+      "id": "fa478af0-3a99-464f-ab58-04ddcabac983",
+      "name": "Cada 5 minutos",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1344,
+        128
+      ],
+      "notes": "Dispara el flujo cada 5 minutos. La API p\u00fablica tiene rate-limit 90 req/min \u2014 suficiente."
+    },
+    {
+      "parameters": {
+        "url": "https://sosvenezuela2026.com/api/persons/list",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "limit",
+              "value": "100"
+            },
+            {
+              "name": "offset",
+              "value": "0"
+            },
+            {
+              "name": "estado",
+              "value": "found_alive"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "SOSVE-Bot-Difusion/1.0 (n8n)"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1152,
+        128
+      ],
+      "id": "5e1f4d48-56af-48e2-8c3e-e6fc62b79c5c",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO sosve_published_log\n  (person_id, status, source_date, display_name, municipio, parroquia, hospital_name, photo_path)\nVALUES\n  (\n    '{{ $json.id }}',\n    '{{ $json.status }}',\n    {{ $json.source_date ? `'${$json.source_date}'` : 'NULL' }},\n    '{{ $json.display_name }}',\n    '{{ $json.municipio }}',\n    '{{ $json.parroquia }}',\n    '{{ $json.hospital_name }}',\n    '{{ $json.photo_path }}'\n  )\nON CONFLICT (person_id) DO NOTHING\nRETURNING\n  person_id,\n  status,\n  source_date,\n  display_name,\n  municipio,\n  parroquia,\n  hospital_name,\n  photo_path,\n  (xmax = 0) AS was_inserted",
+        "options": {}
+      },
+      "id": "190e861d-2293-4731-9976-e9d71ab2273e",
+      "name": "Consulta a la base de datos",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -960,
+        128
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "9ztJ9VjPzMulzo9w",
+          "name": "SOS_VNZL"
+        }
+      },
+      "continueOnFail": true,
+      "notes": "INSERT ... ON CONFLICT (person_id) DO NOTHING. Si la fila ya existe, no se inserta y el count de affected_rows = 0 \u2192 no publicar. Si affected_rows = 1 \u2192 es nuevo, publicar."
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -752,
+        128
+      ],
+      "id": "5cff36be-6f1e-423f-98ab-4355d86e5af5",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "model": "deepseek-v4-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [
+        -560,
+        320
+      ],
+      "id": "ccb8450e-a1cf-49dd-8d60-da92a4cf9e3d",
+      "name": "DeepSeek Chat Model1",
+      "credentials": {
+        "deepSeekApi": {
+          "id": "DrLCO0thjTwtR8ql",
+          "name": "DeepSeek account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "==Redacta un mensaje de difusi\u00f3n para esta persona reportada como encontrada viva:\n\nNombre: {{ $json.display_name || 'No disponible' }}\nMunicipio: {{ $json.municipio || 'No disponible' }}\nParroquia: {{ $json.parroquia || 'No disponible' }}\nHospital: {{ $json.hospital_name || 'No disponible' }}\nFecha del reporte: {{ $json.source_date || 'No disponible' }}\n\nDevuelve SOLO el mensaje, sin comillas ni prefijos.",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=Eres un asistente humanitario que redacta mensajes breves y emp\u00e1ticos para la di\u00e1spora venezolana que busca a sus familiares tras el terremoto del 24-jun-2026 en Venezuela.  \n\n# Reglas estrictas: \n1. NUNCA inventes nombres, c\u00e9dulas, edades, hospitales ni contactos. \n2. Usa SOLO los datos del JSON del usuario. \n3. Si falta un campo (municipio vac\u00edo), NO lo menciones. \n4. Mensaje m\u00e1ximo 240 caracteres. \n5. Tono: esperanzador, sin sensacionalismo, sin emojis excesivos (m\u00e1ximo 2). \n6. Termina SIEMPRE con: \"M\u00e1s info: https://sosvenezuela2026.com\" \n7. NO menciones c\u00e9dulas ni tel\u00e9fonos. 8. Idioma: espa\u00f1ol neutro venezolano.  Devuelve SOLO el mensaje, sin comillas, sin prefijos como \"Mensaje:\"."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -496,
+        144
+      ],
+      "id": "abfd97e6-526c-4cf4-9b32-71a8c9239ef0",
+      "name": "Basic LLM Chain1"
+    },
+    {
+      "parameters": {
+        "chatId": "@SOSVE_Encontrados",
+        "text": "={{ $json.text }}",
+        "additionalFields": {
+          "disable_web_page_preview": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "b03c985c-602c-4352-81f9-e1c20f6470b2",
+      "name": "Publicar en Telegram1",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -160,
+        48
+      ],
+      "alwaysOutputData": true,
+      "webhookId": "161cd41e-f456-424a-944a-72c388eeec03",
+      "credentials": {
+        "telegramApi": {
+          "id": "viiYdVfSba7RFIhT",
+          "name": "SOSvnzl_report_bot"
+        }
+      },
+      "notes": "Requiere un bot creado con @BotFather y agregado como admin a un canal."
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.text }}",
+        "additionalFields": {}
+      },
+      "id": "74301a0e-8e4b-4cc3-930b-0ee579f1e401",
+      "name": "Publicar en Twitter/X",
+      "type": "n8n-nodes-base.twitter",
+      "typeVersion": 2,
+      "position": [
+        -160,
+        192
+      ],
+      "alwaysOutputData": false,
+      "credentials": {
+        "twitterOAuth2Api": {
+          "id": "gSQrcUEEcrWy9yAO",
+          "name": "X account"
+        }
+      },
+      "continueOnFail": true
+    }
+  ],
+  "connections": {
+    "Cada 5 minutos": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Consulta a la base de datos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consulta a la base de datos": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepSeek Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain1": {
+      "main": [
+        [
+          {
+            "node": "Publicar en Telegram1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Publicar en Twitter/X",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "d4dd1d4f-70ce-4694-a071-13a454b2129b",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-06-29T01:30:59.442Z",
+      "createdAt": "2026-06-29T01:30:59.442Z",
+      "role": "workflow:owner",
+      "workflowId": "lQIWSXSqMl4zDWmv",
+      "projectId": "Iy2SCF8ACRv0KbuJ"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}

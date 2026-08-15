@@ -1,0 +1,270 @@
+{
+  "updatedAt": "2026-07-16T20:41:46.963Z",
+  "createdAt": "2026-07-10T03:34:29.035Z",
+  "id": "65m8Lw4uTdwgMoWS",
+  "name": "Generar rutina",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "path": "gym-nfc",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "75bc9bf9-9f45-41ca-8353-4da2bc3eba2f",
+      "name": "NFC Scan Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        -368,
+        -304
+      ],
+      "webhookId": "gym-nfc-trigger"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n    u.nombre AS nombre_alumno,\n    e.nombre AS nombre_ejercicio, \n    r.series, \n    r.repeticiones, \n    r.descanso,\n    r.orden\nFROM rutinas r\nJOIN usuarios u ON r.id_usuario = u.id_usuario\nJOIN ejercicios e ON r.id_ejercicio = e.id_ejercicio\nWHERE r.id_usuario = 1\n  AND r.dia = 'Lunes'::dia_semana\nORDER BY r.orden ASC;",
+        "options": {}
+      },
+      "id": "b1504e36-08e0-42a8-84fa-8728899bbbd5",
+      "name": "Postgres: Buscar Rutina",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.3,
+      "position": [
+        -176,
+        -304
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "Lh7bxmgKEyEyyB9x",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst dia = $(\"NFC Scan Webhook\").first().json.query.dia;\n\nconst FONTS = `<link rel=\"preconnect\" href=\"https://fonts.googleapis.com\"><link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin><link href=\"https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap\" rel=\"stylesheet\">`;\n\nconst BASE_STYLE = `\n  :root {\n    --bg:#0a0c0f; --bg-glow:#0f1720; --surface:#14171c; --surface-2:#1b1f25;\n    --border:#262b32; --text:#f2f4f6; --text-muted:#838c98;\n    --accent:#35d68a; --accent-dim:rgba(53,214,138,.12);\n    --rest:#6c8cff; --rest-dim:rgba(108,140,255,.12); --radius:16px;\n  }\n  * { box-sizing: border-box; }\n  body { background: radial-gradient(circle at 50% 0%, var(--bg-glow) 0%, var(--bg) 55%); color: var(--text); font-family:'Inter',sans-serif; margin:0; min-height:100vh; padding:40px 18px 70px 18px; }\n  @keyframes rise { from { opacity:0; transform: translateY(14px);} to { opacity:1; transform: translateY(0);} }\n  @media (prefers-reduced-motion: reduce) { *, *::before { animation: none !important; } }\n`;\n\n// ============ CASO 1: D\u00eda de descanso ============\nif (items.length === 0) {\n  let htmlDescanso = `\n  <!DOCTYPE html>\n  <html lang=\"es\">\n  <head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>D\u00eda Libre</title>\n    ${FONTS}\n    <style>\n      ${BASE_STYLE}\n      .rest-scene { max-width: 380px; margin: 60px auto 0 auto; text-align: center; animation: rise .6s cubic-bezier(.2,.8,.2,1) both; }\n      .rest-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 40px 28px; box-shadow: 0 20px 60px rgba(0,0,0,.45); }\n      .rest-icon { width: 46px; height: 46px; margin: 0 auto 20px auto; border-radius: 50%; background: var(--rest-dim); border: 1.5px solid var(--rest); display:flex; align-items:center; justify-content:center; }\n      .rest-icon svg { width: 20px; height: 20px; stroke: var(--rest); }\n      .rest-card h1 { font-family:'Space Grotesk',sans-serif; font-size: 1.4rem; margin: 0 0 8px 0; }\n      .rest-card p { color: var(--text-muted); font-size: .95rem; line-height: 1.55; margin: 0; }\n    </style>\n  </head>\n  <body>\n    <div class=\"rest-scene\">\n      <div class=\"rest-card\">\n        <div class=\"rest-icon\">\n          <svg viewBox=\"0 0 24 24\" fill=\"none\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z\"/></svg>\n        </div>\n        <h1>D\u00eda de descanso</h1>\n        <p>No ten\u00e9s ejercicios asignados para este ${dia}.<br>Aprovech\u00e1 para recuperarte bien.</p>\n      </div>\n    </div>\n  </body>\n  </html>`;\n  return [{ json: { html_final: htmlDescanso } }];\n}\n\n// ============ CASO 2: Hay rutina ============\nlet nombreAlumno = items[0].json.nombre_alumno;\n\nlet tarjetasEjercicios = items.map((item, i) => {\n  let ej = item.json;\n  return `\n  <div class=\"exercise\" data-orden=\"${ej.orden}\" style=\"animation-delay:${i * 0.07}s\">\n    <h3>${ej.nombre_ejercicio}</h3>\n    <div class=\"stats\">\n      <div class=\"stat\"><span class=\"label\">Series</span><span class=\"value\">${ej.series}</span></div>\n      <div class=\"stat\"><span class=\"label\">Reps</span><span class=\"value\">${ej.repeticiones}</span></div>\n    </div>\n    <span class=\"rest-pill\">\n      <svg viewBox=\"0 0 24 24\" fill=\"none\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 7v5l3 3\"/></svg>\n      Descanso ${ej.descanso} seg\n    </span>\n  </div>`;\n}).join(\"\");\n\nlet htmlCompleto = `\n<!DOCTYPE html>\n<html lang=\"es\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <title>Rutina | ${dia}</title>\n  ${FONTS}\n  <style>\n    ${BASE_STYLE}\n    .container { max-width: 460px; margin: 0 auto; }\n    header { text-align: center; margin-bottom: 32px; animation: rise .6s cubic-bezier(.2,.8,.2,1) both; }\n    .eyebrow { display:inline-flex; align-items:center; gap:8px; font-family:'JetBrains Mono',monospace; font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; color:var(--text-muted); margin-bottom:14px; }\n    .eyebrow .dot { width:6px; height:6px; border-radius:50%; background:var(--accent); box-shadow:0 0 0 3px var(--accent-dim); }\n    h1 { font-family:'Space Grotesk',sans-serif; font-size:1.7rem; font-weight:700; letter-spacing:-.01em; margin:0 0 4px 0; }\n    h1 span { color: var(--accent); }\n    .subtitle { font-size:.95rem; color:var(--text-muted); margin:0; }\n    .timeline { position: relative; padding-left: 34px; }\n    .timeline::before { content:\"\"; position:absolute; left:11px; top:6px; bottom:6px; width:2px; background: linear-gradient(180deg, var(--accent) 0%, var(--border) 100%); opacity:.5; }\n    .exercise { position:relative; background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:18px 18px 16px 18px; margin-bottom:14px; animation: rise .5s cubic-bezier(.2,.8,.2,1) both; }\n    .exercise::before { content: attr(data-orden); position:absolute; left:-34px; top:18px; width:24px; height:24px; border-radius:50%; background:var(--bg); border:2px solid var(--accent); color:var(--accent); font-family:'JetBrains Mono',monospace; font-size:.7rem; font-weight:600; display:flex; align-items:center; justify-content:center; }\n    .exercise h3 { font-family:'Space Grotesk',sans-serif; font-size:1.05rem; font-weight:600; margin:0 0 12px 0; letter-spacing:-.005em; }\n    .stats { display:flex; gap:10px; margin-bottom:10px; }\n    .stat { flex:1; background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:9px 10px; text-align:center; }\n    .stat .label { display:block; font-family:'JetBrains Mono',monospace; font-size:.6rem; letter-spacing:.08em; text-transform:uppercase; color:var(--text-muted); margin-bottom:3px; }\n    .stat .value { font-family:'JetBrains Mono',monospace; font-size:1.05rem; font-weight:600; color:var(--text); }\n    .rest-pill { display:inline-flex; align-items:center; gap:6px; font-size:.78rem; color:var(--text-muted); background:var(--surface-2); border:1px solid var(--border); border-radius:20px; padding:5px 12px; }\n    .rest-pill svg { width:12px; height:12px; stroke:var(--text-muted); }\n    footer { text-align:center; margin-top:30px; font-size:.78rem; color:#4a515c; }\n  </style>\n</head>\n<body>\n  <div class=\"container\">\n    <header>\n      <div class=\"eyebrow\"><span class=\"dot\"></span>${dia} \u00b7 Sesi\u00f3n de hoy</div>\n      <h1>A darle, <span>${nombreAlumno}</span></h1>\n      <p class=\"subtitle\">${items.length} ejercicios programados para esta sesi\u00f3n</p>\n    </header>\n    <div class=\"timeline\">\n      ${tarjetasEjercicios}\n    </div>\n    <footer>Sesi\u00f3n generada autom\u00e1ticamente para hoy</footer>\n  </div>\n</body>\n</html>\n`;\n\nreturn [{ json: { html_final: htmlCompleto } }];"
+      },
+      "id": "d9d556cc-7ea6-4e2b-9911-5dc48bc514a3",
+      "name": "Generar HTML Din\u00e1mico",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        16,
+        -304
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.html_final }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/html; charset=utf-8"
+              }
+            ]
+          }
+        }
+      },
+      "id": "55d29266-3dcf-46c2-b0e0-1b1e7cc1bcaf",
+      "name": "Responder al Tel\u00e9fono",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        208,
+        -304
+      ]
+    }
+  ],
+  "connections": {
+    "NFC Scan Webhook": {
+      "main": [
+        [
+          {
+            "node": "Postgres: Buscar Rutina",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres: Buscar Rutina": {
+      "main": [
+        [
+          {
+            "node": "Generar HTML Din\u00e1mico",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generar HTML Din\u00e1mico": {
+      "main": [
+        [
+          {
+            "node": "Responder al Tel\u00e9fono",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "d1dfaea9-478a-40df-bb2f-e5cb75da9de9",
+  "activeVersionId": "d1dfaea9-478a-40df-bb2f-e5cb75da9de9",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-07-10T03:34:29.035Z",
+      "createdAt": "2026-07-10T03:34:29.035Z",
+      "role": "workflow:owner",
+      "workflowId": "65m8Lw4uTdwgMoWS",
+      "projectId": "Iy2SCF8ACRv0KbuJ"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-07-10T04:49:45.697Z",
+    "createdAt": "2026-07-10T04:49:34.887Z",
+    "versionId": "d1dfaea9-478a-40df-bb2f-e5cb75da9de9",
+    "workflowId": "65m8Lw4uTdwgMoWS",
+    "nodes": [
+      {
+        "parameters": {
+          "path": "gym-nfc",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "id": "75bc9bf9-9f45-41ca-8353-4da2bc3eba2f",
+        "name": "NFC Scan Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 1.1,
+        "position": [
+          -368,
+          -304
+        ],
+        "webhookId": "gym-nfc-trigger"
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT \n    u.nombre AS nombre_alumno,\n    e.nombre AS nombre_ejercicio, \n    r.series, \n    r.repeticiones, \n    r.descanso,\n    r.orden\nFROM rutinas r\nJOIN usuarios u ON r.id_usuario = u.id_usuario\nJOIN ejercicios e ON r.id_ejercicio = e.id_ejercicio\nWHERE r.id_usuario = 1\n  AND r.dia = 'Lunes'::dia_semana\nORDER BY r.orden ASC;",
+          "options": {}
+        },
+        "id": "b1504e36-08e0-42a8-84fa-8728899bbbd5",
+        "name": "Postgres: Buscar Rutina",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.3,
+        "position": [
+          -176,
+          -304
+        ],
+        "credentials": {
+          "postgres": {
+            "id": "Lh7bxmgKEyEyyB9x",
+            "name": "Postgres account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = $input.all();\nconst dia = $(\"NFC Scan Webhook\").first().json.query.dia;\n\nconst FONTS = `<link rel=\"preconnect\" href=\"https://fonts.googleapis.com\"><link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin><link href=\"https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap\" rel=\"stylesheet\">`;\n\nconst BASE_STYLE = `\n  :root {\n    --bg:#0a0c0f; --bg-glow:#0f1720; --surface:#14171c; --surface-2:#1b1f25;\n    --border:#262b32; --text:#f2f4f6; --text-muted:#838c98;\n    --accent:#35d68a; --accent-dim:rgba(53,214,138,.12);\n    --rest:#6c8cff; --rest-dim:rgba(108,140,255,.12); --radius:16px;\n  }\n  * { box-sizing: border-box; }\n  body { background: radial-gradient(circle at 50% 0%, var(--bg-glow) 0%, var(--bg) 55%); color: var(--text); font-family:'Inter',sans-serif; margin:0; min-height:100vh; padding:40px 18px 70px 18px; }\n  @keyframes rise { from { opacity:0; transform: translateY(14px);} to { opacity:1; transform: translateY(0);} }\n  @media (prefers-reduced-motion: reduce) { *, *::before { animation: none !important; } }\n`;\n\n// ============ CASO 1: D\u00eda de descanso ============\nif (items.length === 0) {\n  let htmlDescanso = `\n  <!DOCTYPE html>\n  <html lang=\"es\">\n  <head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>D\u00eda Libre</title>\n    ${FONTS}\n    <style>\n      ${BASE_STYLE}\n      .rest-scene { max-width: 380px; margin: 60px auto 0 auto; text-align: center; animation: rise .6s cubic-bezier(.2,.8,.2,1) both; }\n      .rest-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 40px 28px; box-shadow: 0 20px 60px rgba(0,0,0,.45); }\n      .rest-icon { width: 46px; height: 46px; margin: 0 auto 20px auto; border-radius: 50%; background: var(--rest-dim); border: 1.5px solid var(--rest); display:flex; align-items:center; justify-content:center; }\n      .rest-icon svg { width: 20px; height: 20px; stroke: var(--rest); }\n      .rest-card h1 { font-family:'Space Grotesk',sans-serif; font-size: 1.4rem; margin: 0 0 8px 0; }\n      .rest-card p { color: var(--text-muted); font-size: .95rem; line-height: 1.55; margin: 0; }\n    </style>\n  </head>\n  <body>\n    <div class=\"rest-scene\">\n      <div class=\"rest-card\">\n        <div class=\"rest-icon\">\n          <svg viewBox=\"0 0 24 24\" fill=\"none\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z\"/></svg>\n        </div>\n        <h1>D\u00eda de descanso</h1>\n        <p>No ten\u00e9s ejercicios asignados para este ${dia}.<br>Aprovech\u00e1 para recuperarte bien.</p>\n      </div>\n    </div>\n  </body>\n  </html>`;\n  return [{ json: { html_final: htmlDescanso } }];\n}\n\n// ============ CASO 2: Hay rutina ============\nlet nombreAlumno = items[0].json.nombre_alumno;\n\nlet tarjetasEjercicios = items.map((item, i) => {\n  let ej = item.json;\n  return `\n  <div class=\"exercise\" data-orden=\"${ej.orden}\" style=\"animation-delay:${i * 0.07}s\">\n    <h3>${ej.nombre_ejercicio}</h3>\n    <div class=\"stats\">\n      <div class=\"stat\"><span class=\"label\">Series</span><span class=\"value\">${ej.series}</span></div>\n      <div class=\"stat\"><span class=\"label\">Reps</span><span class=\"value\">${ej.repeticiones}</span></div>\n    </div>\n    <span class=\"rest-pill\">\n      <svg viewBox=\"0 0 24 24\" fill=\"none\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 7v5l3 3\"/></svg>\n      Descanso ${ej.descanso} seg\n    </span>\n  </div>`;\n}).join(\"\");\n\nlet htmlCompleto = `\n<!DOCTYPE html>\n<html lang=\"es\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <title>Rutina | ${dia}</title>\n  ${FONTS}\n  <style>\n    ${BASE_STYLE}\n    .container { max-width: 460px; margin: 0 auto; }\n    header { text-align: center; margin-bottom: 32px; animation: rise .6s cubic-bezier(.2,.8,.2,1) both; }\n    .eyebrow { display:inline-flex; align-items:center; gap:8px; font-family:'JetBrains Mono',monospace; font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; color:var(--text-muted); margin-bottom:14px; }\n    .eyebrow .dot { width:6px; height:6px; border-radius:50%; background:var(--accent); box-shadow:0 0 0 3px var(--accent-dim); }\n    h1 { font-family:'Space Grotesk',sans-serif; font-size:1.7rem; font-weight:700; letter-spacing:-.01em; margin:0 0 4px 0; }\n    h1 span { color: var(--accent); }\n    .subtitle { font-size:.95rem; color:var(--text-muted); margin:0; }\n    .timeline { position: relative; padding-left: 34px; }\n    .timeline::before { content:\"\"; position:absolute; left:11px; top:6px; bottom:6px; width:2px; background: linear-gradient(180deg, var(--accent) 0%, var(--border) 100%); opacity:.5; }\n    .exercise { position:relative; background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:18px 18px 16px 18px; margin-bottom:14px; animation: rise .5s cubic-bezier(.2,.8,.2,1) both; }\n    .exercise::before { content: attr(data-orden); position:absolute; left:-34px; top:18px; width:24px; height:24px; border-radius:50%; background:var(--bg); border:2px solid var(--accent); color:var(--accent); font-family:'JetBrains Mono',monospace; font-size:.7rem; font-weight:600; display:flex; align-items:center; justify-content:center; }\n    .exercise h3 { font-family:'Space Grotesk',sans-serif; font-size:1.05rem; font-weight:600; margin:0 0 12px 0; letter-spacing:-.005em; }\n    .stats { display:flex; gap:10px; margin-bottom:10px; }\n    .stat { flex:1; background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:9px 10px; text-align:center; }\n    .stat .label { display:block; font-family:'JetBrains Mono',monospace; font-size:.6rem; letter-spacing:.08em; text-transform:uppercase; color:var(--text-muted); margin-bottom:3px; }\n    .stat .value { font-family:'JetBrains Mono',monospace; font-size:1.05rem; font-weight:600; color:var(--text); }\n    .rest-pill { display:inline-flex; align-items:center; gap:6px; font-size:.78rem; color:var(--text-muted); background:var(--surface-2); border:1px solid var(--border); border-radius:20px; padding:5px 12px; }\n    .rest-pill svg { width:12px; height:12px; stroke:var(--text-muted); }\n    footer { text-align:center; margin-top:30px; font-size:.78rem; color:#4a515c; }\n  </style>\n</head>\n<body>\n  <div class=\"container\">\n    <header>\n      <div class=\"eyebrow\"><span class=\"dot\"></span>${dia} \u00b7 Sesi\u00f3n de hoy</div>\n      <h1>A darle, <span>${nombreAlumno}</span></h1>\n      <p class=\"subtitle\">${items.length} ejercicios programados para esta sesi\u00f3n</p>\n    </header>\n    <div class=\"timeline\">\n      ${tarjetasEjercicios}\n    </div>\n    <footer>Sesi\u00f3n generada autom\u00e1ticamente para hoy</footer>\n  </div>\n</body>\n</html>\n`;\n\nreturn [{ json: { html_final: htmlCompleto } }];"
+        },
+        "id": "d9d556cc-7ea6-4e2b-9911-5dc48bc514a3",
+        "name": "Generar HTML Din\u00e1mico",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          16,
+          -304
+        ]
+      },
+      {
+        "parameters": {
+          "respondWith": "text",
+          "responseBody": "={{ $json.html_final }}",
+          "options": {
+            "responseHeaders": {
+              "entries": [
+                {
+                  "name": "Content-Type",
+                  "value": "text/html; charset=utf-8"
+                }
+              ]
+            }
+          }
+        },
+        "id": "55d29266-3dcf-46c2-b0e0-1b1e7cc1bcaf",
+        "name": "Responder al Tel\u00e9fono",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1,
+        "position": [
+          208,
+          -304
+        ]
+      }
+    ],
+    "connections": {
+      "NFC Scan Webhook": {
+        "main": [
+          [
+            {
+              "node": "Postgres: Buscar Rutina",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Postgres: Buscar Rutina": {
+        "main": [
+          [
+            {
+              "node": "Generar HTML Din\u00e1mico",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Generar HTML Din\u00e1mico": {
+        "main": [
+          [
+            {
+              "node": "Responder al Tel\u00e9fono",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "In\u00e9s Risso",
+    "name": "Version d1dfaea9",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": [
+    {
+      "updatedAt": "2026-07-14T02:01:03.574Z",
+      "createdAt": "2026-07-14T02:01:03.574Z",
+      "id": "Z2kky821gbCcGhth",
+      "name": "NFC_Gym"
+    }
+  ]
+}

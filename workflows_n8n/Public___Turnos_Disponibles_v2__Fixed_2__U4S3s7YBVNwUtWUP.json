@@ -1,0 +1,369 @@
+{
+  "updatedAt": "2026-07-17T04:37:36.044Z",
+  "createdAt": "2026-07-17T04:28:13.047Z",
+  "id": "U4S3s7YBVNwUtWUP",
+  "name": "Public - Turnos Disponibles v2 (Fixed 2)",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "public/turnos-disponibles-v2",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "5b1b5431-6711-49b3-a3fc-c7bb7a9cf187",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "dec2b60d-b1b1-407a-b438-508e7f426591"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT duracion FROM servicios WHERE id_servicio = $1::uuid",
+        "options": {
+          "queryReplacement": "={{ $json.body.id_servicio }}"
+        }
+      },
+      "id": "ff425858-eadf-45df-9618-aeb1ad521ad2",
+      "name": "Get Servicio",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        224,
+        0
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT hora, hora_fin FROM turnos WHERE fecha = $1 AND estado != 'cancelado'",
+        "options": {
+          "queryReplacement": "={{ $('Webhook').item.json.body.fecha }}"
+        }
+      },
+      "id": "92ec8200-8424-4b0d-bcbe-02d3ba4018e8",
+      "name": "Get Turnos",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        448,
+        0
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "2923f512-547d-4ee9-abe3-979f02d03cad",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        896,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const duracion = parseInt($('Get Servicio').first().json.duracion, 10);\nconst turnos = items.map(item => item.json);\nconst fecha = $('Webhook').first().json.body.fecha;\n\nif (!duracion) {\n  return [{ json: { error: 'Servicio no encontrado' } }];\n}\n\nfunction timeToMins(t) {\n  if (!t) return 0;\n  const [h, m] = t.split(':').map(Number);\n  return h * 60 + m;\n}\n\nconst occupiedRanges = turnos\n  .filter(t => t.hora && t.hora_fin)\n  .map(t => ({\n    start: timeToMins(t.hora),\n    end: timeToMins(t.hora_fin)\n  }));\n\nconst HORA_INICIO = 8 * 60; // 08:00\nconst HORA_FIN = 18 * 60; // 18:00\nconst INTERVALO = 30;\n\nconst availableSlots = [];\n\nfor (let start = HORA_INICIO; start < HORA_FIN; start += INTERVALO) {\n  const end = start + duracion;\n  \n  if (end > HORA_FIN) {\n    continue;\n  }\n  \n  const isOccupied = occupiedRanges.some(turn => {\n    return start < turn.end && end > turn.start;\n  });\n  \n  if (!isOccupied) {\n    const h = Math.floor(start / 60).toString().padStart(2, '0');\n    const m = (start % 60).toString().padStart(2, '0');\n    availableSlots.push(h + ':' + m);\n  }\n}\n\nreturn [{ json: { availableSlots, duracion, fecha } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        0
+      ],
+      "id": "9c236028-a7f5-4078-ae83-d4a3c83f24bc",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get Servicio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Servicio": {
+      "main": [
+        [
+          {
+            "node": "Get Turnos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Turnos": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "vps-6207995-x.dattaweb.com",
+            "x-real-ip": "186.158.237.71",
+            "x-forwarded-for": "186.158.237.71",
+            "x-forwarded-proto": "https",
+            "connection": "upgrade",
+            "content-length": "75",
+            "sec-ch-ua-platform": "\"Linux\"",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36",
+            "sec-ch-ua": "\"Not;A=Brand\";v=\"8\", \"Chromium\";v=\"150\", \"Brave\";v=\"150\"",
+            "content-type": "application/json",
+            "sec-ch-ua-mobile": "?0",
+            "accept": "*/*",
+            "sec-gpc": "1",
+            "accept-language": "es-419,es;q=0.8",
+            "origin": "http://127.0.0.1:5500",
+            "sec-fetch-site": "cross-site",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-dest": "empty",
+            "referer": "http://127.0.0.1:5500/",
+            "accept-encoding": "gzip, deflate, br, zstd"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "fecha": "2026-07-18",
+            "id_servicio": "80f04d7e-ac20-4acd-8202-f5148eb34971"
+          },
+          "webhookUrl": "https://vps-6207995-x.dattaweb.com/webhook/public/turnos-disponibles-v2",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "versionId": "27c0b144-6dc6-4375-a8e2-41d52baab860",
+  "activeVersionId": "27c0b144-6dc6-4375-a8e2-41d52baab860",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-07-17T04:28:13.047Z",
+      "createdAt": "2026-07-17T04:28:13.047Z",
+      "role": "workflow:owner",
+      "workflowId": "U4S3s7YBVNwUtWUP",
+      "projectId": "Iy2SCF8ACRv0KbuJ"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-07-17T04:34:48.820Z",
+    "createdAt": "2026-07-17T04:34:32.292Z",
+    "versionId": "27c0b144-6dc6-4375-a8e2-41d52baab860",
+    "workflowId": "U4S3s7YBVNwUtWUP",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "public/turnos-disponibles-v2",
+          "responseMode": "responseNode",
+          "options": {
+            "allowedOrigins": "*"
+          }
+        },
+        "id": "5b1b5431-6711-49b3-a3fc-c7bb7a9cf187",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          0,
+          0
+        ],
+        "webhookId": "dec2b60d-b1b1-407a-b438-508e7f426591"
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT duracion FROM servicios WHERE id_servicio = $1::uuid",
+          "options": {
+            "queryReplacement": "={{ $json.body.id_servicio }}"
+          }
+        },
+        "id": "ff425858-eadf-45df-9618-aeb1ad521ad2",
+        "name": "Get Servicio",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          224,
+          0
+        ],
+        "credentials": {
+          "postgres": {
+            "id": "DI7VdrXRMXAIJibS",
+            "name": "NFC_Turnos"
+          }
+        },
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT hora, hora_fin FROM turnos WHERE fecha = $1 AND estado != 'cancelado'",
+          "options": {
+            "queryReplacement": "={{ $('Webhook').item.json.body.fecha }}"
+          }
+        },
+        "id": "92ec8200-8424-4b0d-bcbe-02d3ba4018e8",
+        "name": "Get Turnos",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          448,
+          0
+        ],
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "DI7VdrXRMXAIJibS",
+            "name": "NFC_Turnos"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ JSON.stringify($json) }}",
+          "options": {}
+        },
+        "id": "2923f512-547d-4ee9-abe3-979f02d03cad",
+        "name": "Respond",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          896,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const duracion = parseInt($('Get Servicio').first().json.duracion, 10);\nconst turnos = items.map(item => item.json);\nconst fecha = $('Webhook').first().json.body.fecha;\n\nif (!duracion) {\n  return [{ json: { error: 'Servicio no encontrado' } }];\n}\n\nfunction timeToMins(t) {\n  if (!t) return 0;\n  const [h, m] = t.split(':').map(Number);\n  return h * 60 + m;\n}\n\nconst occupiedRanges = turnos\n  .filter(t => t.hora && t.hora_fin)\n  .map(t => ({\n    start: timeToMins(t.hora),\n    end: timeToMins(t.hora_fin)\n  }));\n\nconst HORA_INICIO = 8 * 60; // 08:00\nconst HORA_FIN = 18 * 60; // 18:00\nconst INTERVALO = 30;\n\nconst availableSlots = [];\n\nfor (let start = HORA_INICIO; start < HORA_FIN; start += INTERVALO) {\n  const end = start + duracion;\n  \n  if (end > HORA_FIN) {\n    continue;\n  }\n  \n  const isOccupied = occupiedRanges.some(turn => {\n    return start < turn.end && end > turn.start;\n  });\n  \n  if (!isOccupied) {\n    const h = Math.floor(start / 60).toString().padStart(2, '0');\n    const m = (start % 60).toString().padStart(2, '0');\n    availableSlots.push(h + ':' + m);\n  }\n}\n\nreturn [{ json: { availableSlots, duracion, fecha } }];\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          640,
+          0
+        ],
+        "id": "9c236028-a7f5-4078-ae83-d4a3c83f24bc",
+        "name": "Code in JavaScript"
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Get Servicio",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get Servicio": {
+        "main": [
+          [
+            {
+              "node": "Get Turnos",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get Turnos": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript": {
+        "main": [
+          [
+            {
+              "node": "Respond",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "In\u00e9s Risso",
+    "name": "Version 27c0b144",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}

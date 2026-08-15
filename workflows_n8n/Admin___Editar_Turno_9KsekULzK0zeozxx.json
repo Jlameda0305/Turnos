@@ -1,0 +1,529 @@
+{
+  "updatedAt": "2026-07-17T17:22:17.359Z",
+  "createdAt": "2026-07-17T17:12:43.507Z",
+  "id": "9KsekULzK0zeozxx",
+  "name": "Admin - Editar Turno",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "PATCH",
+        "path": "admin/turno-editar",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "68ddc019-b338-4933-905a-e7abe72892b6",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        96
+      ],
+      "webhookId": "6163faff-d1fb-4afc-a87d-8a14be237bfd"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT duracion FROM servicios WHERE id_servicio = $1",
+        "options": {
+          "queryReplacement": "={{ [$('Webhook').first().json.body.id_servicio] }}"
+        }
+      },
+      "id": "772b41d6-8c71-4fd0-b8b8-c880b2b7ea04",
+      "name": "Get Servicio",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        224,
+        96
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "\n        const duracion = $input.item.json.duracion || 30;\n        const horaInicio = $('Webhook').first().json.body.hora;\n        \n        const [horas, min] = horaInicio.split(':').map(Number);\n        const totalMin = horas * 60 + min + duracion;\n        \n        const endHoras = Math.floor(totalMin / 60);\n        const endMin = totalMin % 60;\n        \n        const horaFin = `${endHoras.toString().padStart(2, '0')}:${endMin.toString().padStart(2, '0')}`;\n        \n        return { hora_fin: horaFin };\n      "
+      },
+      "id": "143c20df-5a45-4aaf-8899-c313c26a68db",
+      "name": "Calcular Hora Fin",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT COUNT(*)::int as total \n              FROM turnos \n              WHERE fecha = $1::date \n                AND id_turno != $4::uuid\n                AND estado != 'cancelado'\n                AND ((hora >= $2::time AND hora < $3::time) \n                  OR (hora_fin > $2::time AND hora_fin <= $3::time) \n                  OR (hora <= $2::time AND hora_fin >= $3::time))",
+        "options": {
+          "queryReplacement": "={{ [$('Webhook').first().json.body.fecha, $('Webhook').first().json.body.hora, $json.hora_fin, $('Webhook').first().json.body.id_turno] }}"
+        }
+      },
+      "id": "a1280a20-39c5-4b74-a4e6-36c2fd90d285",
+      "name": "Check Colisiones",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        672,
+        96
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.total > 0 }}",
+              "operator": {
+                "operation": "true",
+                "type": "boolean"
+              },
+              "rightValue": true,
+              "id": "51c98a68-f5d6-4f03-8af2-e6ef07e606fc"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "100433a9-a01f-4c7a-bc6a-458f9d7b805a",
+      "name": "Colisi\u00f3n?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        896,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ error: \"Horario no disponible\" }) }}",
+        "options": {
+          "responseCode": 409
+        }
+      },
+      "id": "9a187414-fd64-423b-9ff2-cb951654edb3",
+      "name": "Respond Conflict",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1120,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE turnos \n              SET fecha=$1::date, hora=$2::time, hora_fin=$3::time, id_servicio=$4::uuid, estado=$5, observaciones=$6 \n              WHERE id_turno = $7::uuid",
+        "options": {
+          "queryReplacement": "={{ [$('Webhook').first().json.body.fecha, $('Webhook').first().json.body.hora, $('Calcular Hora Fin').first().json.hora_fin, $('Webhook').first().json.body.id_servicio, $('Webhook').first().json.body.estado, $('Webhook').first().json.body.observaciones, $('Webhook').first().json.body.id_turno] }}"
+        }
+      },
+      "id": "e81950e0-cada-4a5a-84d1-8ac7dfc71e10",
+      "name": "Update Turno",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1120,
+        192
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ message: \"Turno actualizado correctamente\" }) }}",
+        "options": {}
+      },
+      "id": "228b4618-ea64-486e-871a-c8f3c0f6299c",
+      "name": "Respond Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1344,
+        192
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get Servicio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Servicio": {
+      "main": [
+        [
+          {
+            "node": "Calcular Hora Fin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calcular Hora Fin": {
+      "main": [
+        [
+          {
+            "node": "Check Colisiones",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Colisiones": {
+      "main": [
+        [
+          {
+            "node": "Colisi\u00f3n?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Colisi\u00f3n?": {
+      "main": [
+        [
+          {
+            "node": "Respond Conflict",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Turno",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Turno": {
+      "main": [
+        [
+          {
+            "node": "Respond Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "pinData": {},
+  "versionId": "db49f482-9762-4fa5-a58f-455bf10d86b3",
+  "activeVersionId": "db49f482-9762-4fa5-a58f-455bf10d86b3",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-07-17T17:12:43.507Z",
+      "createdAt": "2026-07-17T17:12:43.507Z",
+      "role": "workflow:owner",
+      "workflowId": "9KsekULzK0zeozxx",
+      "projectId": "Iy2SCF8ACRv0KbuJ"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-07-17T17:22:17.360Z",
+    "createdAt": "2026-07-17T17:22:17.360Z",
+    "versionId": "db49f482-9762-4fa5-a58f-455bf10d86b3",
+    "workflowId": "9KsekULzK0zeozxx",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "PATCH",
+          "path": "admin/turno-editar",
+          "responseMode": "responseNode",
+          "options": {
+            "allowedOrigins": "*"
+          }
+        },
+        "id": "68ddc019-b338-4933-905a-e7abe72892b6",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          0,
+          96
+        ],
+        "webhookId": "6163faff-d1fb-4afc-a87d-8a14be237bfd"
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT duracion FROM servicios WHERE id_servicio = $1",
+          "options": {
+            "queryReplacement": "={{ [$('Webhook').first().json.body.id_servicio] }}"
+          }
+        },
+        "id": "772b41d6-8c71-4fd0-b8b8-c880b2b7ea04",
+        "name": "Get Servicio",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          224,
+          96
+        ],
+        "credentials": {
+          "postgres": {
+            "id": "DI7VdrXRMXAIJibS",
+            "name": "NFC_Turnos"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "\n        const duracion = $input.item.json.duracion || 30;\n        const horaInicio = $('Webhook').first().json.body.hora;\n        \n        const [horas, min] = horaInicio.split(':').map(Number);\n        const totalMin = horas * 60 + min + duracion;\n        \n        const endHoras = Math.floor(totalMin / 60);\n        const endMin = totalMin % 60;\n        \n        const horaFin = `${endHoras.toString().padStart(2, '0')}:${endMin.toString().padStart(2, '0')}`;\n        \n        return { hora_fin: horaFin };\n      "
+        },
+        "id": "143c20df-5a45-4aaf-8899-c313c26a68db",
+        "name": "Calcular Hora Fin",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          448,
+          96
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT COUNT(*)::int as total \n              FROM turnos \n              WHERE fecha = $1::date \n                AND id_turno != $4::uuid\n                AND estado != 'cancelado'\n                AND ((hora >= $2::time AND hora < $3::time) \n                  OR (hora_fin > $2::time AND hora_fin <= $3::time) \n                  OR (hora <= $2::time AND hora_fin >= $3::time))",
+          "options": {
+            "queryReplacement": "={{ [$('Webhook').first().json.body.fecha, $('Webhook').first().json.body.hora, $json.hora_fin, $('Webhook').first().json.body.id_turno] }}"
+          }
+        },
+        "id": "a1280a20-39c5-4b74-a4e6-36c2fd90d285",
+        "name": "Check Colisiones",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          672,
+          96
+        ],
+        "credentials": {
+          "postgres": {
+            "id": "DI7VdrXRMXAIJibS",
+            "name": "NFC_Turnos"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ $json.total > 0 }}",
+                "operator": {
+                  "operation": "true",
+                  "type": "boolean"
+                },
+                "rightValue": true,
+                "id": "51c98a68-f5d6-4f03-8af2-e6ef07e606fc"
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "100433a9-a01f-4c7a-bc6a-458f9d7b805a",
+        "name": "Colisi\u00f3n?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          896,
+          96
+        ]
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ JSON.stringify({ error: \"Horario no disponible\" }) }}",
+          "options": {
+            "responseCode": 409
+          }
+        },
+        "id": "9a187414-fd64-423b-9ff2-cb951654edb3",
+        "name": "Respond Conflict",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          1120,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "UPDATE turnos \n              SET fecha=$1::date, hora=$2::time, hora_fin=$3::time, id_servicio=$4::uuid, estado=$5, observaciones=$6 \n              WHERE id_turno = $7::uuid",
+          "options": {
+            "queryReplacement": "={{ [$('Webhook').first().json.body.fecha, $('Webhook').first().json.body.hora, $('Calcular Hora Fin').first().json.hora_fin, $('Webhook').first().json.body.id_servicio, $('Webhook').first().json.body.estado, $('Webhook').first().json.body.observaciones, $('Webhook').first().json.body.id_turno] }}"
+          }
+        },
+        "id": "e81950e0-cada-4a5a-84d1-8ac7dfc71e10",
+        "name": "Update Turno",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          1120,
+          192
+        ],
+        "credentials": {
+          "postgres": {
+            "id": "DI7VdrXRMXAIJibS",
+            "name": "NFC_Turnos"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ JSON.stringify({ message: \"Turno actualizado correctamente\" }) }}",
+          "options": {}
+        },
+        "id": "228b4618-ea64-486e-871a-c8f3c0f6299c",
+        "name": "Respond Success",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          1344,
+          192
+        ]
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Get Servicio",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get Servicio": {
+        "main": [
+          [
+            {
+              "node": "Calcular Hora Fin",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Calcular Hora Fin": {
+        "main": [
+          [
+            {
+              "node": "Check Colisiones",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check Colisiones": {
+        "main": [
+          [
+            {
+              "node": "Colisi\u00f3n?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Colisi\u00f3n?": {
+        "main": [
+          [
+            {
+              "node": "Respond Conflict",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Update Turno",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update Turno": {
+        "main": [
+          [
+            {
+              "node": "Respond Success",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "In\u00e9s Risso",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "tags": []
+}

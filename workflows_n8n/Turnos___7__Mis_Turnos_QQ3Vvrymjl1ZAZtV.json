@@ -1,0 +1,137 @@
+{
+  "updatedAt": "2026-07-16T22:58:42.646Z",
+  "createdAt": "2026-07-14T03:07:54.402Z",
+  "id": "QQ3Vvrymjl1ZAZtV",
+  "name": "Turnos - 7. Mis Turnos",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "mis-turnos",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "9b987ab7-1a39-4e53-bb65-ade83169a977",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        -176,
+        -80
+      ],
+      "webhookId": "0d649594-eaaa-4e86-9168-42e6c8ca74d1"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id_turno, fecha, hora, estado, observaciones FROM public.turnos WHERE id_cliente = $1 ORDER BY fecha DESC, hora DESC;",
+        "options": {
+          "queryReplacement": "={{ $json.body.session_id }}"
+        }
+      },
+      "id": "37272416-d970-4531-822a-5f692e36f0b9",
+      "name": "Consultar Turnos",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.2,
+      "position": [
+        32,
+        -80
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { turnos: $input.all().map(i => i.json).filter(j => j.id_turno) } }];"
+      },
+      "id": "9782af44-7833-4e74-a81b-da54b8ab1832",
+      "name": "Agrupar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "23319b86-1b74-4f1f-8094-cad0bd8d4eac",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        432,
+        -80
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Consultar Turnos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consultar Turnos": {
+      "main": [
+        [
+          {
+            "node": "Agrupar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agrupar": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "d969d259-d02a-41f2-8ed9-d8f0f7198815",
+  "activeVersionId": null,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-07-14T03:07:54.402Z",
+      "createdAt": "2026-07-14T03:07:54.402Z",
+      "role": "workflow:owner",
+      "workflowId": "QQ3Vvrymjl1ZAZtV",
+      "projectId": "Iy2SCF8ACRv0KbuJ"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}

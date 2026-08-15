@@ -1,0 +1,238 @@
+{
+  "updatedAt": "2026-07-17T03:59:19.719Z",
+  "createdAt": "2026-07-16T22:34:08.550Z",
+  "id": "tBfX51jYHlD8h0ee",
+  "name": "Public - Servicios Activos",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "path": "public/servicios-activos",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "e3889c77-2dbf-4b8c-b283-bb722169633c",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "61be6270-5efc-4f12-93cd-cc118bbe0b68"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT s.id_servicio, s.nombre, s.costo, s.duracion, ts.id_tipo_servicio, ts.nombre AS tipo_nombre FROM servicios s JOIN tipos_servicio ts ON ts.id_tipo_servicio = s.id_tipo_servicio WHERE s.activo = true AND ts.activo = true ORDER BY ts.nombre, s.nombre",
+        "options": {}
+      },
+      "id": "8365e263-f4c7-42fa-96ba-ea883a7d51b3",
+      "name": "Query Servicios Activos",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        208,
+        0
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "id": "febbc34e-1f73-4dc1-8190-b04c39c7ea90",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        464,
+        -16
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Query Servicios Activos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query Servicios Activos": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "vps-6207995-x.dattaweb.com",
+            "x-real-ip": "186.158.237.71",
+            "x-forwarded-for": "186.158.237.71",
+            "x-forwarded-proto": "https",
+            "connection": "upgrade",
+            "sec-ch-ua-platform": "\"Linux\"",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36",
+            "sec-ch-ua": "\"Not;A=Brand\";v=\"8\", \"Chromium\";v=\"150\", \"Brave\";v=\"150\"",
+            "sec-ch-ua-mobile": "?0",
+            "accept": "*/*",
+            "sec-gpc": "1",
+            "accept-language": "es-419,es;q=0.8",
+            "origin": "http://127.0.0.1:5500",
+            "sec-fetch-site": "cross-site",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-dest": "empty",
+            "referer": "http://127.0.0.1:5500/",
+            "accept-encoding": "gzip, deflate, br, zstd"
+          },
+          "params": {},
+          "query": {},
+          "body": {},
+          "webhookUrl": "https://vps-6207995-x.dattaweb.com/webhook/public/servicios-activos",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "versionId": "e15d2f04-c265-4267-9775-690f7fb6948d",
+  "activeVersionId": "e15d2f04-c265-4267-9775-690f7fb6948d",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-07-16T22:34:08.550Z",
+      "createdAt": "2026-07-16T22:34:08.550Z",
+      "role": "workflow:owner",
+      "workflowId": "tBfX51jYHlD8h0ee",
+      "projectId": "Iy2SCF8ACRv0KbuJ"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-07-17T03:59:24.236Z",
+    "createdAt": "2026-07-17T03:59:19.720Z",
+    "versionId": "e15d2f04-c265-4267-9775-690f7fb6948d",
+    "workflowId": "tBfX51jYHlD8h0ee",
+    "nodes": [
+      {
+        "parameters": {
+          "path": "public/servicios-activos",
+          "responseMode": "responseNode",
+          "options": {
+            "allowedOrigins": "*"
+          }
+        },
+        "id": "e3889c77-2dbf-4b8c-b283-bb722169633c",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          0,
+          0
+        ],
+        "webhookId": "61be6270-5efc-4f12-93cd-cc118bbe0b68"
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT s.id_servicio, s.nombre, s.costo, s.duracion, ts.id_tipo_servicio, ts.nombre AS tipo_nombre FROM servicios s JOIN tipos_servicio ts ON ts.id_tipo_servicio = s.id_tipo_servicio WHERE s.activo = true AND ts.activo = true ORDER BY ts.nombre, s.nombre",
+          "options": {}
+        },
+        "id": "8365e263-f4c7-42fa-96ba-ea883a7d51b3",
+        "name": "Query Servicios Activos",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          208,
+          0
+        ],
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "DI7VdrXRMXAIJibS",
+            "name": "NFC_Turnos"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "respondWith": "allIncomingItems",
+          "options": {}
+        },
+        "id": "febbc34e-1f73-4dc1-8190-b04c39c7ea90",
+        "name": "Respond",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          464,
+          -16
+        ]
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Query Servicios Activos",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Query Servicios Activos": {
+        "main": [
+          [
+            {
+              "node": "Respond",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "In\u00e9s Risso",
+    "name": "Version e15d2f04",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}

@@ -1,0 +1,192 @@
+{
+  "updatedAt": "2026-07-17T04:16:05.610Z",
+  "createdAt": "2026-07-16T22:34:52.297Z",
+  "id": "kXSsjrER8JO5WdTQ",
+  "name": "Public - Turnos Disponibles v2",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "public/turnos-disponibles-v2",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "8e4da348-2219-4c24-8c3f-562d32bffe3a",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "6841aa3a-2585-4a95-8f7c-f5a4093f09d1"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT duracion FROM servicios WHERE id_servicio = $1::uuid",
+        "options": {
+          "queryReplacement": "={{ $json.body.id_servicio }}"
+        }
+      },
+      "id": "2c61c644-99be-4c14-ac6b-70536012f83a",
+      "name": "Get Servicio",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        224,
+        0
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT hora, hora_fin FROM turnos WHERE fecha = $1 AND estado != 'cancelado'",
+        "options": {
+          "queryReplacement": "={{ $('Webhook').item.json.body.fecha }}"
+        }
+      },
+      "id": "27624467-4842-4ccb-99d8-e997fc5e28d1",
+      "name": "Get Turnos",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        448,
+        -16
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "a8224626-b4e7-4456-99e9-f3b0ebdef41c",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        656,
+        -16
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get Servicio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Servicio": {
+      "main": [
+        [
+          {
+            "node": "Get Turnos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Turnos": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "vps-6207995-x.dattaweb.com",
+            "x-real-ip": "186.158.237.71",
+            "x-forwarded-for": "186.158.237.71",
+            "x-forwarded-proto": "https",
+            "connection": "upgrade",
+            "content-length": "75",
+            "sec-ch-ua-platform": "\"Linux\"",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36",
+            "sec-ch-ua": "\"Not;A=Brand\";v=\"8\", \"Chromium\";v=\"150\", \"Brave\";v=\"150\"",
+            "content-type": "application/json",
+            "sec-ch-ua-mobile": "?0",
+            "accept": "*/*",
+            "sec-gpc": "1",
+            "accept-language": "es-419,es;q=0.8",
+            "origin": "http://127.0.0.1:5500",
+            "sec-fetch-site": "cross-site",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-dest": "empty",
+            "referer": "http://127.0.0.1:5500/",
+            "accept-encoding": "gzip, deflate, br, zstd"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "fecha": "2026-07-17",
+            "id_servicio": "a4f17b2d-c4d8-47f8-bcb3-5e30ae637c74"
+          },
+          "webhookUrl": "https://vps-6207995-x.dattaweb.com/webhook/public/turnos-disponibles-v2",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "versionId": "36e885fe-3e55-414b-b01f-3c9871d4af02",
+  "activeVersionId": null,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-07-16T22:34:52.297Z",
+      "createdAt": "2026-07-16T22:34:52.297Z",
+      "role": "workflow:owner",
+      "workflowId": "kXSsjrER8JO5WdTQ",
+      "projectId": "Iy2SCF8ACRv0KbuJ"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}

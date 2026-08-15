@@ -1,0 +1,273 @@
+{
+  "updatedAt": "2026-07-14T04:23:43.197Z",
+  "createdAt": "2026-07-14T04:23:39.779Z",
+  "id": "wDqOKHXVojAF53L4",
+  "name": "Admin - 1. Dashboard",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "path": "admin/dashboard",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "987ad48e-db00-483b-9277-85d581b4babb",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        208,
+        -48
+      ],
+      "webhookId": "89820755-0c0b-4548-ae3b-d26b7b650b31"
+    },
+    {
+      "parameters": {
+        "url": "https://fosblgvcfhmkvbbejiid.supabase.co/auth/v1/user",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $json.headers.authorization }}"
+            },
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvc2JsZ3ZjZmhta3ZiYmVqaWlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2NTA0MjEsImV4cCI6MjA5OTIyNjQyMX0.shrNEOCsWnD7i9VuMRt2nNuLzaq3qot3uq82PAYkQ2c"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d8fa70c0-5d28-4275-b057-93a6ce15a5af",
+      "name": "Validar Sesi\u00f3n",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        416,
+        -48
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n  (SELECT count(*) FROM clientes) as clientes_totales,\n  (SELECT count(*) FROM turnos WHERE fecha = CURRENT_DATE) as turnos_hoy,\n  (SELECT count(*) FROM turnos WHERE estado IN ('pendiente', 'confirmado')) as turnos_activos,\n  (SELECT count(*) FROM turnos WHERE estado = 'cancelado' AND date_trunc('month', fecha) = date_trunc('month', CURRENT_DATE)) as cancelaciones_mes;",
+        "options": {}
+      },
+      "id": "5c37fd50-6a72-4ac3-abb1-9d072cad03df",
+      "name": "M\u00e9tricas Dashboard",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.2,
+      "position": [
+        608,
+        -48
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"clientes_totales\": {{ $json.clientes_totales }},\n  \"turnos_hoy\": {{ $json.turnos_hoy }},\n  \"turnos_activos\": {{ $json.turnos_activos }},\n  \"cancelaciones_mes\": {{ $json.cancelaciones_mes }}\n}",
+        "options": {}
+      },
+      "id": "707c922d-401d-4d93-a3ee-cfa95d01d241",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        816,
+        -48
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validar Sesi\u00f3n",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar Sesi\u00f3n": {
+      "main": [
+        [
+          {
+            "node": "M\u00e9tricas Dashboard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "M\u00e9tricas Dashboard": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "d37ec8b1-48d5-48dd-a58f-fb29829d28f5",
+  "activeVersionId": "d37ec8b1-48d5-48dd-a58f-fb29829d28f5",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-07-14T04:23:39.779Z",
+      "createdAt": "2026-07-14T04:23:39.779Z",
+      "role": "workflow:owner",
+      "workflowId": "wDqOKHXVojAF53L4",
+      "projectId": "Iy2SCF8ACRv0KbuJ"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-07-14T04:23:44.910Z",
+    "createdAt": "2026-07-14T04:23:43.198Z",
+    "versionId": "d37ec8b1-48d5-48dd-a58f-fb29829d28f5",
+    "workflowId": "wDqOKHXVojAF53L4",
+    "nodes": [
+      {
+        "parameters": {
+          "path": "admin/dashboard",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "id": "987ad48e-db00-483b-9277-85d581b4babb",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 1.1,
+        "position": [
+          208,
+          -48
+        ],
+        "webhookId": "89820755-0c0b-4548-ae3b-d26b7b650b31"
+      },
+      {
+        "parameters": {
+          "url": "https://fosblgvcfhmkvbbejiid.supabase.co/auth/v1/user",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "={{ $json.headers.authorization }}"
+              },
+              {
+                "name": "apikey",
+                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvc2JsZ3ZjZmhta3ZiYmVqaWlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2NTA0MjEsImV4cCI6MjA5OTIyNjQyMX0.shrNEOCsWnD7i9VuMRt2nNuLzaq3qot3uq82PAYkQ2c"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "d8fa70c0-5d28-4275-b057-93a6ce15a5af",
+        "name": "Validar Sesi\u00f3n",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          416,
+          -48
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT \n  (SELECT count(*) FROM clientes) as clientes_totales,\n  (SELECT count(*) FROM turnos WHERE fecha = CURRENT_DATE) as turnos_hoy,\n  (SELECT count(*) FROM turnos WHERE estado IN ('pendiente', 'confirmado')) as turnos_activos,\n  (SELECT count(*) FROM turnos WHERE estado = 'cancelado' AND date_trunc('month', fecha) = date_trunc('month', CURRENT_DATE)) as cancelaciones_mes;",
+          "options": {}
+        },
+        "id": "5c37fd50-6a72-4ac3-abb1-9d072cad03df",
+        "name": "M\u00e9tricas Dashboard",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.2,
+        "position": [
+          608,
+          -48
+        ],
+        "credentials": {
+          "postgres": {
+            "id": "DI7VdrXRMXAIJibS",
+            "name": "NFC_Turnos"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={\n  \"clientes_totales\": {{ $json.clientes_totales }},\n  \"turnos_hoy\": {{ $json.turnos_hoy }},\n  \"turnos_activos\": {{ $json.turnos_activos }},\n  \"cancelaciones_mes\": {{ $json.cancelaciones_mes }}\n}",
+          "options": {}
+        },
+        "id": "707c922d-401d-4d93-a3ee-cfa95d01d241",
+        "name": "Respond",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1,
+        "position": [
+          816,
+          -48
+        ]
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Validar Sesi\u00f3n",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Validar Sesi\u00f3n": {
+        "main": [
+          [
+            {
+              "node": "M\u00e9tricas Dashboard",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "M\u00e9tricas Dashboard": {
+        "main": [
+          [
+            {
+              "node": "Respond",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "In\u00e9s Risso",
+    "name": "Version d37ec8b1",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}

@@ -1,0 +1,375 @@
+{
+  "updatedAt": "2026-07-17T03:25:35.363Z",
+  "createdAt": "2026-07-16T22:30:20.680Z",
+  "id": "x0jKpm3QzxHRBYtL",
+  "name": "Admin - Editar Tipo Servicio",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "PATCH",
+        "path": "admin/tipo-servicio-editar",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "9abcbfe2-3edc-4921-922c-fb69aabd6747",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "064861bd-8af2-4d99-b666-33d392dcd4e2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id",
+              "name": "id",
+              "value": "={{ $json.body?.id ?? $json.id ?? \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "nombre",
+              "name": "nombre",
+              "value": "={{ $json.body?.nombre ?? $json.nombre ?? null }}",
+              "type": "string"
+            },
+            {
+              "id": "descripcion",
+              "name": "descripcion",
+              "value": "={{ $json.body?.descripcion ?? $json.descripcion ?? null }}",
+              "type": "string"
+            },
+            {
+              "id": "activo",
+              "name": "activo",
+              "value": "={{ $json.body?.activo ?? $json.activo ?? null }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "484436ce-a40b-437c-9d78-083846410949",
+      "name": "Normalize Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE tipos_servicio SET nombre = COALESCE(NULLIF($2, ''), nombre), descripcion = COALESCE(NULLIF($3, ''), descripcion), activo = CASE WHEN $4 = 'null' THEN activo WHEN $4 = 'true' THEN true ELSE false END WHERE id_tipo_servicio = $1::uuid RETURNING id_tipo_servicio, nombre, descripcion, activo",
+        "options": {
+          "queryReplacement": "={{ $json.id }}, {{ $json.nombre }}, {{ $json.descripcion }}, {{ $json.activo }}"
+        }
+      },
+      "id": "c553912a-0385-46b5-9e9c-b1456d8f6697",
+      "name": "Update Tipo Servicio",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        448,
+        0
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, data: $json }) }}",
+        "options": {}
+      },
+      "id": "4810b841-058d-4259-aada-a97e0826b6af",
+      "name": "Respond Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        656,
+        -112
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{ \"success\": false, \"message\": \"Error al actualizar el tipo de servicio. Verifique que el nombre no est\u00e9 duplicado.\" }",
+        "options": {
+          "responseCode": 409
+        }
+      },
+      "id": "df35e8cd-bee7-441a-898c-cb34873f179d",
+      "name": "Respond Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        688,
+        80
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Input": {
+      "main": [
+        [
+          {
+            "node": "Update Tipo Servicio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Tipo Servicio": {
+      "main": [
+        [
+          {
+            "node": "Respond Success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond Success": {
+      "main": [
+        [],
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "pinData": {},
+  "versionId": "e66f0b18-e266-43c9-9726-6d3d58325ee1",
+  "activeVersionId": "e66f0b18-e266-43c9-9726-6d3d58325ee1",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-07-16T22:30:20.680Z",
+      "createdAt": "2026-07-16T22:30:20.680Z",
+      "role": "workflow:owner",
+      "workflowId": "x0jKpm3QzxHRBYtL",
+      "projectId": "Iy2SCF8ACRv0KbuJ"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-07-17T03:25:53.419Z",
+    "createdAt": "2026-07-17T03:25:35.364Z",
+    "versionId": "e66f0b18-e266-43c9-9726-6d3d58325ee1",
+    "workflowId": "x0jKpm3QzxHRBYtL",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "PATCH",
+          "path": "admin/tipo-servicio-editar",
+          "responseMode": "responseNode",
+          "options": {
+            "allowedOrigins": "*"
+          }
+        },
+        "id": "9abcbfe2-3edc-4921-922c-fb69aabd6747",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          0,
+          0
+        ],
+        "webhookId": "064861bd-8af2-4d99-b666-33d392dcd4e2"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "id",
+                "name": "id",
+                "value": "={{ $json.body?.id ?? $json.id ?? \"\" }}",
+                "type": "string"
+              },
+              {
+                "id": "nombre",
+                "name": "nombre",
+                "value": "={{ $json.body?.nombre ?? $json.nombre ?? null }}",
+                "type": "string"
+              },
+              {
+                "id": "descripcion",
+                "name": "descripcion",
+                "value": "={{ $json.body?.descripcion ?? $json.descripcion ?? null }}",
+                "type": "string"
+              },
+              {
+                "id": "activo",
+                "name": "activo",
+                "value": "={{ $json.body?.activo ?? $json.activo ?? null }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "484436ce-a40b-437c-9d78-083846410949",
+        "name": "Normalize Input",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          224,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "UPDATE tipos_servicio SET nombre = COALESCE(NULLIF($2, ''), nombre), descripcion = COALESCE(NULLIF($3, ''), descripcion), activo = CASE WHEN $4 = 'null' THEN activo WHEN $4 = 'true' THEN true ELSE false END WHERE id_tipo_servicio = $1::uuid RETURNING id_tipo_servicio, nombre, descripcion, activo",
+          "options": {
+            "queryReplacement": "={{ $json.id }}, {{ $json.nombre }}, {{ $json.descripcion }}, {{ $json.activo }}"
+          }
+        },
+        "id": "c553912a-0385-46b5-9e9c-b1456d8f6697",
+        "name": "Update Tipo Servicio",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          448,
+          0
+        ],
+        "credentials": {
+          "postgres": {
+            "id": "DI7VdrXRMXAIJibS",
+            "name": "NFC_Turnos"
+          }
+        },
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ JSON.stringify({ success: true, data: $json }) }}",
+          "options": {}
+        },
+        "id": "4810b841-058d-4259-aada-a97e0826b6af",
+        "name": "Respond Success",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          656,
+          -112
+        ]
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "{ \"success\": false, \"message\": \"Error al actualizar el tipo de servicio. Verifique que el nombre no est\u00e9 duplicado.\" }",
+          "options": {
+            "responseCode": 409
+          }
+        },
+        "id": "df35e8cd-bee7-441a-898c-cb34873f179d",
+        "name": "Respond Error",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          688,
+          80
+        ]
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Normalize Input",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Normalize Input": {
+        "main": [
+          [
+            {
+              "node": "Update Tipo Servicio",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update Tipo Servicio": {
+        "main": [
+          [
+            {
+              "node": "Respond Success",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Respond Error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Respond Success": {
+        "main": [
+          [],
+          []
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "In\u00e9s Risso",
+    "name": "Version e66f0b18",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}

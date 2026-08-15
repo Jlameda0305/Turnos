@@ -1,0 +1,203 @@
+{
+  "updatedAt": "2026-07-14T03:45:11.825Z",
+  "createdAt": "2026-07-14T03:08:17.027Z",
+  "id": "w4rdwFJFdfrx5azU",
+  "name": "Turnos - 8. Cancelar Turno",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cancelar-turno",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "05197487-fac9-4d40-8887-961b1af929a5",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "88e14e6b-f895-4f31-9813-3c719e15d4e8"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE public.turnos SET estado = 'cancelado' WHERE id_turno = $1 AND id_cliente = $2;",
+        "options": {
+          "queryReplacement": "={{ $json.body.id_turno }},{{ $json.body.session_id }}"
+        }
+      },
+      "id": "2ec57666-2317-40ec-9a05-c0450714b1e8",
+      "name": "Cancelar en DB",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.2,
+      "position": [
+        208,
+        0
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": true\n}",
+        "options": {}
+      },
+      "id": "fd462039-592f-4677-9936-fb454ed4e9db",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        400,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Cancelar en DB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cancelar en DB": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "41f6e95a-bd7f-4776-a15d-cd6f7654f1da",
+  "activeVersionId": "41f6e95a-bd7f-4776-a15d-cd6f7654f1da",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-07-14T03:08:17.027Z",
+      "createdAt": "2026-07-14T03:08:17.027Z",
+      "role": "workflow:owner",
+      "workflowId": "w4rdwFJFdfrx5azU",
+      "projectId": "Iy2SCF8ACRv0KbuJ"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-07-14T03:14:39.106Z",
+    "createdAt": "2026-07-14T03:14:07.245Z",
+    "versionId": "41f6e95a-bd7f-4776-a15d-cd6f7654f1da",
+    "workflowId": "w4rdwFJFdfrx5azU",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "cancelar-turno",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "id": "05197487-fac9-4d40-8887-961b1af929a5",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 1.1,
+        "position": [
+          0,
+          0
+        ],
+        "webhookId": "88e14e6b-f895-4f31-9813-3c719e15d4e8"
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "UPDATE public.turnos SET estado = 'cancelado' WHERE id_turno = $1 AND id_cliente = $2;",
+          "options": {
+            "queryReplacement": "={{ $json.body.id_turno }},{{ $json.body.session_id }}"
+          }
+        },
+        "id": "2ec57666-2317-40ec-9a05-c0450714b1e8",
+        "name": "Cancelar en DB",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.2,
+        "position": [
+          208,
+          0
+        ],
+        "credentials": {
+          "postgres": {
+            "id": "DI7VdrXRMXAIJibS",
+            "name": "NFC_Turnos"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "{\n  \"success\": true\n}",
+          "options": {}
+        },
+        "id": "fd462039-592f-4677-9936-fb454ed4e9db",
+        "name": "Respond to Webhook",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1,
+        "position": [
+          400,
+          0
+        ]
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Cancelar en DB",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Cancelar en DB": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "In\u00e9s Risso",
+    "name": "Version 41f6e95a",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}

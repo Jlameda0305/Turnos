@@ -1,0 +1,277 @@
+{
+  "updatedAt": "2026-07-17T03:28:04.496Z",
+  "createdAt": "2026-07-14T05:40:01.079Z",
+  "id": "bKW3lkO2wQmz52WJ",
+  "name": "Buscar cliente",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "path": "admin/buscar-cliente",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "e3088ec2-ceef-4285-be69-9d8f247569cd",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        -400,
+        -160
+      ],
+      "webhookId": "b2c63b1d-2143-4845-bdcf-9c5bc9466691"
+    },
+    {
+      "parameters": {
+        "url": "https://fosblgvcfhmkvbbejiid.supabase.co/auth/v1/user",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $json.headers.authorization }}"
+            },
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvc2JsZ3ZjZmhta3ZiYmVqaWlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2NTA0MjEsImV4cCI6MjA5OTIyNjQyMX0.shrNEOCsWnD7i9VuMRt2nNuLzaq3qot3uq82PAYkQ2c"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "10cd6dac-327b-4750-8dff-267ee94763d9",
+      "name": "Validar Sesi\u00f3n",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -208,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id_cliente, nombre, apellido, dni FROM clientes WHERE nombre ILIKE '%' || $1 || '%' OR apellido ILIKE '%' || $1 || '%' OR dni ILIKE '%' || $1 || '%' LIMIT 10;",
+        "options": {
+          "queryReplacement": "={{ $('Webhook').item.json.query.q }}"
+        }
+      },
+      "id": "57cc6bb3-ce69-4c0e-815c-eb0cf403534b",
+      "name": "Buscar Cliente",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        -160
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $('Buscar Cliente').all().map(e => e.json) }}",
+        "options": {}
+      },
+      "id": "6294b751-bbfb-4b70-ae9e-3f195c5634b6",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        208,
+        -160
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validar Sesi\u00f3n",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar Sesi\u00f3n": {
+      "main": [
+        [
+          {
+            "node": "Buscar Cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Cliente": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "9cd119ed-6899-4415-a77e-9e1bb5dec4f2",
+  "activeVersionId": "9cd119ed-6899-4415-a77e-9e1bb5dec4f2",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-07-14T05:40:01.079Z",
+      "createdAt": "2026-07-14T05:40:01.079Z",
+      "role": "workflow:owner",
+      "workflowId": "bKW3lkO2wQmz52WJ",
+      "projectId": "Iy2SCF8ACRv0KbuJ"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-07-14T05:40:04.849Z",
+    "createdAt": "2026-07-14T05:40:02.955Z",
+    "versionId": "9cd119ed-6899-4415-a77e-9e1bb5dec4f2",
+    "workflowId": "bKW3lkO2wQmz52WJ",
+    "nodes": [
+      {
+        "parameters": {
+          "path": "admin/buscar-cliente",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "id": "e3088ec2-ceef-4285-be69-9d8f247569cd",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 1.1,
+        "position": [
+          -400,
+          -160
+        ],
+        "webhookId": "b2c63b1d-2143-4845-bdcf-9c5bc9466691"
+      },
+      {
+        "parameters": {
+          "url": "https://fosblgvcfhmkvbbejiid.supabase.co/auth/v1/user",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "={{ $json.headers.authorization }}"
+              },
+              {
+                "name": "apikey",
+                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvc2JsZ3ZjZmhta3ZiYmVqaWlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2NTA0MjEsImV4cCI6MjA5OTIyNjQyMX0.shrNEOCsWnD7i9VuMRt2nNuLzaq3qot3uq82PAYkQ2c"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "10cd6dac-327b-4750-8dff-267ee94763d9",
+        "name": "Validar Sesi\u00f3n",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          -208,
+          -160
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT id_cliente, nombre, apellido, dni FROM clientes WHERE nombre ILIKE '%' || $1 || '%' OR apellido ILIKE '%' || $1 || '%' OR dni ILIKE '%' || $1 || '%' LIMIT 10;",
+          "options": {
+            "queryReplacement": "={{ $('Webhook').item.json.query.q }}"
+          }
+        },
+        "id": "57cc6bb3-ce69-4c0e-815c-eb0cf403534b",
+        "name": "Buscar Cliente",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.2,
+        "position": [
+          0,
+          -160
+        ],
+        "credentials": {
+          "postgres": {
+            "id": "DI7VdrXRMXAIJibS",
+            "name": "NFC_Turnos"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ $('Buscar Cliente').all().map(e => e.json) }}",
+          "options": {}
+        },
+        "id": "6294b751-bbfb-4b70-ae9e-3f195c5634b6",
+        "name": "Respond",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1,
+        "position": [
+          208,
+          -160
+        ]
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Validar Sesi\u00f3n",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Validar Sesi\u00f3n": {
+        "main": [
+          [
+            {
+              "node": "Buscar Cliente",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Buscar Cliente": {
+        "main": [
+          [
+            {
+              "node": "Respond",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "In\u00e9s Risso",
+    "name": "Version 9cd119ed",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}

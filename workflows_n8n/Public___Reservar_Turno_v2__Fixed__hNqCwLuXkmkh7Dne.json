@@ -1,0 +1,508 @@
+{
+  "updatedAt": "2026-07-17T04:51:40.075Z",
+  "createdAt": "2026-07-17T04:24:00.568Z",
+  "id": "hNqCwLuXkmkh7Dne",
+  "name": "Public - Reservar Turno v2 (Fixed)",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "public/reservar-turno-v2",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "ea1bc90d-6589-47f2-ac0a-ddc8473a37a3",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        128
+      ],
+      "webhookId": "b0a43423-76e4-47fc-81f1-47e6798cf832"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id_cliente FROM clientes WHERE id_cliente = $1::uuid LIMIT 1",
+        "options": {
+          "queryReplacement": "={{ $json.body.session_id }}"
+        }
+      },
+      "id": "264b0f58-219e-4227-9ae1-9260dd37bc2a",
+      "name": "Get Cliente",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        224,
+        128
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT duracion FROM servicios WHERE id_servicio = $1::uuid LIMIT 1",
+        "options": {
+          "queryReplacement": "={{ $('Webhook').item.json.body.id_servicio }}"
+        }
+      },
+      "id": "1da89cf7-a60b-4beb-bf18-9333d2b2bbe6",
+      "name": "Get Servicio",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        448,
+        112
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO turnos (id_cliente, id_servicio, fecha, hora, hora_fin, observaciones, estado) \nSELECT $1::uuid, $2::uuid, $3::date, $4::time, $5::time, $6, 'pendiente'\nWHERE NOT EXISTS (\n    SELECT 1 FROM turnos \n    WHERE fecha = $3::date \n      AND estado != 'cancelado'\n      AND hora < $5::time \n      AND hora_fin > $4::time\n)\nRETURNING id_turno;",
+        "options": {
+          "queryReplacement": "={{ $json.id_cliente }}, {{ $json.id_servicio }}, {{ $json.fecha }}, {{ $json.hora }}, {{ $json.hora_fin }}, {{ $json.observaciones }}"
+        }
+      },
+      "id": "98ca2247-c7ed-4823-98a0-21dea4640a6e",
+      "name": "Insert Turno",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        800,
+        0
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{ \"success\": false, \"message\": \"No se pudo reservar el turno (horario no disponible o error de validaci\u00f3n).\" }",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "id": "33fb6278-5295-45ec-9fba-6ffc9a77b12f",
+      "name": "Respond Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        992,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const webhookData = $('Webhook').first().json.body;\nconst cliente = $('Get Cliente').first().json;\nconst servicio = $('Get Servicio').first().json;\n\nif (!cliente.id_cliente) {\n  return [{ json: { error: 'Cliente no encontrado' } }];\n}\n\nif (!servicio.duracion) {\n  return [{ json: { error: 'Servicio no encontrado' } }];\n}\n\nconst [h, m] = webhookData.hora.split(':').map(Number);\nconst totalMins = h * 60 + m + parseInt(servicio.duracion, 10);\n\nconst finH = Math.floor(totalMins / 60).toString().padStart(2, '0');\nconst finM = (totalMins % 60).toString().padStart(2, '0');\nconst hora_fin = finH + ':' + finM;\n\nreturn [{\n  json: {\n    id_cliente: cliente.id_cliente,\n    id_servicio: webhookData.id_servicio,\n    fecha: webhookData.fecha,\n    hora: webhookData.hora,\n    hora_fin: hora_fin,\n    observaciones: webhookData.observaciones || null\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        0
+      ],
+      "id": "19c560b0-86fd-4714-9a55-7923e660029b",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, id_turno: $json.id_turno }) }}",
+        "options": {
+          "responseCode": 201
+        }
+      },
+      "id": "f52e7de8-db63-4716-93c2-11f4245ecba4",
+      "name": "Respond Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        992,
+        -16
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get Cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Cliente": {
+      "main": [
+        [
+          {
+            "node": "Get Servicio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Servicio": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Turno": {
+      "main": [
+        [
+          {
+            "node": "Respond Success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Insert Turno",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "vps-6207995-x.dattaweb.com",
+            "x-real-ip": "186.158.237.71",
+            "x-forwarded-for": "186.158.237.71",
+            "x-forwarded-proto": "https",
+            "connection": "upgrade",
+            "content-length": "163",
+            "sec-ch-ua-platform": "\"Linux\"",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36",
+            "sec-ch-ua": "\"Not;A=Brand\";v=\"8\", \"Chromium\";v=\"150\", \"Brave\";v=\"150\"",
+            "content-type": "application/json",
+            "sec-ch-ua-mobile": "?0",
+            "accept": "*/*",
+            "sec-gpc": "1",
+            "accept-language": "es-419,es;q=0.8",
+            "origin": "http://127.0.0.1:5500",
+            "sec-fetch-site": "cross-site",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-dest": "empty",
+            "referer": "http://127.0.0.1:5500/",
+            "accept-encoding": "gzip, deflate, br, zstd"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "session_id": "cd4dde47-e910-427d-acb4-b6e7e10c8dbd",
+            "id_servicio": "80f04d7e-ac20-4acd-8202-f5148eb34971",
+            "fecha": "2026-07-17",
+            "hora": "08:30",
+            "observaciones": null
+          },
+          "webhookUrl": "https://vps-6207995-x.dattaweb.com/webhook/public/reservar-turno-v2",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "versionId": "3d75ffe5-84f5-4fcc-b23c-f85bb94fbe12",
+  "activeVersionId": "3d75ffe5-84f5-4fcc-b23c-f85bb94fbe12",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-07-17T04:24:00.568Z",
+      "createdAt": "2026-07-17T04:24:00.568Z",
+      "role": "workflow:owner",
+      "workflowId": "hNqCwLuXkmkh7Dne",
+      "projectId": "Iy2SCF8ACRv0KbuJ"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-07-17T04:52:47.757Z",
+    "createdAt": "2026-07-17T04:51:40.076Z",
+    "versionId": "3d75ffe5-84f5-4fcc-b23c-f85bb94fbe12",
+    "workflowId": "hNqCwLuXkmkh7Dne",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "public/reservar-turno-v2",
+          "responseMode": "responseNode",
+          "options": {
+            "allowedOrigins": "*"
+          }
+        },
+        "id": "ea1bc90d-6589-47f2-ac0a-ddc8473a37a3",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          0,
+          128
+        ],
+        "webhookId": "b0a43423-76e4-47fc-81f1-47e6798cf832"
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT id_cliente FROM clientes WHERE id_cliente = $1::uuid LIMIT 1",
+          "options": {
+            "queryReplacement": "={{ $json.body.session_id }}"
+          }
+        },
+        "id": "264b0f58-219e-4227-9ae1-9260dd37bc2a",
+        "name": "Get Cliente",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          224,
+          128
+        ],
+        "credentials": {
+          "postgres": {
+            "id": "DI7VdrXRMXAIJibS",
+            "name": "NFC_Turnos"
+          }
+        },
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT duracion FROM servicios WHERE id_servicio = $1::uuid LIMIT 1",
+          "options": {
+            "queryReplacement": "={{ $('Webhook').item.json.body.id_servicio }}"
+          }
+        },
+        "id": "1da89cf7-a60b-4beb-bf18-9333d2b2bbe6",
+        "name": "Get Servicio",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          448,
+          112
+        ],
+        "credentials": {
+          "postgres": {
+            "id": "DI7VdrXRMXAIJibS",
+            "name": "NFC_Turnos"
+          }
+        },
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "INSERT INTO turnos (id_cliente, id_servicio, fecha, hora, hora_fin, observaciones, estado) \nSELECT $1::uuid, $2::uuid, $3::date, $4::time, $5::time, $6, 'pendiente'\nWHERE NOT EXISTS (\n    SELECT 1 FROM turnos \n    WHERE fecha = $3::date \n      AND estado != 'cancelado'\n      AND hora < $5::time \n      AND hora_fin > $4::time\n)\nRETURNING id_turno;",
+          "options": {
+            "queryReplacement": "={{ $json.id_cliente }}, {{ $json.id_servicio }}, {{ $json.fecha }}, {{ $json.hora }}, {{ $json.hora_fin }}, {{ $json.observaciones }}"
+          }
+        },
+        "id": "98ca2247-c7ed-4823-98a0-21dea4640a6e",
+        "name": "Insert Turno",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          800,
+          0
+        ],
+        "credentials": {
+          "postgres": {
+            "id": "DI7VdrXRMXAIJibS",
+            "name": "NFC_Turnos"
+          }
+        },
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "{ \"success\": false, \"message\": \"No se pudo reservar el turno (horario no disponible o error de validaci\u00f3n).\" }",
+          "options": {
+            "responseCode": 400
+          }
+        },
+        "id": "33fb6278-5295-45ec-9fba-6ffc9a77b12f",
+        "name": "Respond Error",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          992,
+          160
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const webhookData = $('Webhook').first().json.body;\nconst cliente = $('Get Cliente').first().json;\nconst servicio = $('Get Servicio').first().json;\n\nif (!cliente.id_cliente) {\n  return [{ json: { error: 'Cliente no encontrado' } }];\n}\n\nif (!servicio.duracion) {\n  return [{ json: { error: 'Servicio no encontrado' } }];\n}\n\nconst [h, m] = webhookData.hora.split(':').map(Number);\nconst totalMins = h * 60 + m + parseInt(servicio.duracion, 10);\n\nconst finH = Math.floor(totalMins / 60).toString().padStart(2, '0');\nconst finM = (totalMins % 60).toString().padStart(2, '0');\nconst hora_fin = finH + ':' + finM;\n\nreturn [{\n  json: {\n    id_cliente: cliente.id_cliente,\n    id_servicio: webhookData.id_servicio,\n    fecha: webhookData.fecha,\n    hora: webhookData.hora,\n    hora_fin: hora_fin,\n    observaciones: webhookData.observaciones || null\n  }\n}];\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          640,
+          0
+        ],
+        "id": "19c560b0-86fd-4714-9a55-7923e660029b",
+        "name": "Code in JavaScript"
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ JSON.stringify({ success: true, id_turno: $json.id_turno }) }}",
+          "options": {
+            "responseCode": 201
+          }
+        },
+        "id": "f52e7de8-db63-4716-93c2-11f4245ecba4",
+        "name": "Respond Success",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          992,
+          -16
+        ]
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Get Cliente",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get Cliente": {
+        "main": [
+          [
+            {
+              "node": "Get Servicio",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get Servicio": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Respond Error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Insert Turno": {
+        "main": [
+          [
+            {
+              "node": "Respond Success",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Respond Error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript": {
+        "main": [
+          [
+            {
+              "node": "Insert Turno",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "In\u00e9s Risso",
+    "name": "Version 3d75ffe5",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}

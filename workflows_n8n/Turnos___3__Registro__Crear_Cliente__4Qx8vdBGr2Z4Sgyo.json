@@ -1,0 +1,338 @@
+{
+  "updatedAt": "2026-07-17T17:38:31.078Z",
+  "createdAt": "2026-07-14T02:50:37.690Z",
+  "id": "4Qx8vdBGr2Z4Sgyo",
+  "name": "Turnos - 3. Registro (Crear Cliente)",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "registro",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "116a514e-a779-4720-a4e6-1bc185aba1c3",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        -784,
+        96
+      ],
+      "webhookId": "registro-turnos-id"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO public.clientes (dni, nombre, apellido, sexo, fecha_nacimiento, direccion, email, telefono) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id_cliente;",
+        "options": {
+          "queryReplacement": "={{ $json.body.dni }},{{ $json.body.nombre }},{{ $json.body.apellido }},{{ $json.body.sexo }},{{ $json.body.fecha_nacimiento }},{{ $json.body.direccion }},{{ $json.body.email }},{{ $json.body.telefono }}"
+        }
+      },
+      "id": "52070fb2-833e-4c30-b33d-4460041b0576",
+      "name": "Insertar en Supabase",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.2,
+      "position": [
+        -576,
+        96
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.id_cliente }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "id": "478cb9bf-d640-44e9-b20b-f5c6fac59b3b",
+      "name": "Se insert\u00f3?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -384,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"id_cliente\": \"{{ $json.id_cliente }}\",\n  \"nombre\": \"{{ $('Webhook').item.json.body.nombre }}\",\n  \"apellido\": \"{{ $('Webhook').item.json.body.apellido }}\",\n  \"dni\": \"{{ $('Webhook').item.json.body.dni }}\"\n}",
+        "options": {}
+      },
+      "id": "bfca6058-cc69-4e51-8780-27b374a0f008",
+      "name": "Respond to Webhook (\u00c9xito)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -176,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"message\": \"El DNI o Email ya se encuentran registrados, o hubo un error.\"\n}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "id": "64e4075a-1a26-441b-af47-329bb24c9579",
+      "name": "Respond to Webhook (Error)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -176,
+        192
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Insertar en Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insertar en Supabase": {
+      "main": [
+        [
+          {
+            "node": "Se insert\u00f3?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Se insert\u00f3?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Se insert\u00f3?": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook (\u00c9xito)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook (Error)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": true
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "pinData": {},
+  "versionId": "0c739e52-3b5c-4398-8ebf-9832fb26a4d7",
+  "activeVersionId": "0c739e52-3b5c-4398-8ebf-9832fb26a4d7",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-07-14T02:50:37.690Z",
+      "createdAt": "2026-07-14T02:50:37.690Z",
+      "role": "workflow:owner",
+      "workflowId": "4Qx8vdBGr2Z4Sgyo",
+      "projectId": "Iy2SCF8ACRv0KbuJ"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-07-17T17:38:31.080Z",
+    "createdAt": "2026-07-17T17:38:31.080Z",
+    "versionId": "0c739e52-3b5c-4398-8ebf-9832fb26a4d7",
+    "workflowId": "4Qx8vdBGr2Z4Sgyo",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "registro",
+          "responseMode": "responseNode",
+          "options": {
+            "allowedOrigins": "*"
+          }
+        },
+        "id": "116a514e-a779-4720-a4e6-1bc185aba1c3",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 1.1,
+        "position": [
+          -784,
+          96
+        ],
+        "webhookId": "registro-turnos-id"
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "INSERT INTO public.clientes (dni, nombre, apellido, sexo, fecha_nacimiento, direccion, email, telefono) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id_cliente;",
+          "options": {
+            "queryReplacement": "={{ $json.body.dni }},{{ $json.body.nombre }},{{ $json.body.apellido }},{{ $json.body.sexo }},{{ $json.body.fecha_nacimiento }},{{ $json.body.direccion }},{{ $json.body.email }},{{ $json.body.telefono }}"
+          }
+        },
+        "id": "52070fb2-833e-4c30-b33d-4460041b0576",
+        "name": "Insertar en Supabase",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.2,
+        "position": [
+          -576,
+          96
+        ],
+        "credentials": {
+          "postgres": {
+            "id": "DI7VdrXRMXAIJibS",
+            "name": "NFC_Turnos"
+          }
+        },
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "string": [
+              {
+                "value1": "={{ $json.id_cliente }}",
+                "operation": "isNotEmpty"
+              }
+            ]
+          }
+        },
+        "id": "478cb9bf-d640-44e9-b20b-f5c6fac59b3b",
+        "name": "Se insert\u00f3?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 1,
+        "position": [
+          -384,
+          96
+        ]
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={\n  \"id_cliente\": \"{{ $json.id_cliente }}\",\n  \"nombre\": \"{{ $('Webhook').item.json.body.nombre }}\",\n  \"apellido\": \"{{ $('Webhook').item.json.body.apellido }}\",\n  \"dni\": \"{{ $('Webhook').item.json.body.dni }}\"\n}",
+          "options": {}
+        },
+        "id": "bfca6058-cc69-4e51-8780-27b374a0f008",
+        "name": "Respond to Webhook (\u00c9xito)",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1,
+        "position": [
+          -176,
+          -16
+        ]
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "{\n  \"message\": \"El DNI o Email ya se encuentran registrados, o hubo un error.\"\n}",
+          "options": {
+            "responseCode": 400
+          }
+        },
+        "id": "64e4075a-1a26-441b-af47-329bb24c9579",
+        "name": "Respond to Webhook (Error)",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1,
+        "position": [
+          -176,
+          192
+        ]
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Insertar en Supabase",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Insertar en Supabase": {
+        "main": [
+          [
+            {
+              "node": "Se insert\u00f3?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Se insert\u00f3?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Se insert\u00f3?": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook (\u00c9xito)",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Respond to Webhook (Error)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "In\u00e9s Risso",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "tags": []
+}

@@ -1,0 +1,319 @@
+{
+  "updatedAt": "2026-07-17T17:03:45.972Z",
+  "createdAt": "2026-07-16T22:49:47.713Z",
+  "id": "vb9kJNNaIngiJMbX",
+  "name": "Admin - Listar Turnos v2",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "path": "admin/turnos-v2",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "79e70cbe-dd0c-426c-9e4d-c21eb14090c8",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "7cd10aee-ca9e-4598-879f-91c09f47ed34"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT t.id_turno, t.fecha, t.hora, t.hora_fin, t.estado, t.observaciones, t.created_at,\n       c.nombre AS cliente_nombre, c.apellido AS cliente_apellido, c.dni AS cliente_dni, c.email AS cliente_email, c.telefono AS cliente_telefono,\n       s.nombre AS servicio_nombre, s.duracion, s.costo, ts.nombre AS tipo_nombre\nFROM turnos t\nJOIN servicios s ON t.id_servicio = s.id_servicio\nJOIN tipos_servicio ts ON s.id_tipo_servicio = ts.id_tipo_servicio\nJOIN clientes c ON t.id_cliente = c.id_cliente\nWHERE ($1::text = 'todos' OR t.estado::text = $1::text)\n  AND ($2::text IS NULL OR c.dni ILIKE '%' || $2::text || '%' OR c.nombre ILIKE '%' || $2::text || '%' OR c.apellido ILIKE '%' || $2::text || '%')\n  AND ($3::date IS NULL OR t.fecha >= $3::date)\n  AND ($4::date IS NULL OR t.fecha <= $4::date)\n  AND ($5::uuid IS NULL OR t.id_cliente = $5::uuid)\nORDER BY t.fecha DESC, t.hora DESC\nLIMIT $6 OFFSET $7",
+        "options": {
+          "queryReplacement": "={{ [$('Webhook').first().json.query?.estado || 'todos', $('Webhook').first().json.query?.search || null, $('Webhook').first().json.query?.fecha_inicio || null, $('Webhook').first().json.query?.fecha_fin || null, $('Webhook').first().json.query?.id_cliente || null, $('Webhook').first().json.query?.limit || 50, $('Webhook').first().json.query?.offset || 0] }}"
+        }
+      },
+      "id": "96b43042-5a0c-4534-8743-7a50b6b25223",
+      "name": "Get Admin Turnos",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        224,
+        0
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT COUNT(*) as total\nFROM turnos t\nJOIN clientes c ON t.id_cliente = c.id_cliente\nWHERE ($1::text = 'todos' OR t.estado::text = $1::text)\n  AND ($2::text IS NULL OR c.dni ILIKE '%' || $2::text || '%' OR c.nombre ILIKE '%' || $2::text || '%' OR c.apellido ILIKE '%' || $2::text || '%')\n  AND ($3::date IS NULL OR t.fecha >= $3::date)\n  AND ($4::date IS NULL OR t.fecha <= $4::date)\n  AND ($5::uuid IS NULL OR t.id_cliente = $5::uuid)",
+        "options": {
+          "queryReplacement": "={{ [$('Webhook').first().json.query?.estado || 'todos', $('Webhook').first().json.query?.search || null, $('Webhook').first().json.query?.fecha_inicio || null, $('Webhook').first().json.query?.fecha_fin || null, $('Webhook').first().json.query?.id_cliente || null] }}"
+        }
+      },
+      "id": "b72aa903-6c12-489d-9de2-8c3d59305cfc",
+      "name": "Count Total",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        480,
+        -16
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ data: $('Get Admin Turnos').all().map(i => i.json).filter(j => j.id_turno), total: parseInt($('Count Total').first().json.total) }) }}",
+        "options": {}
+      },
+      "id": "480396ec-6cd2-4d36-b66e-0495b575fc9c",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        688,
+        -16
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get Admin Turnos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Admin Turnos": {
+      "main": [
+        [
+          {
+            "node": "Count Total",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Count Total": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "vps-6207995-x.dattaweb.com",
+            "x-real-ip": "186.158.237.71",
+            "x-forwarded-for": "186.158.237.71",
+            "x-forwarded-proto": "https",
+            "connection": "upgrade",
+            "sec-ch-ua-platform": "\"Linux\"",
+            "authorization": "Bearer eyJhbGciOiJFUzI1NiIsImtpZCI6IjZiYjk3NGJkLWMwZmEtNDA4Zi1iZDMxLWFjMGU4NzI5OGQ3ZCIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2Zvc2JsZ3ZjZmhta3ZiYmVqaWlkLnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiI5NDI2ZWU5Yy01ZTA0LTQ2M2ItYWJhNS0xNjA3MjhmYjViZWYiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzg0MjYxNzYyLCJpYXQiOjE3ODQyNTgxNjIsImVtYWlsIjoiYWRtaW5AYWlvbmV4LmNvbSIsInBob25lIjoiIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiXX0sInVzZXJfbWV0YWRhdGEiOnt9LCJyb2xlIjoiYXV0aGVudGljYXRlZCIsImFhbCI6ImFhbDEiLCJhbXIiOlt7Im1ldGhvZCI6InBhc3N3b3JkIiwidGltZXN0YW1wIjoxNzg0MjU4MTYyfV0sInNlc3Npb25faWQiOiJiN2Y1ZjNjMS1lN2MwLTQyMzctYjk5NS0yM2I5YjZiMWRiZWIiLCJpc19hbm9ueW1vdXMiOmZhbHNlfQ.mcDN3nmsj7mgU4C1cIcLiCW9arfMTfs4sUiuged2pY4T9GOqPyLAcdRFH60rD5dVCmirVwbEk5Ul5NGOaQR-SA",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36",
+            "sec-ch-ua": "\"Not;A=Brand\";v=\"8\", \"Chromium\";v=\"150\", \"Brave\";v=\"150\"",
+            "sec-ch-ua-mobile": "?0",
+            "accept": "*/*",
+            "sec-gpc": "1",
+            "accept-language": "es-419,es;q=0.8",
+            "origin": "http://127.0.0.1:5500",
+            "sec-fetch-site": "cross-site",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-dest": "empty",
+            "referer": "http://127.0.0.1:5500/",
+            "accept-encoding": "gzip, deflate, br, zstd"
+          },
+          "params": {},
+          "query": {
+            "estado": "todos",
+            "limit": "10",
+            "offset": "0"
+          },
+          "body": {},
+          "webhookUrl": "https://vps-6207995-x.dattaweb.com/webhook/admin/turnos-v2",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "versionId": "63dbfd36-c49e-4b63-a5da-3cfc7f35fc6b",
+  "activeVersionId": "63dbfd36-c49e-4b63-a5da-3cfc7f35fc6b",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-07-16T22:49:47.713Z",
+      "createdAt": "2026-07-16T22:49:47.713Z",
+      "role": "workflow:owner",
+      "workflowId": "vb9kJNNaIngiJMbX",
+      "projectId": "Iy2SCF8ACRv0KbuJ"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-07-17T17:03:45.973Z",
+    "createdAt": "2026-07-17T17:03:45.973Z",
+    "versionId": "63dbfd36-c49e-4b63-a5da-3cfc7f35fc6b",
+    "workflowId": "vb9kJNNaIngiJMbX",
+    "nodes": [
+      {
+        "parameters": {
+          "path": "admin/turnos-v2",
+          "responseMode": "responseNode",
+          "options": {
+            "allowedOrigins": "*"
+          }
+        },
+        "id": "79e70cbe-dd0c-426c-9e4d-c21eb14090c8",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          0,
+          0
+        ],
+        "webhookId": "7cd10aee-ca9e-4598-879f-91c09f47ed34"
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT t.id_turno, t.fecha, t.hora, t.hora_fin, t.estado, t.observaciones, t.created_at,\n       c.nombre AS cliente_nombre, c.apellido AS cliente_apellido, c.dni AS cliente_dni, c.email AS cliente_email, c.telefono AS cliente_telefono,\n       s.nombre AS servicio_nombre, s.duracion, s.costo, ts.nombre AS tipo_nombre\nFROM turnos t\nJOIN servicios s ON t.id_servicio = s.id_servicio\nJOIN tipos_servicio ts ON s.id_tipo_servicio = ts.id_tipo_servicio\nJOIN clientes c ON t.id_cliente = c.id_cliente\nWHERE ($1::text = 'todos' OR t.estado::text = $1::text)\n  AND ($2::text IS NULL OR c.dni ILIKE '%' || $2::text || '%' OR c.nombre ILIKE '%' || $2::text || '%' OR c.apellido ILIKE '%' || $2::text || '%')\n  AND ($3::date IS NULL OR t.fecha >= $3::date)\n  AND ($4::date IS NULL OR t.fecha <= $4::date)\n  AND ($5::uuid IS NULL OR t.id_cliente = $5::uuid)\nORDER BY t.fecha DESC, t.hora DESC\nLIMIT $6 OFFSET $7",
+          "options": {
+            "queryReplacement": "={{ [$('Webhook').first().json.query?.estado || 'todos', $('Webhook').first().json.query?.search || null, $('Webhook').first().json.query?.fecha_inicio || null, $('Webhook').first().json.query?.fecha_fin || null, $('Webhook').first().json.query?.id_cliente || null, $('Webhook').first().json.query?.limit || 50, $('Webhook').first().json.query?.offset || 0] }}"
+          }
+        },
+        "id": "96b43042-5a0c-4534-8743-7a50b6b25223",
+        "name": "Get Admin Turnos",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          224,
+          0
+        ],
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "DI7VdrXRMXAIJibS",
+            "name": "NFC_Turnos"
+          }
+        },
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT COUNT(*) as total\nFROM turnos t\nJOIN clientes c ON t.id_cliente = c.id_cliente\nWHERE ($1::text = 'todos' OR t.estado::text = $1::text)\n  AND ($2::text IS NULL OR c.dni ILIKE '%' || $2::text || '%' OR c.nombre ILIKE '%' || $2::text || '%' OR c.apellido ILIKE '%' || $2::text || '%')\n  AND ($3::date IS NULL OR t.fecha >= $3::date)\n  AND ($4::date IS NULL OR t.fecha <= $4::date)\n  AND ($5::uuid IS NULL OR t.id_cliente = $5::uuid)",
+          "options": {
+            "queryReplacement": "={{ [$('Webhook').first().json.query?.estado || 'todos', $('Webhook').first().json.query?.search || null, $('Webhook').first().json.query?.fecha_inicio || null, $('Webhook').first().json.query?.fecha_fin || null, $('Webhook').first().json.query?.id_cliente || null] }}"
+          }
+        },
+        "id": "b72aa903-6c12-489d-9de2-8c3d59305cfc",
+        "name": "Count Total",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          480,
+          -16
+        ],
+        "credentials": {
+          "postgres": {
+            "id": "DI7VdrXRMXAIJibS",
+            "name": "NFC_Turnos"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ JSON.stringify({ data: $('Get Admin Turnos').all().map(i => i.json).filter(j => j.id_turno), total: parseInt($('Count Total').first().json.total) }) }}",
+          "options": {}
+        },
+        "id": "480396ec-6cd2-4d36-b66e-0495b575fc9c",
+        "name": "Respond",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          688,
+          -16
+        ]
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Get Admin Turnos",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get Admin Turnos": {
+        "main": [
+          [
+            {
+              "node": "Count Total",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Count Total": {
+        "main": [
+          [
+            {
+              "node": "Respond",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "In\u00e9s Risso",
+    "name": null,
+    "description": null,
+    "autosaved": false
+  },
+  "tags": []
+}

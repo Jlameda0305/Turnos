@@ -1,0 +1,582 @@
+{
+  "updatedAt": "2026-07-17T03:14:22.223Z",
+  "createdAt": "2026-07-16T22:33:49.116Z",
+  "id": "2RVE8GL1H7KpzZ3L",
+  "name": "Admin - Editar Servicio",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "PATCH",
+        "path": "admin/servicio-editar",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "dd42f740-d425-42e6-89f2-393ca138efdc",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "fbf411d4-51f0-48e3-a6bc-0a169bea02be"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id",
+              "name": "id",
+              "type": "string",
+              "value": "={{ $json.body?.id_servicio ?? $json.body?.id ?? $json.id_servicio ?? $json.id ?? \"\" }}"
+            },
+            {
+              "id": "id_tipo_servicio",
+              "name": "id_tipo_servicio",
+              "type": "string",
+              "value": "={{ $json.body?.id_tipo_servicio ?? $json.id_tipo_servicio ?? null }}"
+            },
+            {
+              "id": "nombre",
+              "name": "nombre",
+              "type": "string",
+              "value": "={{ $json.body?.nombre ?? $json.nombre ?? null }}"
+            },
+            {
+              "id": "costo",
+              "name": "costo",
+              "type": "string",
+              "value": "={{ $json.body?.costo ?? $json.costo ?? null }}"
+            },
+            {
+              "id": "duracion",
+              "name": "duracion",
+              "type": "string",
+              "value": "={{ $json.body?.duracion ?? $json.duracion ?? null }}"
+            },
+            {
+              "id": "activo",
+              "name": "activo",
+              "type": "string",
+              "value": "={{ $json.body?.activo ?? $json.activo ?? null }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "64803099-14a2-45de-a124-5595d683c4c0",
+      "name": "Normalize Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE servicios SET\n        id_tipo_servicio = COALESCE(NULLIF(NULLIF($2::text, 'null'), '')::uuid, id_tipo_servicio),\n        nombre = COALESCE(NULLIF(NULLIF($3::text, 'null'), ''), nombre),\n        costo = COALESCE(NULLIF(NULLIF($4::text, 'null'), '')::numeric, costo),\n        duracion = COALESCE(NULLIF(NULLIF($5::text, 'null'), '')::int, duracion),\n        activo = CASE WHEN $6 IS NULL OR $6::text = 'null' OR $6::text = '' THEN activo WHEN $6::text = 'true' THEN true ELSE false END\nWHERE id_servicio = NULLIF($1::text, '')::uuid \nRETURNING *",
+        "options": {
+          "queryReplacement": "={{ [$json.id, $json.id_tipo_servicio, $json.nombre, $json.costo, $json.duracion, $json.activo] }}"
+        }
+      },
+      "id": "c2f215b9-466c-4d94-aa07-b474e11deb70",
+      "name": "Update Servicio",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        448,
+        0
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, data: $json }) }}",
+        "options": {}
+      },
+      "id": "a8d3dcdd-a7e1-4c85-9fbf-da6c88a44a87",
+      "name": "Respond Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        640,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": false,\n  \"message\": \"Ya existe un servicio con ese nombre para este tipo.\"\n}",
+        "options": {
+          "responseCode": 409
+        }
+      },
+      "id": "ca93377b-1e92-4dd7-9e37-7abafecd3559",
+      "name": "Respond Error Duplicado",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        944,
+        -48
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": false,\n  \"message\": \"Valores inv\u00e1lidos. Verifica que el costo sea positivo, la duraci\u00f3n sea v\u00e1lida (30, 60, 90, 120) y los datos est\u00e9n correctos.\"\n}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "id": "bed32413-4317-41a8-b72e-0f04976ee64a",
+      "name": "Respond Error Invalido",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        944,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "dbd3937b-0fba-4d58-b3b5-fc1bc55ffba1",
+              "leftValue": "={{ $json.message }}",
+              "rightValue": "duplicate key",
+              "operator": {
+                "type": "string",
+                "operation": "contains",
+                "name": "filter.operator.contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        640,
+        32
+      ],
+      "id": "5de9c4e6-e32a-4985-b607-2ac0049cfb1b",
+      "name": "If"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Input": {
+      "main": [
+        [
+          {
+            "node": "Update Servicio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Servicio": {
+      "main": [
+        [
+          {
+            "node": "Respond Success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond Success": {
+      "main": [
+        [],
+        []
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Respond Error Duplicado",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Error Invalido",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "vps-6207995-x.dattaweb.com",
+            "x-real-ip": "186.158.237.71",
+            "x-forwarded-for": "186.158.237.71",
+            "x-forwarded-proto": "https",
+            "connection": "upgrade",
+            "content-length": "172",
+            "sec-ch-ua-platform": "\"Linux\"",
+            "authorization": "Bearer eyJhbGciOiJFUzI1NiIsImtpZCI6IjZiYjk3NGJkLWMwZmEtNDA4Zi1iZDMxLWFjMGU4NzI5OGQ3ZCIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2Zvc2JsZ3ZjZmhta3ZiYmVqaWlkLnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiI5NDI2ZWU5Yy01ZTA0LTQ2M2ItYWJhNS0xNjA3MjhmYjViZWYiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzg0MjYxMzczLCJpYXQiOjE3ODQyNTc3NzMsImVtYWlsIjoiYWRtaW5AYWlvbmV4LmNvbSIsInBob25lIjoiIiwiYXBwX21ldGFkYXRhIjp7InByb3ZpZGVyIjoiZW1haWwiLCJwcm92aWRlcnMiOlsiZW1haWwiXX0sInVzZXJfbWV0YWRhdGEiOnt9LCJyb2xlIjoiYXV0aGVudGljYXRlZCIsImFhbCI6ImFhbDEiLCJhbXIiOlt7Im1ldGhvZCI6InBhc3N3b3JkIiwidGltZXN0YW1wIjoxNzg0MjU0MjI3fV0sInNlc3Npb25faWQiOiIxMTNkOTIzNS0wMjA4LTRmOGEtOGM4ZC01NWM3NDgzY2UzYzEiLCJpc19hbm9ueW1vdXMiOmZhbHNlfQ.HC605U0QDKsDuOC5ByN8jN3OT29vRf2rxQRfFnI-GZGQBGRrGht5QpjXD_GUvWa0WIShR0hhxN-wu3AhSIgJkw",
+            "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36",
+            "sec-ch-ua": "\"Not;A=Brand\";v=\"8\", \"Chromium\";v=\"150\", \"Brave\";v=\"150\"",
+            "content-type": "application/json",
+            "sec-ch-ua-mobile": "?0",
+            "accept": "*/*",
+            "sec-gpc": "1",
+            "accept-language": "es-419,es;q=0.8",
+            "origin": "http://127.0.0.1:5500",
+            "sec-fetch-site": "cross-site",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-dest": "empty",
+            "referer": "http://127.0.0.1:5500/",
+            "accept-encoding": "gzip, deflate, br, zstd"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "id_servicio": "536fc8b4-96cd-45ea-b55e-3b9aa03ca9dd",
+            "id_tipo_servicio": "7494b6d8-16f0-40e4-b40b-0f06e1295a0a",
+            "nombre": "qweqwe",
+            "duracion": 90,
+            "costo": 15000,
+            "activo": true
+          },
+          "webhookUrl": "https://vps-6207995-x.dattaweb.com/webhook/admin/servicio-editar",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "versionId": "6c4e44d3-0606-41bf-9b0f-b0f6bae9527b",
+  "activeVersionId": "6c4e44d3-0606-41bf-9b0f-b0f6bae9527b",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-07-16T22:33:49.116Z",
+      "createdAt": "2026-07-16T22:33:49.116Z",
+      "role": "workflow:owner",
+      "workflowId": "2RVE8GL1H7KpzZ3L",
+      "projectId": "Iy2SCF8ACRv0KbuJ"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-07-17T03:14:32.779Z",
+    "createdAt": "2026-07-17T03:14:22.224Z",
+    "versionId": "6c4e44d3-0606-41bf-9b0f-b0f6bae9527b",
+    "workflowId": "2RVE8GL1H7KpzZ3L",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "PATCH",
+          "path": "admin/servicio-editar",
+          "responseMode": "responseNode",
+          "options": {
+            "allowedOrigins": "*"
+          }
+        },
+        "id": "dd42f740-d425-42e6-89f2-393ca138efdc",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          0,
+          0
+        ],
+        "webhookId": "fbf411d4-51f0-48e3-a6bc-0a169bea02be"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "id",
+                "name": "id",
+                "type": "string",
+                "value": "={{ $json.body?.id_servicio ?? $json.body?.id ?? $json.id_servicio ?? $json.id ?? \"\" }}"
+              },
+              {
+                "id": "id_tipo_servicio",
+                "name": "id_tipo_servicio",
+                "type": "string",
+                "value": "={{ $json.body?.id_tipo_servicio ?? $json.id_tipo_servicio ?? null }}"
+              },
+              {
+                "id": "nombre",
+                "name": "nombre",
+                "type": "string",
+                "value": "={{ $json.body?.nombre ?? $json.nombre ?? null }}"
+              },
+              {
+                "id": "costo",
+                "name": "costo",
+                "type": "string",
+                "value": "={{ $json.body?.costo ?? $json.costo ?? null }}"
+              },
+              {
+                "id": "duracion",
+                "name": "duracion",
+                "type": "string",
+                "value": "={{ $json.body?.duracion ?? $json.duracion ?? null }}"
+              },
+              {
+                "id": "activo",
+                "name": "activo",
+                "type": "string",
+                "value": "={{ $json.body?.activo ?? $json.activo ?? null }}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "64803099-14a2-45de-a124-5595d683c4c0",
+        "name": "Normalize Input",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          224,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "UPDATE servicios SET\n        id_tipo_servicio = COALESCE(NULLIF(NULLIF($2::text, 'null'), '')::uuid, id_tipo_servicio),\n        nombre = COALESCE(NULLIF(NULLIF($3::text, 'null'), ''), nombre),\n        costo = COALESCE(NULLIF(NULLIF($4::text, 'null'), '')::numeric, costo),\n        duracion = COALESCE(NULLIF(NULLIF($5::text, 'null'), '')::int, duracion),\n        activo = CASE WHEN $6 IS NULL OR $6::text = 'null' OR $6::text = '' THEN activo WHEN $6::text = 'true' THEN true ELSE false END\nWHERE id_servicio = NULLIF($1::text, '')::uuid \nRETURNING *",
+          "options": {
+            "queryReplacement": "={{ [$json.id, $json.id_tipo_servicio, $json.nombre, $json.costo, $json.duracion, $json.activo] }}"
+          }
+        },
+        "id": "c2f215b9-466c-4d94-aa07-b474e11deb70",
+        "name": "Update Servicio",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          448,
+          0
+        ],
+        "credentials": {
+          "postgres": {
+            "id": "DI7VdrXRMXAIJibS",
+            "name": "NFC_Turnos"
+          }
+        },
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ JSON.stringify({ success: true, data: $json }) }}",
+          "options": {}
+        },
+        "id": "a8d3dcdd-a7e1-4c85-9fbf-da6c88a44a87",
+        "name": "Respond Success",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          640,
+          -96
+        ]
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "{\n  \"success\": false,\n  \"message\": \"Ya existe un servicio con ese nombre para este tipo.\"\n}",
+          "options": {
+            "responseCode": 409
+          }
+        },
+        "id": "ca93377b-1e92-4dd7-9e37-7abafecd3559",
+        "name": "Respond Error Duplicado",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          944,
+          -48
+        ]
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "{\n  \"success\": false,\n  \"message\": \"Valores inv\u00e1lidos. Verifica que el costo sea positivo, la duraci\u00f3n sea v\u00e1lida (30, 60, 90, 120) y los datos est\u00e9n correctos.\"\n}",
+          "options": {
+            "responseCode": 400
+          }
+        },
+        "id": "bed32413-4317-41a8-b72e-0f04976ee64a",
+        "name": "Respond Error Invalido",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          944,
+          80
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "dbd3937b-0fba-4d58-b3b5-fc1bc55ffba1",
+                "leftValue": "={{ $json.message }}",
+                "rightValue": "duplicate key",
+                "operator": {
+                  "type": "string",
+                  "operation": "contains",
+                  "name": "filter.operator.contains"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          640,
+          32
+        ],
+        "id": "5de9c4e6-e32a-4985-b607-2ac0049cfb1b",
+        "name": "If"
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Normalize Input",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Normalize Input": {
+        "main": [
+          [
+            {
+              "node": "Update Servicio",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update Servicio": {
+        "main": [
+          [
+            {
+              "node": "Respond Success",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Respond Success": {
+        "main": [
+          [],
+          []
+        ]
+      },
+      "If": {
+        "main": [
+          [
+            {
+              "node": "Respond Error Duplicado",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Respond Error Invalido",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "In\u00e9s Risso",
+    "name": "Version 6c4e44d3",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}

@@ -1,0 +1,114 @@
+{
+  "updatedAt": "2026-07-16T22:49:54.081Z",
+  "createdAt": "2026-07-16T22:36:33.813Z",
+  "id": "K0K10vJJHLbcDLzY",
+  "name": "Admin - Listar Turnos v2",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "id": "79e70cbe-dd0c-426c-9e4d-c21eb14090c8",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "admin/turnos-v2",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "webhookId": "67a8583c-8508-4a18-9232-bac9129a9088"
+    },
+    {
+      "id": "96b43042-5a0c-4534-8743-7a50b6b25223",
+      "name": "Get Admin Turnos",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        224,
+        0
+      ],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "\n        SELECT t.id_turno, t.fecha, t.hora, t.hora_fin, t.estado, t.observaciones, t.created_at,\n               c.nombre AS cliente_nombre, c.email AS cliente_email, c.telefono AS cliente_telefono,\n               s.nombre AS servicio_nombre, s.duracion, s.costo, ts.nombre AS tipo_nombre\n        FROM turnos t\n        JOIN servicios s ON t.id_servicio = s.id_servicio\n        JOIN tipos_servicio ts ON s.id_tipo_servicio = ts.id_tipo_servicio\n        JOIN clientes c ON t.id_cliente = c.id_cliente\n        ORDER BY t.fecha DESC, t.hora DESC\n      ",
+        "options": {}
+      },
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "480396ec-6cd2-4d36-b66e-0495b575fc9c",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        448,
+        0
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($('Get Admin Turnos').all().map(i => i.json).filter(j => j.id_turno)) }}",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get Admin Turnos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Admin Turnos": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "staticData": null,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "pinData": null,
+  "versionId": "5016c153-27ef-46fb-930a-26ecf8f8e9b0",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-07-16T22:36:33.813Z",
+      "createdAt": "2026-07-16T22:36:33.813Z",
+      "role": "workflow:owner",
+      "workflowId": "K0K10vJJHLbcDLzY",
+      "projectId": "Iy2SCF8ACRv0KbuJ"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}

@@ -1,0 +1,279 @@
+{
+  "updatedAt": "2026-07-14T05:37:50.001Z",
+  "createdAt": "2026-07-14T05:30:37.058Z",
+  "id": "cKUHaxxcKPioaZ9M",
+  "name": "Admin - 6. Eliminar turno",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "DELETE",
+        "path": "admin/turno-eliminar",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "3d6e4c5d-c47b-4dc3-a6b6-a82b1e5718bf",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "b325eeb3-29e3-4823-aa0d-93dc353b4b8b"
+    },
+    {
+      "parameters": {
+        "url": "https://fosblgvcfhmkvbbejiid.supabase.co/auth/v1/user",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $json.headers.authorization }}"
+            },
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvc2JsZ3ZjZmhta3ZiYmVqaWlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2NTA0MjEsImV4cCI6MjA5OTIyNjQyMX0.shrNEOCsWnD7i9VuMRt2nNuLzaq3qot3uq82PAYkQ2c"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f93d557f-6dea-4694-8174-8d4dbf4392c4",
+      "name": "Validar Sesi\u00f3n",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        208,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "DELETE FROM turnos WHERE id_turno = $1;",
+        "options": {
+          "queryReplacement": "={{ $('Webhook').item.json.query.id }}"
+        }
+      },
+      "id": "8e5453b3-1192-4cc8-9dd9-8dd60a820e57",
+      "name": "Eliminar Turno",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.2,
+      "position": [
+        400,
+        0
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": true\n}",
+        "options": {}
+      },
+      "id": "41112d02-a4b3-44f1-bf6c-a13b2c1b050f",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        608,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validar Sesi\u00f3n",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar Sesi\u00f3n": {
+      "main": [
+        [
+          {
+            "node": "Eliminar Turno",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Eliminar Turno": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "e76b6daf-72ee-4be5-a916-53129d0a09c6",
+  "activeVersionId": "e76b6daf-72ee-4be5-a916-53129d0a09c6",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-07-14T05:30:37.058Z",
+      "createdAt": "2026-07-14T05:30:37.058Z",
+      "role": "workflow:owner",
+      "workflowId": "cKUHaxxcKPioaZ9M",
+      "projectId": "Iy2SCF8ACRv0KbuJ"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-07-14T05:30:40.856Z",
+    "createdAt": "2026-07-14T05:30:39.228Z",
+    "versionId": "e76b6daf-72ee-4be5-a916-53129d0a09c6",
+    "workflowId": "cKUHaxxcKPioaZ9M",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "DELETE",
+          "path": "admin/turno-eliminar",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "id": "3d6e4c5d-c47b-4dc3-a6b6-a82b1e5718bf",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 1.1,
+        "position": [
+          0,
+          0
+        ],
+        "webhookId": "b325eeb3-29e3-4823-aa0d-93dc353b4b8b"
+      },
+      {
+        "parameters": {
+          "url": "https://fosblgvcfhmkvbbejiid.supabase.co/auth/v1/user",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "={{ $json.headers.authorization }}"
+              },
+              {
+                "name": "apikey",
+                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvc2JsZ3ZjZmhta3ZiYmVqaWlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2NTA0MjEsImV4cCI6MjA5OTIyNjQyMX0.shrNEOCsWnD7i9VuMRt2nNuLzaq3qot3uq82PAYkQ2c"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "f93d557f-6dea-4694-8174-8d4dbf4392c4",
+        "name": "Validar Sesi\u00f3n",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          208,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "DELETE FROM turnos WHERE id_turno = $1;",
+          "options": {
+            "queryReplacement": "={{ $('Webhook').item.json.query.id }}"
+          }
+        },
+        "id": "8e5453b3-1192-4cc8-9dd9-8dd60a820e57",
+        "name": "Eliminar Turno",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.2,
+        "position": [
+          400,
+          0
+        ],
+        "credentials": {
+          "postgres": {
+            "id": "DI7VdrXRMXAIJibS",
+            "name": "NFC_Turnos"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "{\n  \"success\": true\n}",
+          "options": {}
+        },
+        "id": "41112d02-a4b3-44f1-bf6c-a13b2c1b050f",
+        "name": "Respond",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1,
+        "position": [
+          608,
+          0
+        ]
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Validar Sesi\u00f3n",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Validar Sesi\u00f3n": {
+        "main": [
+          [
+            {
+              "node": "Eliminar Turno",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Eliminar Turno": {
+        "main": [
+          [
+            {
+              "node": "Respond",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "In\u00e9s Risso",
+    "name": "Version e76b6daf",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}

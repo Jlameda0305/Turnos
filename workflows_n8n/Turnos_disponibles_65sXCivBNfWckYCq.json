@@ -1,0 +1,277 @@
+{
+  "updatedAt": "2026-07-17T03:27:48.618Z",
+  "createdAt": "2026-07-14T05:40:23.929Z",
+  "id": "65sXCivBNfWckYCq",
+  "name": "Turnos disponibles",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "path": "admin/turnos-disponibles",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "42b95a60-04c3-4db9-acf5-37b91db230c2",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        -224,
+        0
+      ],
+      "webhookId": "1355520a-f779-4edd-8cf3-6ecd89d34efe"
+    },
+    {
+      "parameters": {
+        "url": "https://fosblgvcfhmkvbbejiid.supabase.co/auth/v1/user",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $json.headers.authorization }}"
+            },
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvc2JsZ3ZjZmhta3ZiYmVqaWlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2NTA0MjEsImV4cCI6MjA5OTIyNjQyMX0.shrNEOCsWnD7i9VuMRt2nNuLzaq3qot3uq82PAYkQ2c"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "47b3cb59-5326-46ef-a464-f8f64148658b",
+      "name": "Validar Sesi\u00f3n",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -32,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT hora FROM turnos WHERE fecha = $1 AND estado != 'cancelado';",
+        "options": {
+          "queryReplacement": "={{ $('Webhook').item.json.query.fecha }}"
+        }
+      },
+      "id": "2bce6982-640d-41d0-b297-431a5d58eadc",
+      "name": "Consultar Horas",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.2,
+      "position": [
+        176,
+        0
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DI7VdrXRMXAIJibS",
+          "name": "NFC_Turnos"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $('Consultar Horas').all().map(e => e.json.hora.substring(0,5)) }}",
+        "options": {}
+      },
+      "id": "fea1f772-3624-439b-9118-26f131fd7052",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        384,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validar Sesi\u00f3n",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar Sesi\u00f3n": {
+      "main": [
+        [
+          {
+            "node": "Consultar Horas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consultar Horas": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "dba080e0-d2a3-47b5-83a1-04e113bd7b9a",
+  "activeVersionId": "dba080e0-d2a3-47b5-83a1-04e113bd7b9a",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-07-14T05:40:23.929Z",
+      "createdAt": "2026-07-14T05:40:23.929Z",
+      "role": "workflow:owner",
+      "workflowId": "65sXCivBNfWckYCq",
+      "projectId": "Iy2SCF8ACRv0KbuJ"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-07-14T05:40:28.651Z",
+    "createdAt": "2026-07-14T05:40:26.149Z",
+    "versionId": "dba080e0-d2a3-47b5-83a1-04e113bd7b9a",
+    "workflowId": "65sXCivBNfWckYCq",
+    "nodes": [
+      {
+        "parameters": {
+          "path": "admin/turnos-disponibles",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "id": "42b95a60-04c3-4db9-acf5-37b91db230c2",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 1.1,
+        "position": [
+          -224,
+          0
+        ],
+        "webhookId": "1355520a-f779-4edd-8cf3-6ecd89d34efe"
+      },
+      {
+        "parameters": {
+          "url": "https://fosblgvcfhmkvbbejiid.supabase.co/auth/v1/user",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "={{ $json.headers.authorization }}"
+              },
+              {
+                "name": "apikey",
+                "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvc2JsZ3ZjZmhta3ZiYmVqaWlkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2NTA0MjEsImV4cCI6MjA5OTIyNjQyMX0.shrNEOCsWnD7i9VuMRt2nNuLzaq3qot3uq82PAYkQ2c"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "47b3cb59-5326-46ef-a464-f8f64148658b",
+        "name": "Validar Sesi\u00f3n",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          -32,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT hora FROM turnos WHERE fecha = $1 AND estado != 'cancelado';",
+          "options": {
+            "queryReplacement": "={{ $('Webhook').item.json.query.fecha }}"
+          }
+        },
+        "id": "2bce6982-640d-41d0-b297-431a5d58eadc",
+        "name": "Consultar Horas",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.2,
+        "position": [
+          176,
+          0
+        ],
+        "credentials": {
+          "postgres": {
+            "id": "DI7VdrXRMXAIJibS",
+            "name": "NFC_Turnos"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ $('Consultar Horas').all().map(e => e.json.hora.substring(0,5)) }}",
+          "options": {}
+        },
+        "id": "fea1f772-3624-439b-9118-26f131fd7052",
+        "name": "Respond",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1,
+        "position": [
+          384,
+          0
+        ]
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Validar Sesi\u00f3n",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Validar Sesi\u00f3n": {
+        "main": [
+          [
+            {
+              "node": "Consultar Horas",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Consultar Horas": {
+        "main": [
+          [
+            {
+              "node": "Respond",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "In\u00e9s Risso",
+    "name": "Version dba080e0",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}
